@@ -18,12 +18,12 @@
 
 Під час запуску інтеграція автоматично:
 
-1. реєструє файл картки за адресою `/api/smart_heating/smart-heating-card.js`;
+1. реєструє файл картки за HACS-адресою `/hacsfiles/ha-smart-heating/www/smart-heating-card.js`;
 2. очікує, поки Lovelace завантажить сховище ресурсів;
 3. створює або оновлює ресурс типу `JavaScript module` у Lovelace Resources;
-4. додає URL `/api/smart_heating/smart-heating-card.js?v=1.0.0`.
+4. додає URL `/hacsfiles/ha-smart-heating/www/smart-heating-card.js?v=1.0.0`.
 
-Додавати ресурс вручну не потрібно. Після оновлення через HACS перезапустіть Home Assistant, а потім оновіть браузер через `Ctrl+F5`. У розділі `Налаштування → Панелі керування → Ресурси` має з'явитися ресурс із URL `/api/smart_heating/smart-heating-card.js?v=1.0.0`.
+Додавати ресурс вручну не потрібно. Після оновлення через HACS перезапустіть Home Assistant, а потім оновіть браузер через `Ctrl+F5`. У розділі `Налаштування → Панелі керування → Ресурси` має з'явитися ресурс із URL `/hacsfiles/ha-smart-heating/www/smart-heating-card.js?v=1.0.0`.
 
 Якщо раніше був доданий старий ресурс `/hacsfiles/ha-smart-heating/...` або `/local/...`, його можна видалити, щоб не завантажувати картку двічі.
 

@@ -19,6 +19,8 @@ PLATFORMS = ["climate", "number", "switch"]
 URL_BASE = "/api/smart_heating"
 CARD_URL = f"{URL_BASE}/smart-heating-card.js"
 CARD_PATH = Path(__file__).parent / "www"
+HACS_BASE = "/hacsfiles/ha-smart-heating"
+HACS_CARD_URL = f"{HACS_BASE}/www/smart-heating-card.js"
 CARD_VERSION = "1.0.0"
 
 
@@ -27,6 +29,13 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     await hass.http.async_register_static_paths([
         StaticPathConfig(URL_BASE, str(CARD_PATH), cache_headers=False)
     ])
+    try:
+        await hass.http.async_register_static_paths([
+            StaticPathConfig(HACS_BASE, str(Path(__file__).parent), cache_headers=False)
+        ])
+    except RuntimeError:
+        # HACS may already own /hacsfiles; its handler serves this URL.
+        _LOGGER.debug("HACS static path is already registered")
 
     async def _register_frontend(_event: Any = None) -> None:
         """Register the card only after Lovelace has initialized."""
@@ -47,7 +56,7 @@ async def async_register_lovelace_resource(hass: HomeAssistant) -> None:
 
     if resources is None or mode != "storage":
         # YAML dashboards do not have a writable Lovelace resource store.
-        frontend.add_extra_js_url(hass, f"{CARD_URL}?v={CARD_VERSION}")
+        frontend.add_extra_js_url(hass, f"{HACS_CARD_URL}?v={CARD_VERSION}")
         _LOGGER.debug("Lovelace is not in storage mode; registered extra JS URL")
         return
 
@@ -65,11 +74,11 @@ async def async_register_lovelace_resource(hass: HomeAssistant) -> None:
         (
             resource
             for resource in resources.async_items()
-            if resource["url"].split("?", 1)[0] == CARD_URL
+            if resource["url"].split("?", 1)[0] in {CARD_URL, HACS_CARD_URL}
         ),
         None,
     )
-    url = f"{CARD_URL}?v={CARD_VERSION}"
+    url = f"{HACS_CARD_URL}?v={CARD_VERSION}"
     if existing is None:
         await resources.async_create_item({"res_type": "module", "url": url})
         _LOGGER.info("Registered Smart Heating Lovelace card resource: %s", url)
