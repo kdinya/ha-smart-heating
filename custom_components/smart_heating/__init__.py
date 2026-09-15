@@ -23,7 +23,7 @@ CARD_PATH = Path(__file__).parent / "www"
 LOCAL_CARD_URL = "/local/smart-heating-card.js"
 LOCAL_CARD_PATH = "smart-heating-card.js"
 CARD_VERSION = "1.0.0"
-CARD_BUILD = "ref3d-popup-l10n"
+CARD_BUILD = "ref3d-power-digital"
 
 
 def _copy_card_to_www(www_path: str) -> None:
@@ -31,6 +31,9 @@ def _copy_card_to_www(www_path: str) -> None:
     destination_dir = Path(www_path)
     destination_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(CARD_PATH / LOCAL_CARD_PATH, destination_dir / LOCAL_CARD_PATH)
+    font_dir = destination_dir / "fonts"
+    font_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(CARD_PATH / "fonts" / "7segment.woff", font_dir / "7segment.woff")
 
 
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:

@@ -26,13 +26,18 @@ class SmartHeatingClimate(ClimateEntity):
     @property
     def target_temperature(self): return self.data.target_temperature
     @property
-    def hvac_mode(self): return HVACMode.HEAT if self.data.heating else HVACMode.OFF
+    def hvac_mode(self): return HVACMode.HEAT if self.data.enabled else HVACMode.OFF
     @property
     def extra_state_attributes(self): return self.data.attributes
     async def async_set_temperature(self, **kwargs):
         if ATTR_TEMPERATURE in kwargs:
             self.data.set_target(float(kwargs[ATTR_TEMPERATURE])); self.async_write_ha_state()
     async def async_set_hvac_mode(self, hvac_mode):
-        if hvac_mode == HVACMode.HEAT: self.data.heating = True
-        elif hvac_mode == HVACMode.OFF: self.data.heating = False
-        self.data._sync_output(); self.async_write_ha_state()
+        if hvac_mode == HVACMode.HEAT:
+            self.data.enabled = True
+            self.data._evaluate()
+        elif hvac_mode == HVACMode.OFF:
+            self.data.enabled = False
+            self.data.heating = False
+            self.data._sync_output()
+        self.async_write_ha_state()

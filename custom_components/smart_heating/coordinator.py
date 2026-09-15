@@ -19,6 +19,7 @@ class SmartHeatingData:
         self.name = entry.data.get("name", "Smart Heating")
         self.target_temperature = entry.options.get("target_temperature", DEFAULT_TARGET)
         self.hysteresis = entry.options.get("hysteresis", DEFAULT_HYSTERESIS)
+        self.enabled = True
         self.heating = False
         self.room_temperature = None
         self._remove_listener = None
@@ -48,6 +49,10 @@ class SmartHeatingData:
         except ValueError:
             self.room_temperature = None
         if self.room_temperature is None:
+            return
+        if not self.enabled:
+            self.heating = False
+            self._sync_output()
             return
         if self.heating and self.room_temperature >= self.target_temperature:
             self.heating = False
@@ -84,6 +89,7 @@ class SmartHeatingData:
     @property
     def attributes(self) -> dict:
         return {
+            "enabled": self.enabled,
             ATTR_HEATING: self.heating,
             "room_temperature": self.room_temperature,
             "target_temperature": self.target_temperature,
