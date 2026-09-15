@@ -1,5 +1,6 @@
 /* Smart Heating Card 1.0.0 — dark graphite/orange boiler dashboard */
 class SmartHeatingCard extends HTMLElement {
+  static getConfigElement() { return document.createElement('smart-heating-card-editor'); }
   setConfig(config) { this.config = config; this.entity = config.entity; this.attachShadow({mode:'open'}); this.render(); }
   set hass(hass) { this._hass = hass; this.render(); }
   getCardSize() { return 6; }
@@ -16,4 +17,30 @@ class SmartHeatingCard extends HTMLElement {
   }
 }
 customElements.define('smart-heating-card',SmartHeatingCard);
-window.customCards=window.customCards||[];window.customCards.push({type:'smart-heating-card',name:'Smart Heating Card',description:'Graphite and orange gas boiler dashboard card'});
+
+class SmartHeatingCardEditor extends HTMLElement {
+  setConfig(config) { this.config = {...config}; this.render(); }
+  set hass(hass) { this._hass = hass; this.render(); }
+  render() {
+    if (!this.shadowRoot || !this._hass) { if (!this.shadowRoot) this.attachShadow({mode:'open'}); return; }
+    const climates = Object.values(this._hass.states).filter(s => s.entity_id.startsWith('climate.'));
+    const selected = this.config?.entity || '';
+    this.shadowRoot.innerHTML = `<style>
+      .box{font-family:var(--paper-font-body1_-_font-family,Arial);padding:12px 0;display:grid;gap:12px}.title{font-size:16px;font-weight:500}.field{display:grid;gap:6px}label{font-size:13px;color:var(--secondary-text-color)}select,input{box-sizing:border-box;width:100%;padding:10px;border:1px solid var(--divider-color);border-radius:4px;background:var(--card-background-color);color:var(--primary-text-color);font:inherit}button{justify-self:start;padding:9px 18px;border:0;border-radius:4px;background:var(--primary-color);color:#fff;cursor:pointer}
+    </style><div class="box"><div class="title">Smart Heating — налаштування картки</div><div class="field"><label>Кліматична сутність котла</label><select id="entity"><option value="">Оберіть сутність…</option>${climates.map(s=>`<option value="${s.entity_id}" ${s.entity_id===selected?'selected':''}>${s.attributes.friendly_name||s.entity_id}</option>`).join('')}</select></div><div class="field"><label>Назва картки (необов’язково)</label><input id="title" value="${this.config?.title||''}" placeholder="Smart Heating"></div><button id="save">Зберегти</button></div>`;
+    this.shadowRoot.getElementById('save').onclick = () => this._save();
+    this.shadowRoot.getElementById('entity').onchange = () => this._save();
+    this.shadowRoot.getElementById('title').onchange = () => this._save();
+  }
+  _save() {
+    const entity = this.shadowRoot.getElementById('entity').value;
+    const title = this.shadowRoot.getElementById('title').value.trim();
+    if (!entity) return;
+    const config = {...this.config, entity};
+    if (title) config.title = title; else delete config.title;
+    this.config = config;
+    this.dispatchEvent(new CustomEvent('config-changed', {detail:{config}, bubbles:true, composed:true}));
+  }
+}
+customElements.define('smart-heating-card-editor',SmartHeatingCardEditor);
+window.customCards=window.customCards||[];window.customCards.push({type:'smart-heating-card',name:'Smart Heating Card',description:'Graphite and orange gas boiler dashboard card',preview:true,config_element:'smart-heating-card-editor'});
