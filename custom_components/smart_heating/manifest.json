@@ -1,11 +1,12 @@
 {
   "domain": "smart_heating",
   "name": "Smart Heating",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "documentation": "https://github.com/kdinya/ha-smart-heating",
   "issue_tracker": "https://github.com/kdinya/ha-smart-heating/issues",
   "codeowners": ["@kdinya"],
   "config_flow": true,
+  "integration_type": "device",
   "dependencies": ["frontend", "http"],
   "requirements": [],
   "iot_class": "local_push"

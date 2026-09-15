@@ -1,4 +1,7 @@
-# Smart Heating — газовий котел для Home Assistant
+# Smart Heating
+
+[![Validate](https://github.com/kdinya/ha-smart-heating/actions/workflows/validate.yml/badge.svg)](https://github.com/kdinya/ha-smart-heating/actions/workflows/validate.yml)
+[![Latest release](https://img.shields.io/github/v/release/kdinya/ha-smart-heating?sort=semver)](https://github.com/kdinya/ha-smart-heating/releases) — газовий котел для Home Assistant
 
 Повноцінна інтеграція Home Assistant для керування газовим котлом за кімнатною температурою. Інтерфейс містить графітову панель з помаранчевими акцентами, круговим індикатором температури, кнопками `−/+`, станом котла та метеоданими.
 
@@ -12,6 +15,12 @@
 - Українські назви та адаптивна Lovelace-картка.
 - **JavaScript-картка автоматично копіюється в `/config/www` і додається в Lovelace Resources**.
 
+## HACS
+
+[![Додати до HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=kdinya&repository=ha-smart-heating&category=integration)
+
+У HACS відкрийте **Custom repositories**, додайте `kdinya/ha-smart-heating` як **Integration**, встановіть інтеграцію та перезапустіть Home Assistant. Для оновлення через HACS використовуйте релізи GitHub і після оновлення виконайте повний перезапуск Home Assistant.
+
 ## Встановлення інтеграції
 
 Для HACS додайте цей репозиторій як custom repository типу **Integration**, встановіть **Smart Heating** і перезапустіть Home Assistant. Для ручного встановлення скопіюйте `custom_components/smart_heating` у каталог `config/custom_components/`.
@@ -20,14 +29,14 @@
 
 1. копіює `www/smart-heating-card.js` у `config/www/smart-heating-card.js`;
 2. після запуску Home Assistant створює або оновлює ресурс типу `JavaScript module`;
-3. використовує стандартну адресу `/local/smart-heating-card.js?v=1.0.0&build=ref3d-audit-fixes`.
+3. використовує стандартну адресу `/local/smart-heating-card.js?v=1.0.1&build=ref3d-audit-fixes-v101`.
 
 Адреса `/hacsfiles/ha-smart-heating/...` є типовою для HACS-репозиторіїв типу **Dashboard/Plugin**, які встановлюються у `www/community`. Цей репозиторій має тип **Integration** і встановлюється у `custom_components/smart_heating`, тому HACS сам по собі не публікує його `www` як `/hacsfiles`. Інтеграція тепер копіює картку в стандартний `/config/www`, тому використовується гарантований URL `/local`.
 
 Додавати ресурс вручну не потрібно. Після оновлення через HACS виконайте **повний перезапуск Home Assistant**, а потім оновіть браузер через `Ctrl+F5`. У розділі `Налаштування → Панелі керування → Ресурси` має з'явитися:
 
 ```text
-/local/smart-heating-card.js?v=1.0.0&build=ref3d-audit-fixes
+/local/smart-heating-card.js?v=1.0.1&build=ref3d-audit-fixes-v101
 ```
 
 Якщо раніше були додані ресурси `/api/...` або `/hacsfiles/...`, їх можна видалити, щоб картка не завантажувалася двічі.
@@ -51,4 +60,4 @@ entity: climate.gazovyi_kotel
 
 ## Ліцензія
 
-MIT. Версія першого релізу: **1.0.0**.
+MIT. Поточна версія: **1.0.1**. Дивіться [CHANGELOG.md](CHANGELOG.md) для історії змін.
