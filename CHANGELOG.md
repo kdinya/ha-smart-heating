@@ -9,6 +9,8 @@
 - Preserved effect position, scale, enable/disable, and opacity controls.
 - Restored climate state after Home Assistant restarts.
 - Added repository tests, brand assets, and HACS/GitHub metadata.
+- Preserved the configured screen aspect ratio for the complete card at every width.
+- Fixed bottom-panel controls being clipped by the panel mask.
 
 ## 1.0.0
 
