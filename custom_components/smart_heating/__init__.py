@@ -23,7 +23,7 @@ CARD_PATH = Path(__file__).parent / "www"
 LOCAL_CARD_URL = "/local/smart-heating-card.js"
 LOCAL_CARD_PATH = "smart-heating-card.js"
 CARD_VERSION = "1.0.0"
-CARD_BUILD = "ref3d-comment-fixes"
+CARD_BUILD = "ref3d-all-reviews"
 
 
 def _copy_card_to_www(www_path: str) -> None:
@@ -112,3 +112,32 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data = hass.data[DOMAIN].pop(entry.entry_id)
         await data.async_stop()
     return unloaded
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove shared Lovelace resources and copied assets after the last entry."""
+    remaining = [
+        item for item in hass.config_entries.async_entries(DOMAIN)
+        if item.entry_id != entry.entry_id
+    ]
+    if remaining:
+        return
+
+    lovelace = hass.data.get("lovelace")
+    resources = getattr(lovelace, "resources", None) if lovelace else None
+    accepted_urls = {CARD_URL, LOCAL_CARD_URL}
+    if resources is not None and resources.loaded:
+        for resource in list(resources.async_items()):
+            if resource["url"].split("?", 1)[0] in accepted_urls:
+                await resources.async_delete_item(resource["id"])
+
+    frontend.remove_extra_js_url(
+        hass, f"{LOCAL_CARD_URL}?v={CARD_VERSION}&build={CARD_BUILD}"
+    )
+
+    def _remove_files() -> None:
+        www = Path(hass.config.path("www"))
+        (www / LOCAL_CARD_PATH).unlink(missing_ok=True)
+        (www / "fonts" / "7segment.woff").unlink(missing_ok=True)
+
+    await hass.async_add_executor_job(_remove_files)
