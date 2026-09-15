@@ -11,16 +11,33 @@
 - Сутність `climate` для котла та сутності `number` для цільової температури й гістерезісу.
 - Українські назви та адаптивна Lovelace-картка.
 
-## Встановлення
+## Встановлення інтеграції
 
-Скопіюйте `custom_components/smart_heating` у каталог `config/custom_components/`, перезапустіть Home Assistant і додайте **Smart Heating** через `Налаштування → Пристрої та служби → Додати інтеграцію`. Для HACS використайте власний репозиторій як custom repository типу **Integration**.
+Для HACS додайте цей репозиторій як custom repository типу **Integration**, встановіть **Smart Heating** і перезапустіть Home Assistant. Для ручного встановлення скопіюйте `custom_components/smart_heating` у каталог `config/custom_components/`.
 
-Після встановлення додайте ресурс картки:
+## Обов'язково: додавання ресурсу картки
+
+Помилка `Custom element not found: smart-heating-card` означає, що ресурс JavaScript не доданий або має неправильний URL. Після встановлення інтеграції додайте ресурс у `Налаштування → Панелі керування → Ресурси`.
+
+### Варіант A — HACS
+
+Використовуйте саме цей URL, тип **JavaScript module**:
 
 ```yaml
-url: /local/community/ha-smart-heating/www/smart-heating-card.js
+url: /hacsfiles/ha-smart-heating/www/smart-heating-card.js?v=1.0.0
 type: module
 ```
+
+### Варіант B — ручне встановлення
+
+Скопіюйте файл `www/smart-heating-card.js` до `config/www/smart-heating-card.js`, а потім додайте:
+
+```yaml
+url: /local/smart-heating-card.js?v=1.0.0
+type: module
+```
+
+Після додавання ресурсу виконайте повне оновлення браузера: `Ctrl+F5` або очистіть кеш для Home Assistant. Не додавайте одночасно обидва варіанти ресурсу.
 
 ## Картка
 
