@@ -23,6 +23,7 @@ CARD_PATH = Path(__file__).parent / "www"
 LOCAL_CARD_URL = "/local/smart-heating-card.js"
 LOCAL_CARD_PATH = "smart-heating-card.js"
 CARD_VERSION = "1.0.0"
+CARD_BUILD = "952c974"
 
 
 def _copy_card_to_www(www_path: str) -> None:
@@ -58,7 +59,7 @@ async def async_register_lovelace_resource(hass: HomeAssistant) -> None:
 
     if resources is None or mode != "storage":
         # YAML dashboards do not have a writable Lovelace resource store.
-        frontend.add_extra_js_url(hass, f"{LOCAL_CARD_URL}?v={CARD_VERSION}")
+        frontend.add_extra_js_url(hass, f"{LOCAL_CARD_URL}?v={CARD_VERSION}&build={CARD_BUILD}")
         _LOGGER.debug("Lovelace is not in storage mode; registered extra JS URL")
         return
 
@@ -81,7 +82,7 @@ async def async_register_lovelace_resource(hass: HomeAssistant) -> None:
         ),
         None,
     )
-    url = f"{LOCAL_CARD_URL}?v={CARD_VERSION}"
+    url = f"{LOCAL_CARD_URL}?v={CARD_VERSION}&build={CARD_BUILD}"
     if existing is None:
         await resources.async_create_item({"res_type": "module", "url": url})
         _LOGGER.info("Registered Smart Heating Lovelace card resource: %s", url)
