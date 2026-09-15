@@ -1,15 +1,20 @@
 """Climate platform."""
 from __future__ import annotations
+
 from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.restore_state import RestoreEntity
+
 from . import SmartHeatingData
 from .const import DOMAIN
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([SmartHeatingClimate(hass.data[DOMAIN][entry.entry_id], entry)])
 
-class SmartHeatingClimate(ClimateEntity):
+
+class SmartHeatingClimate(RestoreEntity, ClimateEntity):
     _attr_has_entity_name = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
@@ -21,6 +26,27 @@ class SmartHeatingClimate(ClimateEntity):
         self._attr_name = "Газовий котел"
         self._attr_device_info = {"identifiers": {(DOMAIN, entry.entry_id)}, "name": data.name, "manufacturer": "Smart Heating", "model": "Hysteresis boiler controller"}
 
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if not last_state:
+            return
+        self.data.enabled = last_state.state != HVACMode.OFF
+        attributes = last_state.attributes
+        target = attributes.get(ATTR_TEMPERATURE, attributes.get("target_temperature"))
+        if target is not None:
+            try:
+                self.data.target_temperature = float(target)
+            except (TypeError, ValueError):
+                pass
+        hysteresis = attributes.get("hysteresis")
+        if hysteresis is not None:
+            try:
+                self.data.hysteresis = float(hysteresis)
+            except (TypeError, ValueError):
+                pass
+        self.data._evaluate()
+
     @property
     def current_temperature(self): return self.data.room_temperature
     @property
@@ -29,9 +55,12 @@ class SmartHeatingClimate(ClimateEntity):
     def hvac_mode(self): return HVACMode.HEAT if self.data.enabled else HVACMode.OFF
     @property
     def extra_state_attributes(self): return self.data.attributes
+
     async def async_set_temperature(self, **kwargs):
         if ATTR_TEMPERATURE in kwargs:
-            self.data.set_target(float(kwargs[ATTR_TEMPERATURE])); self.async_write_ha_state()
+            self.data.set_target(float(kwargs[ATTR_TEMPERATURE]))
+            self.async_write_ha_state()
+
     async def async_set_hvac_mode(self, hvac_mode):
         if hvac_mode == HVACMode.HEAT:
             self.data.enabled = True
