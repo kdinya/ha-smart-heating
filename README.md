@@ -20,14 +20,14 @@
 
 1. копіює `www/smart-heating-card.js` у `config/www/smart-heating-card.js`;
 2. після запуску Home Assistant створює або оновлює ресурс типу `JavaScript module`;
-3. використовує стандартну адресу `/local/smart-heating-card.js?v=1.0.0&build=ref3d-all-reviews`.
+3. використовує стандартну адресу `/local/smart-heating-card.js?v=1.0.0&build=ref3d-audit-fixes`.
 
 Адреса `/hacsfiles/ha-smart-heating/...` є типовою для HACS-репозиторіїв типу **Dashboard/Plugin**, які встановлюються у `www/community`. Цей репозиторій має тип **Integration** і встановлюється у `custom_components/smart_heating`, тому HACS сам по собі не публікує його `www` як `/hacsfiles`. Інтеграція тепер копіює картку в стандартний `/config/www`, тому використовується гарантований URL `/local`.
 
 Додавати ресурс вручну не потрібно. Після оновлення через HACS виконайте **повний перезапуск Home Assistant**, а потім оновіть браузер через `Ctrl+F5`. У розділі `Налаштування → Панелі керування → Ресурси` має з'явитися:
 
 ```text
-/local/smart-heating-card.js?v=1.0.0&build=ref3d-all-reviews
+/local/smart-heating-card.js?v=1.0.0&build=ref3d-audit-fixes
 ```
 
 Якщо раніше були додані ресурси `/api/...` або `/hacsfiles/...`, їх можна видалити, щоб картка не завантажувалася двічі.
