@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components import frontend
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, CoreState, HomeAssistant
 from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
@@ -23,12 +23,19 @@ CARD_VERSION = "1.0.0"
 
 
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
-    """Set up Smart Heating and register its Lovelace card automatically."""
+    """Set up Smart Heating and its frontend resource endpoint."""
     await hass.http.async_register_static_paths([
         StaticPathConfig(URL_BASE, str(CARD_PATH), cache_headers=False)
     ])
-    frontend.add_extra_js_url(hass, f"{CARD_URL}?v={CARD_VERSION}")
-    hass.async_create_task(async_register_lovelace_resource(hass))
+
+    async def _register_frontend(_event: Any = None) -> None:
+        """Register the card only after Lovelace has initialized."""
+        await async_register_lovelace_resource(hass)
+
+    if hass.state is CoreState.running:
+        hass.async_create_task(_register_frontend())
+    else:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _register_frontend)
     return True
 
 
@@ -36,7 +43,15 @@ async def async_register_lovelace_resource(hass: HomeAssistant) -> None:
     """Create or update the card in Lovelace storage resources."""
     lovelace = hass.data.get("lovelace")
     resources = getattr(lovelace, "resources", None) if lovelace else None
-    if resources is None or not resources.loaded:
+    mode = getattr(lovelace, "mode", getattr(lovelace, "resource_mode", "yaml")) if lovelace else "yaml"
+
+    if resources is None or mode != "storage":
+        # YAML dashboards do not have a writable Lovelace resource store.
+        frontend.add_extra_js_url(hass, f"{CARD_URL}?v={CARD_VERSION}")
+        _LOGGER.debug("Lovelace is not in storage mode; registered extra JS URL")
+        return
+
+    if not resources.loaded:
         async_call_later(
             hass,
             5,
@@ -57,7 +72,7 @@ async def async_register_lovelace_resource(hass: HomeAssistant) -> None:
     url = f"{CARD_URL}?v={CARD_VERSION}"
     if existing is None:
         await resources.async_create_item({"res_type": "module", "url": url})
-        _LOGGER.info("Registered Smart Heating Lovelace card resource")
+        _LOGGER.info("Registered Smart Heating Lovelace card resource: %s", url)
     elif existing["url"] != url:
         await resources.async_update_item(
             existing["id"], {"res_type": "module", "url": url}
