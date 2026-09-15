@@ -23,7 +23,7 @@ CARD_PATH = Path(__file__).parent / "www"
 LOCAL_CARD_URL = "/local/smart-heating-card.js"
 LOCAL_CARD_PATH = "smart-heating-card.js"
 CARD_VERSION = "1.0.0"
-CARD_BUILD = "ref3d-power-digital"
+CARD_BUILD = "ref3d-responsive-effects"
 
 
 def _copy_card_to_www(www_path: str) -> None:
