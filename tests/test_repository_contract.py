@@ -13,6 +13,12 @@ class RepositoryContractTests(unittest.TestCase):
         bundled = (ROOT / "custom_components/smart_heating/www/smart-heating-card.js").read_bytes()
         self.assertEqual(source, bundled)
 
+    def test_card_has_responsive_and_flame_layout_contract(self):
+        card = (ROOT / "www/smart-heating-card.js").read_text()
+        self.assertIn("class=\"${enabled?\'is-enabled\':\'is-disabled\'} ${this.offsetWidth<760?\'compact\':\'\'}\"", card)
+        self.assertIn("flame-effect", card)
+        self.assertIn("transform:translateX(-8%) scale(.62)", card)
+
     def test_manifest_is_release_ready(self):
         manifest = json.loads((ROOT / "custom_components/smart_heating/manifest.json").read_text())
         self.assertEqual(manifest["version"], "1.0.1")
