@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -19,23 +20,24 @@ PLATFORMS = ["climate", "number", "switch"]
 URL_BASE = "/api/smart_heating"
 CARD_URL = f"{URL_BASE}/smart-heating-card.js"
 CARD_PATH = Path(__file__).parent / "www"
-HACS_BASE = "/hacsfiles/ha-smart-heating"
-HACS_CARD_URL = f"{HACS_BASE}/www/smart-heating-card.js"
+LOCAL_CARD_URL = "/local/smart-heating-card.js"
+LOCAL_CARD_PATH = "smart-heating-card.js"
 CARD_VERSION = "1.0.0"
 
 
+def _copy_card_to_www(www_path: str) -> None:
+    """Install the bundled card in Home Assistant's standard /local directory."""
+    destination_dir = Path(www_path)
+    destination_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(CARD_PATH / LOCAL_CARD_PATH, destination_dir / LOCAL_CARD_PATH)
+
+
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
-    """Set up Smart Heating and its frontend resource endpoint."""
+    """Set up Smart Heating and install its Lovelace card automatically."""
     await hass.http.async_register_static_paths([
         StaticPathConfig(URL_BASE, str(CARD_PATH), cache_headers=False)
     ])
-    try:
-        await hass.http.async_register_static_paths([
-            StaticPathConfig(HACS_BASE, str(Path(__file__).parent), cache_headers=False)
-        ])
-    except RuntimeError:
-        # HACS may already own /hacsfiles; its handler serves this URL.
-        _LOGGER.debug("HACS static path is already registered")
+    await hass.async_add_executor_job(_copy_card_to_www, hass.config.path("www"))
 
     async def _register_frontend(_event: Any = None) -> None:
         """Register the card only after Lovelace has initialized."""
@@ -56,7 +58,7 @@ async def async_register_lovelace_resource(hass: HomeAssistant) -> None:
 
     if resources is None or mode != "storage":
         # YAML dashboards do not have a writable Lovelace resource store.
-        frontend.add_extra_js_url(hass, f"{HACS_CARD_URL}?v={CARD_VERSION}")
+        frontend.add_extra_js_url(hass, f"{LOCAL_CARD_URL}?v={CARD_VERSION}")
         _LOGGER.debug("Lovelace is not in storage mode; registered extra JS URL")
         return
 
@@ -70,15 +72,16 @@ async def async_register_lovelace_resource(hass: HomeAssistant) -> None:
         )
         return
 
+    accepted_urls = {CARD_URL, LOCAL_CARD_URL}
     existing = next(
         (
             resource
             for resource in resources.async_items()
-            if resource["url"].split("?", 1)[0] in {CARD_URL, HACS_CARD_URL}
+            if resource["url"].split("?", 1)[0] in accepted_urls
         ),
         None,
     )
-    url = f"{HACS_CARD_URL}?v={CARD_VERSION}"
+    url = f"{LOCAL_CARD_URL}?v={CARD_VERSION}"
     if existing is None:
         await resources.async_create_item({"res_type": "module", "url": url})
         _LOGGER.info("Registered Smart Heating Lovelace card resource: %s", url)
@@ -86,7 +89,7 @@ async def async_register_lovelace_resource(hass: HomeAssistant) -> None:
         await resources.async_update_item(
             existing["id"], {"res_type": "module", "url": url}
         )
-        _LOGGER.info("Updated Smart Heating Lovelace card resource to %s", CARD_VERSION)
+        _LOGGER.info("Updated Smart Heating Lovelace card resource to %s", url)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
