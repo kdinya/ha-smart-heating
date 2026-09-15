@@ -6,7 +6,7 @@
   "issue_tracker": "https://github.com/kdinya/ha-smart-heating/issues",
   "codeowners": ["@kdinya"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["frontend", "http"],
   "requirements": [],
   "iot_class": "local_push"
 }
