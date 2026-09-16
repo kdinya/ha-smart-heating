@@ -24,6 +24,7 @@
 - Fixed the later reference-skin `ha-card` rule that was overriding the configurable radius, while retaining container-relative sizing for layout coordinates when the card ratio changes.
 - Added a final layout override to neutralize the legacy UI-scale transform, keep the device anchored to the card bounds, and apply ratio/radius directly to the visible outer card.
 - Made Lovelace resource lifecycle prefix-independent: legacy `/hacsfiles`, `/api`, and old `/local` card URLs are recognized by filename, migrated to the canonical resource, and duplicate resources are removed; removal cleans up all matching card resources.
+- Added a compatibility static route for the legacy HACS card path and separated the top-left device name container from its adjacent icon so editor controls affect only their intended element.
 
 ## 1.0.1 — 2026-09-16
 

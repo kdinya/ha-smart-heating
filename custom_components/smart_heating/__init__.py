@@ -23,8 +23,9 @@ CARD_URL = f"{URL_BASE}/smart-heating-card.js"
 CARD_PATH = Path(__file__).parent / "www"
 LOCAL_CARD_URL = "/local/smart-heating-card.js"
 LOCAL_CARD_PATH = "smart-heating-card.js"
+LEGACY_CARD_URL = "/hacsfiles/ha-smart-heating/www"
 CARD_VERSION = "1.0.2"
-CARD_BUILD = "reference-dashboard-v102-layout7"
+CARD_BUILD = "reference-dashboard-v102-layout8"
 
 
 def _is_card_resource_url(url: str) -> bool:
@@ -45,7 +46,8 @@ def _copy_card_to_www(www_path: str) -> None:
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up Smart Heating and install its Lovelace card automatically."""
     await hass.http.async_register_static_paths([
-        StaticPathConfig(URL_BASE, str(CARD_PATH), cache_headers=False)
+        StaticPathConfig(URL_BASE, str(CARD_PATH), cache_headers=False),
+        StaticPathConfig(LEGACY_CARD_URL, str(CARD_PATH), cache_headers=False),
     ])
     await hass.async_add_executor_job(_copy_card_to_www, hass.config.path("www"))
 

@@ -60,6 +60,8 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("Math.max(.25,Math.min(4,n(key+'_s',1)))", card)
         self.assertIn("prefix+'_s','s',.25,4,.01", card)
         self.assertIn("this._ctrl('Розмір знаку температури','room_unit_size'", card)
+        self.assertIn(".brand-name{transform:translate(calc(var(--brand-x,0) * 1cqw),calc(var(--brand-y,0) * 1cqh))", card)
+        self.assertIn('<div class="flame brand-icon">♨</div><div class="brand-name">', card)
         self.assertIn("this._ctrl('Відстань між цифрами','target_letter_spacing'", card)
         self.assertIn("this._ctrl('Розмір десяткової частини','target_decimal_size'", card)
         self.assertIn("this._ctrl('Розмір знаку температури','target_unit_size'", card)
@@ -104,7 +106,9 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("endswith(\"/smart-heating-card.js\")", init)
         self.assertIn("card_resources = [", init)
         self.assertIn("await resources.async_delete_item(resource[\"id\"])", init)
-        self.assertIn("CARD_BUILD = \"reference-dashboard-v102-layout7\"", init)
+        self.assertIn("CARD_BUILD = \"reference-dashboard-v102-layout8\"", init)
+        self.assertIn("LEGACY_CARD_URL = \"/hacsfiles/ha-smart-heating/www\"", init)
+        self.assertIn("StaticPathConfig(LEGACY_CARD_URL, str(CARD_PATH)", init)
 
     def test_hacs_files_and_brand_asset_exist(self):
         hacs = json.loads((ROOT / "hacs.json").read_text())
