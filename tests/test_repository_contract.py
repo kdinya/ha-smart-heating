@@ -19,7 +19,7 @@ BUNDLED_CARD = COMPONENT / "www/smart-heating-card.js"
 GROUPS = ("weather", "climate", "panel")
 ITEMS = (
     "brand", "brand_icon", "date", "clock", "signal", "outdoor", "wind", "rain",
-    "dial", "room", "target", "adjust", "humidity", "scheme", "panel_buttons",
+    "dial", "room", "target", "adjust", "humidity", "scheme",
 )
 
 

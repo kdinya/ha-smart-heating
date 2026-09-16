@@ -12,6 +12,7 @@ Full audit of the integration and the card: bug fixes, dead-code removal, a rebu
 - Renamed the "Підключення" tab to "Керування".
 - Removed the "Група підключення" editor block: it only moved the scheme section's title text, disconnected from the actual scheme cards, and had no other effect. The underlying dead `group-connection` CSS rule and class were removed with it.
 - Removed the "Активна схема" (direct/old programmer/parallel) chooser from the editor; the boiler-control scheme selection is being redesigned.
+- Removed the "Кнопки, іконки та написи" block from the Panel tab: it duplicated the "Група нижньої панелі" block's horizontal/vertical/size controls (same `.group-panel` element). In its place there is now a single "Розмір кнопок" slider that scales each bottom-panel button individually around its own center, instead of the whole panel scaling as one block.
 - Brought `tests/test_repository_contract.py` back in sync with the card: `test_every_positionable_block_has_editor_controls` no longer expects controls for `header`/`humidity_int`/`humidity_dec`/`humidity_unit` (dropped in earlier edits), and `test_visibility_toggles_are_declared` no longer expects the removed `room_int_visible` toggle.
 - The "Buttons, icons and labels" controls on the Panel tab wrote `panel-buttons_x/_y/_s` (with a dash) while the card read `panel_buttons_x/_y/_s` (with an underscore). Those three sliders did nothing; they work now.
 - The active connection scheme was hardcoded to the first card in the markup, so the `connection_mode` setting had no visible effect.
