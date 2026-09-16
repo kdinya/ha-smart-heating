@@ -97,7 +97,7 @@ ha-card{border-radius:var(--card-radius,27px);border:2px solid #344149;backgroun
 .dial-content{z-index:2}.dial .temp{font-size:clamp(34px,7.5cqw,110px);color:#f6f8fa;text-shadow:0 2px 6px #000}.dial .target{font-size:clamp(18px,3.6cqw,52px);color:#f6f8fa}
 .scheme-title{font-size:clamp(10px,1.5cqw,22px);color:#cbd4db;letter-spacing:.5px}.scheme-card{height:clamp(72px,10cqw,150px);padding:clamp(5px,.8cqw,12px) 3px;border-color:#5c6971;border-radius:7px;background:linear-gradient(145deg,#1d292f,#091015);box-shadow:inset 0 0 16px #000b}.scheme-card.active{border-color:var(--orange);box-shadow:inset 0 0 14px #ff8a0030,0 0 8px #ff8a0030}.scheme-icon{color:#f0f3f5}.scheme-number{width:clamp(18px,2.5cqw,38px);height:clamp(18px,2.5cqw,38px);font-size:clamp(10px,1.5cqw,22px);background:#bfc8ce;color:#162027}.scheme-card.active .scheme-number{background:var(--orange);color:#fff}.scheme-card span{font-size:clamp(7px,1.2cqw,18px)}
 .control-panel{margin-top:clamp(8px,1.5cqw,24px);padding:0 clamp(5px,3cqw,46px);align-items:center;background:linear-gradient(180deg,#10191e00,#080d11aa);border-radius:0 0 clamp(16px,2.4cqw,38px) clamp(16px,2.4cqw,38px)}
-.control{font-size:clamp(8px,1.5cqw,22px);color:#b9c4cd;text-transform:uppercase}.control:not(:last-child):after{content:'';position:absolute;right:0;top:18%;height:64%;width:1px;background:#82909a88}.control.active,.control.fire{color:var(--orange)}
+.control{font-size:clamp(8px,1.5cqw,22px);color:#b9c4cd;text-transform:uppercase}.control.active,.control.fire{color:var(--orange)}
 .button{width:clamp(42px,8.4cqw,128px);height:clamp(42px,8.4cqw,128px);margin:0 auto clamp(3px,.6cqw,9px);border:2px solid #111a20;box-shadow:0 0 0 4px #05090c,0 0 0 5px #26333a,0 9px 14px #000c,inset 0 3px 5px #ffffff30,inset 0 -10px 15px #000;background:radial-gradient(circle at 35% 22%,#53616a 0%,#26333a 25%,#0b1216 68%)}
 .control.active .button,.control.fire .button{border-color:var(--orange);box-shadow:0 0 0 4px #05090c,0 0 0 5px #26333a,0 0 13px #ff8a0080,inset 0 3px 5px #ffffff30}.button svg{width:clamp(22px,3.7cqw,56px);height:clamp(22px,3.7cqw,56px)}
 .flame-effect{top:-20%;width:44%;height:58%}
@@ -106,6 +106,11 @@ ha-card{border-radius:var(--card-radius,27px);border:2px solid #344149;backgroun
 .center{position:relative}.adjust{position:absolute;left:50%;bottom:clamp(7px,1.4cqh,22px);margin:0;z-index:5;transform:translate(calc(-50% + var(--adjust-x,0) * 1cqw),calc(var(--adjust-y,0) * 1cqh)) scale(var(--adjust-s,1))}
 .dial{width:min(100%,clamp(42px,29cqw,440px),calc(100cqh - 125px))}.adjust button{font-size:clamp(16px,3.2cqw,44px)}
 .adjust{bottom:clamp(10px,2cqw,30px)}
+/* 1.0.3: geometry of the climate dial is fixed and independent of the temperature typography */
+ha-card{--dial-size:min(clamp(42px,29cqw,440px),calc(100cqh - 125px))}
+.center.group-climate{width:var(--dial-size);min-width:var(--dial-size);max-width:var(--dial-size)}
+.dial{flex:0 0 auto;aspect-ratio:auto;width:var(--dial-size);height:var(--dial-size);min-width:var(--dial-size);min-height:var(--dial-size);max-width:var(--dial-size);max-height:var(--dial-size)}
+.dial-content{position:absolute;left:0;right:0;top:0;width:100%;height:auto;z-index:2}
 
     .group-climate{position:absolute;left:calc(50% + var(--climate-x,0) * 1%);top:calc(50% + var(--climate-y,0) * 1%);transform:translate(-50%,-50%) scale(var(--climate-s,1));transform-origin:center center}
 .group-weather{grid-column:1}.group-connection{grid-column:3}
