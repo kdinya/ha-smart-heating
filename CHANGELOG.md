@@ -16,6 +16,7 @@
 - Removed humidity, target-entity, hysteresis, and integer-temperature visibility controls from the Climate tab; changed the card resource build identifier to force Home Assistant cache refresh.
 - Fixed a runtime `oneDecimal` initialization error that prevented the card from rendering after the climate controls update.
 - Restored the movable gradient header line while hiding only the thick orange brand rule; fixed decimal ratio display, card-radius updates, grouped header controls, temperature labels, and extended +/- spacing and icon-size ranges.
+- Grouped all current-temperature, target-temperature, and +/- controls into labeled Climate blocks and added per-slider reset-to-default buttons.
 
 ## 1.0.1 — 2026-09-16
 
