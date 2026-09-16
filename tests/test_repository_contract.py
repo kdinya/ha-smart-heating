@@ -113,7 +113,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("endswith(\"/smart-heating-card.js\")", init)
         self.assertIn("card_resources = [", init)
         self.assertIn("await resources.async_delete_item(resource[\"id\"])", init)
-        self.assertIn("CARD_BUILD = \"reference-dashboard-v102-canvasfix1\"", init)
+        self.assertIn("CARD_BUILD = \"reference-dashboard-v102-decouplefix1\"", init)
         self.assertIn("StaticPathConfig(\"/hacsfiles/ha-smart-heating\", str(CARD_PATH)", init)
 
     def test_hacs_files_and_brand_asset_exist(self):

@@ -2,6 +2,11 @@
 
 ## 1.0.2 — 2026-09-16
 
+- Fixed: adjusting the current-temperature block's position or size on the Climate tab no longer affects the central dial's own rendering. The current-temperature text was nested inside the dial's transformed subtree, so the dial's position/scale compounded onto it; its transform now cancels the dial's own translate/scale, making the two fully independent (visual output is unchanged at default settings).
+- Removed the reset ("↺") button next to every switch across all editor tabs; the switches themselves are now right-aligned in their row.
+- Fixed the "Відстань між цифрами" (digit spacing) control in the Climate tab's Target temperature block: a later CSS override rule was hardcoding `letter-spacing:0` on the target digits, silently cancelling the setting.
+- Added a new "Відстань до знаку" (gap before the degree sign) control in the Target temperature block, replacing the previous fixed literal-space gap (which was noticeably large) with a configurable, tighter default.
+
 - Fixed: the "Device name" field in the Entities tab now renders on the card (brand title), instead of always showing the hardcoded "HEAT" label.
 - Fixed: the "Card ratio (W/H)" control in the Layout tab used a fixed 600×400 logical canvas to compute the uniform UI scale, so changing the ratio away from the 1.5 default made `cqw`/`cqh`-based element offsets (icons, dial, text blocks) drift out of sync with plain-percentage-based elements. The logical canvas height now follows the configured ratio, so every block repositions consistently and the card's internal layout no longer distorts when the ratio changes.
 - Renamed the Layout tab title from "Розкладка" to "РОЗКЛАДКА".
