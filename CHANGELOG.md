@@ -10,6 +10,8 @@
 - Isolated room-humidity positioning from climate-group positioning so moving the circle no longer moves the humidity block.
 - Replaced width-based vertical offsets with `cqh` coordinates and added uniform card scaling, preserving relative placement from very small to large cards without a breakpoint jump.
 - Fixed editor range `input`/`change` handling and immutable configuration updates so every slider and `+/-` control reliably changes and emits its setting.
+- Renamed the visual-editor `Device` tab to `Entities` and added a `Layout` tab for card ratio and corner radius.
+- Removed the decorative orange header line and separated controls for the header vertical offset, name, icon, date, current time, signal level, and retained line offset.
 
 ## 1.0.1 — 2026-09-16
 

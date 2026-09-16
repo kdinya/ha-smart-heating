@@ -35,6 +35,15 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("var(--item-y,0) * 1cqh", card)
         self.assertIn("this.config={...this.config,[k]:value}", card)
         self.assertIn("flame-effect", card)
+        self.assertIn("this._section('entities','◉','СУТНОСТІ'", card)
+        self.assertIn("this._section('layout','▤','Розкладка'", card)
+        self.assertIn("this._ctrl('Пропорція картки (Шир/Вис)','screen_aspect_ratio'", card)
+        self.assertIn("this._ctrl('Заокруглення картки','card_radius'", card)
+        self.assertIn(".line{display:none", card)
+        self.assertIn("this._ctrl('Вертикаль','header_y'", card)
+        self.assertIn("this._element('Іконка','brand-icon')", card)
+        self.assertIn("this._element('Дата','date')", card)
+        self.assertIn("this._element('Поточний час','clock')", card)
 
     def test_responsive_coordinates_and_editor_numeric_updates_are_safe(self):
         card = (ROOT / "www/smart-heating-card.js").read_text()
