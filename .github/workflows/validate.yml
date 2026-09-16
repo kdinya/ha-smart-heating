@@ -3,12 +3,16 @@ name: Validate
 on:
   push:
   pull_request:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  validate:
+  repository:
+    name: Repository contract
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -16,16 +20,51 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
       - name: Validate JSON files
-        run: python -m json.tool hacs.json >/dev/null && python -m json.tool custom_components/smart_heating/manifest.json >/dev/null && python -m json.tool custom_components/smart_heating/strings.json >/dev/null
+        run: |
+          for file in hacs.json custom_components/smart_heating/manifest.json \
+                      custom_components/smart_heating/strings.json \
+                      custom_components/smart_heating/translations/*.json; do
+            python -m json.tool "$file" > /dev/null
+          done
+      - name: Compile Python
+        run: python -m compileall -q custom_components/smart_heating
       - name: Run unit tests
         run: python -m unittest discover -v
-      - name: Compile Python
-        run: python -m py_compile custom_components/smart_heating/*.py
-      - name: Check card JavaScript
+
+  card:
+    name: Lovelace card
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Check card syntax
         run: node --check www/smart-heating-card.js
       - name: Check bundled card copy
         run: cmp --silent www/smart-heating-card.js custom_components/smart_heating/www/smart-heating-card.js
-      - name: Check required HACS files
-        run: test -f hacs.json && test -f README.md && test -f custom_components/smart_heating/brand/icon.png
+      - name: Render the card in a headless DOM
+        run: |
+          npm install --no-save --silent jsdom
+          node tests/card_smoke.mjs www/smart-heating-card.js
+
+  hassfest:
+    name: Hassfest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master
+
+  hacs:
+    name: HACS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hacs/action@main
+        with:
+          category: integration
+          ignore: brands

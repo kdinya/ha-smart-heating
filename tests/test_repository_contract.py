@@ -1,134 +1,219 @@
-"""Repository-level checks that do not require Home Assistant to be installed."""
+"""Repository-level checks that do not require Home Assistant to be installed.
+
+These tests deliberately check *structure* — that the two card copies match, that
+the version is consistent everywhere, that the editor exposes every positionable
+block, and that no stylesheet reads a custom property nobody sets. They do not
+pin exact minified substrings: that turned every refactor into a test rewrite.
+"""
 import json
 import pathlib
 import re
 import unittest
 
-
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+COMPONENT = ROOT / "custom_components/smart_heating"
+CARD = ROOT / "www/smart-heating-card.js"
+BUNDLED_CARD = COMPONENT / "www/smart-heating-card.js"
+
+#: Blocks that get a --<id>-x / -y / -s triplet from the card.
+GROUPS = ("header", "weather", "climate", "connection", "panel")
+ITEMS = (
+    "brand", "brand_icon", "date", "clock", "signal", "outdoor", "wind", "rain",
+    "dial", "room", "target", "adjust", "humidity", "humidity_int",
+    "humidity_dec", "humidity_unit", "scheme", "panel_buttons",
+)
 
 
-class RepositoryContractTests(unittest.TestCase):
-    def test_card_sources_are_identical(self):
-        source = (ROOT / "www/smart-heating-card.js").read_bytes()
-        bundled = (ROOT / "custom_components/smart_heating/www/smart-heating-card.js").read_bytes()
-        self.assertEqual(source, bundled)
+def card_source() -> str:
+    return CARD.read_text()
 
-    def test_card_has_responsive_and_flame_layout_contract(self):
-        card = (ROOT / "www/smart-heating-card.js").read_text()
-        self.assertIn("const cardRatio=screenRatio", card)
-        self.assertIn("Number.isFinite(screenValue)", card)
-        self.assertIn("--effect-y:${n('effect_y',-2)}", card)
-        self.assertIn("--ui-scale:clamp(.01,min(calc(100cqw / 600px),calc(100cqh / (600px / var(--card-ratio,1.5)))),10)", card)
-        self.assertIn("width:calc(100% / var(--ui-scale))", card)
-        self.assertIn("position:relative;display:block", card)
-        self.assertIn("control-panel{position:relative", card)
-        self.assertIn("overflow:hidden;display:grid", card)
-        self.assertIn("data-power", card)
-        self.assertIn("set_hvac_mode", card)
-        self.assertIn("set_temperature", card)
-        self.assertIn(".group-climate{position:absolute", card)
-        self.assertIn("left:calc(50% + var(--climate-x,0) * 1%)", card)
-        self.assertIn("top:calc(50% + var(--climate-y,0) * 1%)", card)
-        self.assertIn("element-humidity group-humidity", card)
-        self.assertIn("var(--weather-y,0) * 1cqh", card)
-        self.assertIn("var(--dial-y,0) * 1cqh", card)
-        self.assertIn("var(--item-y,0) * 1cqh", card)
-        self.assertIn("this.config={...this.config,[k]:value}", card)
-        self.assertIn("data-reset=\"${key}\"", card)
-        self.assertIn("this.shadowRoot.querySelectorAll('[data-reset]')", card)
-        self.assertIn("<b>${this._ui('Поточна температура')}</b>", card)
-        self.assertIn("<b>${this._ui('Цільова температура')}</b>", card)
-        self.assertIn("<b>${this._ui('Кнопки −/+')}</b>", card)
-        self.assertIn("flame-effect", card)
-        self.assertIn("this._section('entities','◉','СУТНОСТІ'", card)
-        self.assertIn("this._section('layout','▤','РОЗКЛАДКА'", card)
-        self.assertIn("this._ctrl('Пропорція картки (Шир/Вис)','screen_aspect_ratio'", card)
-        self.assertIn("this._ctrl('Заокруглення картки','card_radius'", card)
-        self.assertGreaterEqual(card.count("border-radius:var(--card-radius,27px)"), 2)
-        self.assertIn("<style data-layout-override>ha-card{aspect-ratio:var(--card-ratio,1.5);border-radius:var(--card-radius,27px);overflow:hidden}", card)
-        self.assertNotIn("<style data-layout-override>ha-card{aspect-ratio:var(--card-ratio,1.5);border-radius:var(--card-radius,27px);overflow:hidden}.device{", card)
-        self.assertIn(".screen{flex:1 1 0;min-height:0;aspect-ratio:auto}", card)
-        self.assertIn(".screen-grid{position:relative;width:100%;height:100%;grid-template-columns:30% 40% 30%;grid-template-rows:100%;gap:0;align-items:center}", card)
-        self.assertIn(".line{height:1px", card)
-        self.assertIn("this._ctrl('Зсув по Y','header_inner_y'", card)
-        self.assertIn(".header-shell{transform:translateY(calc(var(--header-inner-y,0) * 1cqh))", card)
-        self.assertIn("<div class=\"header-shell\"><div class=\"group-header\">", card)
-        self.assertIn("<strong class=\"clock-time\">${time}</strong></div><span class=\"signal\">", card)
-        self.assertNotIn("border-bottom:2px solid #ff951f", card)
-        self.assertIn("this._ui('Назва та іконка')", card)
-        self.assertIn("this._ui('Дата і поточний час')", card)
-        self.assertLess(card.index("this._section('header'"), card.index("this._section('climate'"))
-        self.assertLess(card.index("this._section('climate'"), card.index("this._section('weather'"))
-        self.assertIn("Math.max(.25,Math.min(4,n(key+'_s',1)))", card)
-        self.assertIn("prefix+'_s','s',.25,4,.01", card)
-        self.assertIn("this._ctrl('Розмір знаку температури','room_unit_size'", card)
-        self.assertIn(".brand-name{transform:translate(calc(var(--brand-x,0) * 1cqw),calc(var(--brand-y,0) * 1cqh))", card)
-        self.assertIn('<div class="flame brand-icon">♨</div><div class="brand-name">', card)
-        self.assertIn("this._ctrl('Відстань між цифрами','target_letter_spacing'", card)
-        self.assertIn("this._ctrl('Розмір десяткової частини','target_decimal_size'", card)
-        self.assertIn("this._ctrl('Розмір знаку температури','target_unit_size'", card)
-        self.assertIn("this._ctrl('Розмір іконок кнопок','adjust_icon_size'", card)
-        self.assertIn("this._ctrl('Зсув по X','brand_group_x'", card)
-        self.assertIn("this._ctrl('Зсув по Y','brand_group_y'", card)
-        self.assertIn("this._ctrl('Зсув по X','date_group_x'", card)
-        self.assertIn("this._ctrl('Зсув по Y','date_group_y'", card)
-        self.assertNotIn("this._ctrl('Зсув по X','header_inner_x'", card)
-        self.assertIn(".brand .rule{display:none}", card)
-        self.assertIn("background:linear-gradient(90deg,var(--orange),#505c65", card)
-        self.assertIn("vertical-align:baseline", card)
-        self.assertIn("this._ctrl('Відстань між кнопками','adjust_gap','x',18,180,1,'px')", card)
-        self.assertIn("this._ctrl('Розмір іконок кнопок','adjust_icon_size','x',12,100,1,'px')", card)
-        self.assertIn("id==='screen_aspect_ratio'?2:0", card)
-        self.assertIn("data-default=\"${defaultValue}\"", card)
-        self.assertNotIn("toggle('Ціла частина температури'", card)
-        self.assertIn("<b>${this.safe(this.config.title||'HEAT')}</b>", card)
-        self.assertNotIn("<b>HEAT</b>", card)
-        self.assertIn("toggle('Показувати вологість','humidity_visible')", card)
-        self.assertIn("this._ctrl('Горизонталь','humidity_x'", card)
-        self.assertIn("this._ctrl('Вертикаль','humidity_y'", card)
-        self.assertIn("this._ctrl('Розмір','humidity_s'", card)
-        self.assertNotIn("this._field('Ентіті вологості'", card)
-        self.assertNotIn("this._field('Гістерезіс'", card)
 
-    def test_responsive_coordinates_and_editor_numeric_updates_are_safe(self):
-        card = (ROOT / "www/smart-heating-card.js").read_text()
-        self.assertIn("calc(var(--row-offset,0) * 1cqh)", card)
-        self.assertIn("calc(100cqh / (600px / var(--card-ratio,1.5)))", card)
-        self.assertIn("--adjust-button-size:${buttonSize}px", card)
-        self.assertIn("Number.isFinite(raw)?Math.max(min,Math.min(max,raw)):min", card)
-        self.assertIn("toFixed(6)", card)
-        self.assertLess(card.index("const oneDecimal="), card.index("oneDecimal(target)"))
+def manifest() -> dict:
+    return json.loads((COMPONENT / "manifest.json").read_text())
+
+
+class PackagingTests(unittest.TestCase):
+    """What HACS and Home Assistant need to find in the repository."""
+
+    def test_card_copies_are_identical(self):
+        self.assertEqual(CARD.read_bytes(), BUNDLED_CARD.read_bytes())
+
+    def test_required_files_exist(self):
+        for path in ("hacs.json", "README.md", "LICENSE", "CHANGELOG.md"):
+            self.assertTrue((ROOT / path).is_file(), path)
+        self.assertTrue((COMPONENT / "brand/icon.png").is_file())
+        self.assertTrue((COMPONENT / "translations/uk.json").is_file())
+
+    def test_hacs_manifest_uses_known_keys(self):
+        hacs = json.loads((ROOT / "hacs.json").read_text())
+        allowed = {
+            "name", "content_in_root", "filename", "country", "homeassistant",
+            "hacs", "persistent_directory", "render_readme", "zip_release",
+        }
+        self.assertEqual(hacs["name"], "Smart Heating")
+        self.assertFalse(set(hacs) - allowed, "unknown keys in hacs.json")
 
     def test_manifest_is_release_ready(self):
-        manifest = json.loads((ROOT / "custom_components/smart_heating/manifest.json").read_text())
-        self.assertEqual(manifest["version"], "1.0.2")
-        self.assertEqual(manifest["domain"], "smart_heating")
-        self.assertEqual(manifest["integration_type"], "device")
-        self.assertTrue(manifest["config_flow"])
+        data = manifest()
+        self.assertRegex(data["version"], r"^\d+\.\d+\.\d+$")
+        self.assertEqual(data["domain"], "smart_heating")
+        self.assertEqual(data["integration_type"], "device")
+        self.assertTrue(data["config_flow"])
+        self.assertIn("frontend", data["dependencies"])
+        self.assertIn("http", data["dependencies"])
 
-    def test_card_resource_lifecycle_handles_legacy_prefixes(self):
-        init = (ROOT / "custom_components/smart_heating/__init__.py").read_text()
-        self.assertIn("from urllib.parse import urlsplit", init)
-        self.assertIn("def _is_card_resource_url", init)
-        self.assertIn("endswith(\"/smart-heating-card.js\")", init)
-        self.assertIn("card_resources = [", init)
-        self.assertIn("await resources.async_delete_item(resource[\"id\"])", init)
-        self.assertRegex(init, r'CARD_BUILD = "[A-Za-z0-9._-]+\d"')
-        self.assertIn("StaticPathConfig(\"/hacsfiles/ha-smart-heating\", str(CARD_PATH)", init)
+    def test_every_declared_platform_has_a_module(self):
+        init = (COMPONENT / "__init__.py").read_text()
+        platforms = re.search(r"PLATFORMS = \[([^\]]*)\]", init).group(1)
+        found = re.findall(r'"([a-z_]+)"', platforms)
+        self.assertTrue(found)
+        for platform in found:
+            self.assertTrue((COMPONENT / f"{platform}.py").is_file(), platform)
+
+    def test_translations_cover_every_string(self):
+        def leaves(blob, prefix=""):
+            found = set()
+            for key, value in blob.items():
+                if isinstance(value, dict):
+                    found |= leaves(value, f"{prefix}{key}.")
+                else:
+                    found.add(f"{prefix}{key}")
+            return found
+
+        expected = leaves(json.loads((COMPONENT / "strings.json").read_text()))
+        translations = sorted((COMPONENT / "translations").glob("*.json"))
+        self.assertTrue(translations)
+        for path in translations:
+            self.assertEqual(leaves(json.loads(path.read_text())), expected, path.name)
+
+    def test_every_translated_field_is_a_real_config_key(self):
+        const = (COMPONENT / "const.py").read_text()
+        names = set(re.findall(r'CONF_[A-Z_0-9]+ = "([a-z_0-9]+)"', const))
+        strings = json.loads((COMPONENT / "strings.json").read_text())
+        labelled = set(strings["config"]["step"]["user"]["data"])
+        labelled |= set(strings["options"]["step"]["init"]["data"])
+        self.assertTrue(labelled <= names, labelled - names)
+
+
+class VersionTests(unittest.TestCase):
+    """The version must agree across the manifest, the loader and the card."""
 
     def test_card_version_matches_manifest(self):
-        manifest = json.loads((ROOT / "custom_components/smart_heating/manifest.json").read_text())
-        init = (ROOT / "custom_components/smart_heating/__init__.py").read_text()
-        match = re.search(r'CARD_VERSION = "([^"]+)"', init)
-        self.assertIsNotNone(match)
-        self.assertEqual(match.group(1), manifest["version"])
+        init = (COMPONENT / "__init__.py").read_text()
+        version = manifest()["version"]
+        self.assertEqual(re.search(r'CARD_VERSION = "([^"]+)"', init).group(1), version)
+        self.assertEqual(
+            re.search(r"const SH_VERSION = '([^']+)'", card_source()).group(1), version
+        )
 
-    def test_hacs_files_and_brand_asset_exist(self):
-        hacs = json.loads((ROOT / "hacs.json").read_text())
-        self.assertEqual(hacs["name"], "Smart Heating")
-        self.assertTrue((ROOT / "README.md").is_file())
-        self.assertTrue((ROOT / "custom_components/smart_heating/brand/icon.png").is_file())
+    def test_card_build_marker_ends_with_a_number(self):
+        """scripts/publish.sh bumps the trailing digits to bust the browser cache."""
+        init = (COMPONENT / "__init__.py").read_text()
+        self.assertRegex(init, r'CARD_BUILD = "[A-Za-z0-9._-]+\d"')
+
+    def test_card_resource_url_carries_version_and_build(self):
+        init = (COMPONENT / "__init__.py").read_text()
+        self.assertIn("?v={CARD_VERSION}&build={CARD_BUILD}", init)
+
+
+class CardContractTests(unittest.TestCase):
+    """Structural guarantees about the Lovelace card."""
+
+    def test_custom_element_and_editor_are_registered(self):
+        card = card_source()
+        self.assertIn("customElements.define('smart-heating-card',", card)
+        self.assertIn("customElements.define('smart-heating-card-editor',", card)
+        self.assertIn("static getConfigElement()", card)
+        self.assertIn("static getStubConfig(", card)
+
+    def test_card_calls_only_supported_climate_services(self):
+        services = set(re.findall(r"callService\('climate','([a-z_]+)'", card_source()))
+        self.assertEqual(services, {"set_hvac_mode", "set_temperature"})
+
+    def test_every_positionable_block_has_editor_controls(self):
+        card = card_source()
+        placed = set(re.findall(r"this\._place\('([a-z_0-9]+)'\)", card))
+        placed |= set(re.findall(r"this\._element\('[^']*','([a-z_0-9]+)'\)", card))
+        for prefix in GROUPS + ITEMS:
+            self.assertIn(prefix, placed, f"{prefix} has no horizontal/vertical/size controls")
+
+    def test_editor_prefixes_use_underscores(self):
+        """A dash in a prefix silently writes a config key the card never reads."""
+        card = card_source()
+        for match in re.finditer(r"this\._(?:place|element)\((?:'[^']*',)?'([^']+)'\)", card):
+            self.assertNotIn("-", match.group(1), match.group(1))
+
+    def test_scalar_sliders_are_declared(self):
+        keys = set(re.findall(r"this\._ctrl\('[^']*','([a-z_0-9]+)'", card_source()))
+        for key in (
+            "screen_aspect_ratio", "card_radius", "row_offset_y", "header_inner_y",
+            "line_y", "adjust_gap", "adjust_icon_size", "adjust_button_size",
+            "room_letter_spacing", "room_decimal_size", "room_unit_size",
+            "target_letter_spacing", "target_decimal_size", "target_unit_size",
+            "target_unit_gap", "panel_h", "panel_gap", "effect_opacity",
+        ):
+            self.assertIn(key, keys, key)
+
+    def test_visibility_toggles_are_declared(self):
+        keys = set(re.findall(r"this\._toggle\('[^']*','([a-z_0-9]+)'\)", card_source()))
+        for key in (
+            "humidity_visible", "outdoor_visible", "wind_visible", "rain_visible",
+            "room_int_visible", "room_dec_visible", "room_unit_visible",
+            "target_dec_visible", "target_unit_visible", "effect_enabled",
+        ):
+            self.assertIn(key, keys, key)
+
+    def test_no_custom_property_is_read_without_a_value(self):
+        card = card_source()
+        # Provided by the Home Assistant theme, not by this card.
+        emitted = {"--primary-text-color", "--divider-color", "--card-background-color"}
+        emitted |= {f"--{name}" for name in re.findall(r"--([a-z-]+):", card)}
+        for prefix in GROUPS + ITEMS:
+            dashed = prefix.replace("_", "-")
+            emitted |= {f"--{dashed}-{axis}" for axis in "xys"}
+        missing = sorted(
+            {
+                match.group(1)
+                for match in re.finditer(r"var\((--[a-z-]+)(,[^)]*)?\)", card)
+                if match.group(2) is None and match.group(1) not in emitted
+            }
+        )
+        self.assertFalse(missing, f"read but never set and no fallback: {missing}")
+
+    def test_browser_storage_goes_through_guarded_helpers(self):
+        card = card_source()
+        self.assertEqual(card.count("localStorage."), 2)
+        self.assertIn("const SH_READ_STORE", card)
+        self.assertIn("const SH_WRITE_STORE", card)
+
+    def test_card_does_not_rerender_on_every_hass_update(self):
+        card = card_source()
+        self.assertIn("_shouldRender(previous,value)", card)
+        self.assertIn("_watchedEntities()", card)
+
+    def test_defaults_have_a_single_source_of_truth(self):
+        self.assertEqual(card_source().count("const SH_DEFAULTS"), 1)
+
+
+class ConstantsTests(unittest.TestCase):
+    """Ranges the integration enforces."""
+
+    def _values(self) -> dict[str, float]:
+        const = (COMPONENT / "const.py").read_text()
+        return {k: float(v) for k, v in re.findall(r"([A-Z_]+) = ([0-9.]+)\n", const)}
+
+    def test_temperature_range_is_sane(self):
+        values = self._values()
+        self.assertEqual(values["MIN_TARGET"], 5.0)
+        self.assertEqual(values["MAX_TARGET"], 35.0)
+        self.assertLess(values["MIN_HYSTERESIS"], values["MAX_HYSTERESIS"])
+
+    def test_defaults_sit_inside_their_ranges(self):
+        values = self._values()
+        self.assertLessEqual(values["MIN_TARGET"], values["DEFAULT_TARGET"])
+        self.assertLessEqual(values["DEFAULT_TARGET"], values["MAX_TARGET"])
+        self.assertLessEqual(values["MIN_HYSTERESIS"], values["DEFAULT_HYSTERESIS"])
+        self.assertLessEqual(values["DEFAULT_HYSTERESIS"], values["MAX_HYSTERESIS"])
 
 
 if __name__ == "__main__":

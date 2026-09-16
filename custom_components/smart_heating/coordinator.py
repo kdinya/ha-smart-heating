@@ -1,33 +1,70 @@
 """Runtime state and hysteresis controller for Smart Heating."""
 from __future__ import annotations
 
-from typing import Callable
+import logging
+from typing import Any, Callable
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
-    ATTR_HEATING, CONF_HUMIDITY, CONF_OUTDOOR_TEMPERATURE, CONF_PRECIPITATION,
-    CONF_ROOM_TEMPERATURE, CONF_SWITCH_1, CONF_SWITCH_2, CONF_WIND, DEFAULT_HYSTERESIS,
-    DEFAULT_TARGET, DOMAIN,
+    ATTR_HEATING,
+    CONF_HUMIDITY,
+    CONF_HYSTERESIS,
+    CONF_NAME,
+    CONF_OUTDOOR_TEMPERATURE,
+    CONF_PRECIPITATION,
+    CONF_ROOM_TEMPERATURE,
+    CONF_SWITCH_1,
+    CONF_TARGET_TEMPERATURE,
+    CONF_WIND,
+    DEFAULT_HYSTERESIS,
+    DEFAULT_NAME,
+    DEFAULT_TARGET,
+    ENTITY_KEYS,
+    MAX_HYSTERESIS,
+    MAX_TARGET,
+    MIN_HYSTERESIS,
+    MIN_TARGET,
 )
 
+_LOGGER = logging.getLogger(__name__)
+UNAVAILABLE_STATES = {"unknown", "unavailable", "none", ""}
+
+
+def clamp(value: float, low: float, high: float) -> float:
+    """Keep a value inside its supported range."""
+    return min(high, max(low, value))
+
+
 class SmartHeatingData:
-    """State container shared by all entities in one heating device."""
+    """State container shared by all entities of one heating device."""
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        self.hass, self.entry = hass, entry
-        self.name = entry.data.get("name", "Smart Heating")
-        self.target_temperature = entry.options.get("target_temperature", DEFAULT_TARGET)
-        self.hysteresis = entry.options.get("hysteresis", DEFAULT_HYSTERESIS)
+        self.hass = hass
+        self.entry = entry
+        self.name = entry.data.get(CONF_NAME, DEFAULT_NAME)
+        self.target_temperature = clamp(
+            float(entry.options.get(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET)),
+            MIN_TARGET,
+            MAX_TARGET,
+        )
+        self.hysteresis = clamp(
+            float(entry.options.get(CONF_HYSTERESIS, DEFAULT_HYSTERESIS)),
+            MIN_HYSTERESIS,
+            MAX_HYSTERESIS,
+        )
         self.enabled = True
         self.heating = False
-        self.room_temperature = None
-        self._remove_listener = None
+        self.room_temperature: float | None = None
+        self._remove_listener: Callable[[], None] | None = None
         self._listeners: list[Callable[[], None]] = []
 
+    # -- listener plumbing -------------------------------------------------
+
     def async_add_listener(self, update_callback: Callable[[], None]) -> Callable[[], None]:
-        """Register a callback invoked after every evaluate() cycle. Returns an unsubscribe function."""
+        """Register a callback invoked after every evaluation. Returns an unsubscribe function."""
         self._listeners.append(update_callback)
 
         def _remove() -> None:
@@ -40,73 +77,115 @@ class SmartHeatingData:
         for update_callback in list(self._listeners):
             update_callback()
 
+    # -- lifecycle ---------------------------------------------------------
+
     async def async_start(self) -> None:
-        entity_ids = [v for k, v in self.entry.data.items() if k not in {"name"} and v]
+        """Begin watching the configured source entities."""
+        entity_ids = [
+            entity_id
+            for key in ENTITY_KEYS
+            if (entity_id := self.entry.data.get(key))
+        ]
         if entity_ids:
             self._remove_listener = async_track_state_change_event(
                 self.hass, entity_ids, self._state_changed
             )
-        self._evaluate()
+        self.evaluate()
 
     async def async_stop(self) -> None:
+        """Stop watching source entities."""
         if self._remove_listener:
             self._remove_listener()
+            self._remove_listener = None
 
     @callback
-    def _state_changed(self, event) -> None:
-        self._evaluate()
+    def _state_changed(self, event: Any) -> None:
+        self.evaluate()
 
-    @callback
-    def _evaluate(self) -> None:
-        entity_id = self.entry.data.get(CONF_ROOM_TEMPERATURE)
+    # -- control loop ------------------------------------------------------
+
+    def _read_float(self, key: str) -> float | None:
+        entity_id = self.entry.data.get(key)
         state = self.hass.states.get(entity_id) if entity_id else None
+        if not state or state.state in UNAVAILABLE_STATES:
+            return None
         try:
-            self.room_temperature = float(state.state) if state and state.state not in ("unknown", "unavailable") else None
-        except ValueError:
-            self.room_temperature = None
+            return float(state.state)
+        except (TypeError, ValueError):
+            _LOGGER.debug("%s: cannot read a number from %s", self.name, entity_id)
+            return None
+
+    @callback
+    def evaluate(self) -> None:
+        """Re-read the room sensor, apply hysteresis and drive the output switch."""
+        self.room_temperature = self._read_float(CONF_ROOM_TEMPERATURE)
         try:
             if self.room_temperature is None:
                 return
             if not self.enabled:
                 self.heating = False
-                self._sync_output()
+                self.sync_output()
                 return
             if self.heating and self.room_temperature >= self.target_temperature:
                 self.heating = False
             elif not self.heating and self.room_temperature <= self.target_temperature - self.hysteresis:
                 self.heating = True
-            self._sync_output()
+            self.sync_output()
         finally:
             self._notify_listeners()
 
     @callback
-    def _sync_output(self) -> None:
+    def sync_output(self) -> None:
+        """Push the desired state to the controlled switch, if it differs."""
         switch_id = self.entry.data.get(CONF_SWITCH_1)
-        if switch_id:
-            desired = "on" if self.heating else "off"
-            current = self.hass.states.get(switch_id)
-            if current and current.state != desired:
-                self.hass.async_create_task(self.hass.services.async_call(
-                    "switch", "turn_on" if self.heating else "turn_off", {"entity_id": switch_id}
-                ))
+        if not switch_id:
+            return
+        desired = "on" if self.heating else "off"
+        current = self.hass.states.get(switch_id)
+        if current and current.state != desired:
+            self.hass.async_create_task(
+                self.hass.services.async_call(
+                    "switch",
+                    "turn_on" if self.heating else "turn_off",
+                    {"entity_id": switch_id},
+                )
+            )
+
+    # -- setters used by the entities -------------------------------------
+
+    def set_enabled(self, enabled: bool) -> None:
+        """Turn the hysteresis control on or off."""
+        self.enabled = enabled
+        if not enabled:
+            self.heating = False
+            self.sync_output()
+            self._notify_listeners()
+            return
+        self.evaluate()
 
     def set_target(self, value: float) -> None:
-        self.target_temperature = value
-        self._evaluate()
+        """Change the target temperature and re-evaluate."""
+        self.target_temperature = clamp(float(value), MIN_TARGET, MAX_TARGET)
+        self.evaluate()
 
     def set_hysteresis(self, value: float) -> None:
-        self.hysteresis = value
-        self._evaluate()
+        """Change the hysteresis band and re-evaluate."""
+        self.hysteresis = clamp(float(value), MIN_HYSTERESIS, MAX_HYSTERESIS)
+        self.evaluate()
 
-    def source_value(self, key: str):
+    # -- card-facing data --------------------------------------------------
+
+    def source_value(self, key: str) -> str | None:
+        """Raw state of an optional source entity, or None when unusable."""
         entity_id = self.entry.data.get(key)
         state = self.hass.states.get(entity_id) if entity_id else None
-        if not state or state.state in ("unknown", "unavailable"):
+        if not state or state.state in UNAVAILABLE_STATES:
             return None
         return state.state
 
     @property
-    def attributes(self) -> dict:
+    def attributes(self) -> dict[str, Any]:
+        """Extra attributes consumed by the Lovelace card."""
         return {
             "enabled": self.enabled,
             ATTR_HEATING: self.heating,

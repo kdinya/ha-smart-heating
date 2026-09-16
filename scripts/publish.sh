@@ -76,9 +76,20 @@ git push -f origin "refs/tags/$TAG"
 
 # 6. Touch the release so its timestamp changes and HACS metadata refreshes.
 API="https://api.github.com/repos/$REPO"
-RELEASE_ID="$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" \
-  "$API/releases/tags/$TAG" | python3 -c "import json,sys;print(json.load(sys.stdin)['id'])")"
 SHA="$(git rev-parse HEAD)"
+RELEASE_ID="$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" "$API/releases/tags/$TAG" \
+  | python3 -c "import json,sys;print(json.load(sys.stdin)['id'])" 2>/dev/null || true)"
+if [ -z "$RELEASE_ID" ]; then
+  # First publish of this version: create the release HACS will install from.
+  curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Content-Type: application/json" \
+    "$API/releases" \
+    -d "$(python3 -c "
+import json
+print(json.dumps({'tag_name': '$TAG', 'name': '$TAG', 'body': 'See CHANGELOG.md.'}))
+")" >/dev/null
+  echo "Created release $TAG -> $SHA"
+  exit 0
+fi
 curl -fsS -X PATCH -H "Authorization: Bearer $GH_TOKEN" \
   -H "Content-Type: application/json" \
   "$API/releases/$RELEASE_ID" \

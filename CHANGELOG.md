@@ -1,5 +1,43 @@
 # Changelog
 
+## 1.0.3 — 2026-09-16
+
+Full audit of the integration and the card: bug fixes, dead-code removal, a rebuilt visual editor and real CI.
+
+### Fixed
+
+- The "Buttons, icons and labels" controls on the Panel tab wrote `panel-buttons_x/_y/_s` (with a dash) while the card read `panel_buttons_x/_y/_s` (with an underscore). Those three sliders did nothing; they work now.
+- The active connection scheme was hardcoded to the first card in the markup, so the `connection_mode` setting had no visible effect.
+- The flame effect lit up whenever the climate mode was `heat`, not when the boiler was actually firing. The card now reads the integration's `heating` attribute, falling back to `hvac_action` and then to the raw mode.
+- `_toggle` wrote the editor's open/closed section state to `localStorage` but never read it back, so sections always reopened in their default state.
+- `SmartHeatingOptionsFlow.__init__` assigned `self.config_entry`, which is deprecated and slated for removal in Home Assistant 2025.12.
+- Changing the options (target temperature, hysteresis) had no effect until Home Assistant was restarted. The entry now reloads automatically.
+- Non-numeric sensor states could raise `TypeError` while reading the room temperature; both `TypeError` and `ValueError` are handled.
+
+### Changed
+
+- The card no longer rebuilds its shadow DOM on every `hass` update — only when one of the entities it actually displays changes. The clock updates on its own 10-second timer instead of forcing a full re-render.
+- The visual editor was rebuilt around a single `SH_DEFAULTS` table (default values used to be duplicated in three places and had drifted apart). It now has nine sections — General, Layout, Header, Climate, Humidity, Weather, Connection, Panel, Visual effects — with 94 sliders, 10 toggles and 5 entity fields, covering every setting the card reads.
+- New controls that previously had no UI at all: content row offset, button diameter, current-temperature digit spacing and decimal size, the humidity integer/decimal/percent blocks, and the humidity entity.
+- `strings.json` is now English and real `translations/en.json` + `translations/uk.json` files were added, so the config flow follows the Home Assistant interface language.
+- The climate entity reports `hvac_action` (heating / idle / off) and supports the `turn_on` / `turn_off` climate services.
+- The −/+ buttons respect the entity's `min_temp`, `max_temp` and `target_temp_step` instead of always stepping by 0.5.
+- Added `getStubConfig` so the card renders a preview in the card picker, and Escape now closes the settings modal.
+- Minimum supported Home Assistant version is 2024.11.0.
+
+### Removed
+
+Dead code with no runtime effect: the `read()` and `_emitCardConfig()` methods; the `leftScale` / `centerScale` / `rightScale` / `roomScale` / `targetScale` variables and the `--left-scale`, `--center-scale`, `--right-scale`, `--room-scale`, `--panel-scale` custom properties (no stylesheet read them); the `flame-pulse` keyframes; the `.boiler-effect`, `.tab-content`, `.brand .rule`, `.dial .label`, `.dial .target-label` and `.control+.control` rules; the empty `<div class="rule">`; the `compact` class, which also forced a layout reflow via `offsetWidth` on every render; duplicate `.flame-outer` / `.flame-inner` declarations; the `uiTr` alias and unused dictionary keys; the unused `Platform` import and the `from .const import *` wildcard.
+
+### Tooling
+
+- CI now runs hassfest and the HACS action, and `tests/card_smoke.mjs` renders the card and the editor in a headless DOM, asserting that every block the card positions has matching editor controls — exactly the check that would have caught the `panel-buttons` bug.
+- The repository contract tests check structure (version consistency across manifest/loader/card, translation coverage, custom properties that are read but never set) instead of pinning exact minified substrings.
+
+### Note
+
+The behaviour of `available` on the climate entity is deliberately unchanged: the entity stays available when the room sensor drops out, so the card does not grey out on every brief sensor outage.
+
 ## 1.0.2 — 2026-09-16
 
 - Fixed: adjusting the current-temperature block's position or size on the Climate tab no longer affects the central dial's own rendering. The current-temperature text was nested inside the dial's transformed subtree, so the dial's position/scale compounded onto it; its transform now cancels the dial's own translate/scale, making the two fully independent (visual output is unchanged at default settings).

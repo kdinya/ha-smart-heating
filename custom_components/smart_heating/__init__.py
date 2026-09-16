@@ -18,8 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["climate", "number", "switch"]
 CARD_PATH = Path(__file__).parent / "www"
 CANONICAL_CARD_URL = "/hacsfiles/ha-smart-heating/smart-heating-card.js"
-CARD_VERSION = "1.0.2"
-CARD_BUILD = "reference-dashboard-v102-decouplefix2"
+CARD_VERSION = "1.0.3"
+CARD_BUILD = "reference-dashboard-v103-1"
 
 
 def _is_card_resource_url(url: str) -> bool:
@@ -91,7 +91,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
     await data.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Apply changed options by reloading the entry."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -107,7 +107,17 @@ The integration automatically finds old Smart Heating resources by filename, inc
 
 ### Development
 
-The source card is `www/smart-heating-card.js`; the bundled runtime copy is `custom_components/smart_heating/www/smart-heating-card.js`. Keep them identical. Run `python3 -m unittest discover -v`, `python3 -m py_compile custom_components/smart_heating/*.py`, `node --check www/smart-heating-card.js`, and `cmp www/smart-heating-card.js custom_components/smart_heating/www/smart-heating-card.js` before submitting changes.
+The source card is `www/smart-heating-card.js`; the bundled runtime copy is `custom_components/smart_heating/www/smart-heating-card.js`. Keep them identical. Run the same checks CI runs before submitting changes:
+
+```bash
+python3 -m unittest discover -v
+python3 -m compileall -q custom_components/smart_heating
+node --check www/smart-heating-card.js
+cmp www/smart-heating-card.js custom_components/smart_heating/www/smart-heating-card.js
+npm install --no-save jsdom && node tests/card_smoke.mjs www/smart-heating-card.js
+```
+
+`tests/card_smoke.mjs` renders the card and its editor in a headless DOM and fails if any block the card positions has no matching editor control, or if a slider stops writing to the config. `SH_DEFAULTS` at the top of the card is the single source of truth for default values — add new settings there, not inline.
 
 #### Publishing
 
