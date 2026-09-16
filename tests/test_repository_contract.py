@@ -81,7 +81,10 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("id==='screen_aspect_ratio'?2:0", card)
         self.assertIn("data-default=\"${defaultValue}\"", card)
         self.assertNotIn("toggle('Ціла частина температури'", card)
-        self.assertNotIn("toggle('Показувати вологість'", card)
+        self.assertIn("toggle('Показувати вологість','humidity_visible')", card)
+        self.assertIn("this._ctrl('Горизонталь','humidity_x'", card)
+        self.assertIn("this._ctrl('Вертикаль','humidity_y'", card)
+        self.assertIn("this._ctrl('Розмір','humidity_s'", card)
         self.assertNotIn("this._field('Ентіті вологості'", card)
         self.assertNotIn("this._field('Гістерезіс'", card)
 

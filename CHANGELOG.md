@@ -2,6 +2,7 @@
 
 ## 1.0.2 — 2026-09-16
 
+- Fixed: restored the "Room humidity" block (visibility toggle, horizontal/vertical position, size) in the Climate editor tab, bound to its own `humidity_x`/`humidity_y`/`humidity_s`/`humidity_visible` keys. It no longer shares config with the central dial (`dial_x`/`dial_y`/`dial_s`), so adjusting humidity parameters never changes the central-circuit dial's position, size, or any other setting.
 - Reworked the card skin to closely match the supplied reference dashboard: wide 3:2 framing, layered metal housing, inset screen, orange/steel dial, dense side metrics, connection cards, and a five-button lower control rail.
 - Preserved all existing entities, controls, editor settings, hysteresis behavior, responsive aspect-ratio handling, and card resource registration.
 - Added finite-value validation for the aspect-ratio setting, height-aware compact rendering for extreme ratios, and aligned runtime flame defaults with the editor.
