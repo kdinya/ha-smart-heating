@@ -8,6 +8,8 @@
 - Verified power and temperature-adjustment service calls in a browser harness across wide, medium, and narrow layouts.
 - Reworked the climate circle position to use percentage coordinates relative to the screen container, keeping it stable when the card is resized.
 - Isolated room-humidity positioning from climate-group positioning so moving the circle no longer moves the humidity block.
+- Replaced width-based vertical offsets with `cqh` coordinates and added uniform card scaling, preserving relative placement from very small to large cards without a breakpoint jump.
+- Fixed editor range `input`/`change` handling and immutable configuration updates so every slider and `+/-` control reliably changes and emits its setting.
 
 ## 1.0.1 — 2026-09-16
 

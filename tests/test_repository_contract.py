@@ -18,7 +18,8 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("const cardRatio=screenRatio", card)
         self.assertIn("Number.isFinite(screenValue)", card)
         self.assertIn("--effect-y:${n('effect_y',-2)}", card)
-        self.assertIn("@container (max-height:220px)", card)
+        self.assertIn("--ui-scale:clamp(.25,calc(100cqw / 600px),1)", card)
+        self.assertIn("width:calc(100% / var(--ui-scale))", card)
         self.assertIn("position:relative;display:block", card)
         self.assertIn("control-panel{position:relative", card)
         self.assertIn("overflow:hidden;display:grid", card)
@@ -29,6 +30,10 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("left:calc(50% + var(--climate-x,0) * 1%)", card)
         self.assertIn("top:calc(50% + var(--climate-y,0) * 1%)", card)
         self.assertIn("element-humidity group-humidity", card)
+        self.assertIn("var(--weather-y,0) * 1cqh", card)
+        self.assertIn("var(--dial-y,0) * 1cqh", card)
+        self.assertIn("var(--item-y,0) * 1cqh", card)
+        self.assertIn("this.config={...this.config,[k]:v}", card)
         self.assertIn("flame-effect", card)
 
     def test_manifest_is_release_ready(self):
