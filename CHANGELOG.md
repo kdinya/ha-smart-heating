@@ -18,6 +18,7 @@
 - Restored the movable gradient header line while hiding only the thick orange brand rule; fixed decimal ratio display, card-radius updates, grouped header controls, temperature labels, and extended +/- spacing and icon-size ranges.
 - Grouped all current-temperature, target-temperature, and +/- controls into labeled Climate blocks and added per-slider reset-to-default buttons.
 - Refined the Climate editor so Current temperature contains only its requested controls, while target typography controls remain grouped with Target temperature; added reset-to-default buttons for toggles and made reset values independent from saved values.
+- Fixed card-radius application and removed the actual thick orange header border; made the whole header Y-only, separated brand and date/time group offsets, and kept time changes from moving the date or signal.
 
 ## 1.0.1 — 2026-09-16
 
