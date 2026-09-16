@@ -23,7 +23,7 @@ class RepositoryContractTests(unittest.TestCase):
 
     def test_manifest_is_release_ready(self):
         manifest = json.loads((ROOT / "custom_components/smart_heating/manifest.json").read_text())
-        self.assertEqual(manifest["version"], "1.0.1")
+        self.assertEqual(manifest["version"], "1.0.2")
         self.assertEqual(manifest["domain"], "smart_heating")
         self.assertEqual(manifest["integration_type"], "device")
         self.assertTrue(manifest["config_flow"])

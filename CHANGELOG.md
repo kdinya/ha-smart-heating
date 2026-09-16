@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2 — 2026-09-16
+
+- Reworked the card skin to closely match the supplied reference dashboard: wide 3:2 framing, layered metal housing, inset screen, orange/steel dial, dense side metrics, connection cards, and a five-button lower control rail.
+- Preserved all existing entities, controls, editor settings, hysteresis behavior, responsive aspect-ratio handling, and card resource registration.
+
 ## 1.0.1 — 2026-09-16
 
 - Fixed the runtime card copy and added CI validation to keep both card sources synchronized.

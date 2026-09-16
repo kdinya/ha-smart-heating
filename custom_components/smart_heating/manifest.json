@@ -1,7 +1,7 @@
 {
   "domain": "smart_heating",
   "name": "Smart Heating",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "documentation": "https://github.com/kdinya/ha-smart-heating",
   "issue_tracker": "https://github.com/kdinya/ha-smart-heating/issues",
   "codeowners": ["@kdinya"],
