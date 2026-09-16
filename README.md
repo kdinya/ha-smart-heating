@@ -101,13 +101,23 @@ The visual editor provides language selection, block position and scale controls
 
 ### Updating and troubleshooting
 
-After a HACS update, restart Home Assistant completely. The integration automatically finds old Smart Heating resources by filename, updates one to `/hacsfiles/ha-smart-heating/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102-canvasfix1`, and removes duplicates. If the old card is still displayed, refresh the browser with `Ctrl+F5` or clear the browser cache.
+After a HACS update, restart Home Assistant completely. The integration automatically finds old Smart Heating resources by filename, updates one to `/hacsfiles/ha-smart-heating/smart-heating-card.js?v=<version>&build=<build>`, and removes duplicates. The `build` marker changes on every published refresh, which is what forces browsers to refetch the card. If the old card is still displayed, refresh the browser with `Ctrl+F5` or clear the browser cache.
 
 The integration automatically finds old Smart Heating resources by filename, including `/hacsfiles/...`, `/api/...`, and old `/local/...` URLs, updates one to the canonical `/local` URL, and deletes duplicates. If the climate entity is unavailable, check the configured room-temperature sensor and its state. If `switch_1` does not respond, verify that the selected entity is a switch and that Home Assistant can call its `turn_on` and `turn_off` services. The optional `switch_2` entity reflects the state of its configured switch and is not part of the automatic hysteresis output.
 
 ### Development
 
 The source card is `www/smart-heating-card.js`; the bundled runtime copy is `custom_components/smart_heating/www/smart-heating-card.js`. Keep them identical. Run `python3 -m unittest discover -v`, `python3 -m py_compile custom_components/smart_heating/*.py`, `node --check www/smart-heating-card.js`, and `cmp www/smart-heating-card.js custom_components/smart_heating/www/smart-heating-card.js` before submitting changes.
+
+#### Publishing
+
+HACS installs the repository from its latest GitHub **release**, that is from the commit the tag points at — not from the tip of `main`. Commits pushed to `main` alone are invisible to HACS. To publish the current code under the existing version, run:
+
+```bash
+GH_TOKEN=<token with repo scope> ./scripts/publish.sh
+```
+
+The script syncs both card copies, bumps `CARD_BUILD`, runs the tests, pushes `main`, force-moves the existing `vX.Y.Z` tag to the tip of `main` and refreshes the release. Afterwards, in Home Assistant: HACS → Smart Heating → ⋮ → **Redownload** → same version → restart Home Assistant → `Ctrl+F5`. Use a real version bump (new tag + new release) only when you want HACS to show an update notification.
 
 ## Українська — повна інструкція
 
@@ -142,7 +152,7 @@ entity: climate.ваша_сутність_smart_heating
 
 ### Оновлення та усунення проблем
 
-Після оновлення через HACS повністю перезапустіть Home Assistant. Інтеграція автоматично знаходить старі ресурси Smart Heating за назвою файлу, зокрема `/hacsfiles/...`, `/api/...` та старі `/local/...`, оновлює один до canonical URL `/hacsfiles/ha-smart-heating/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102-canvasfix1` і видаляє дублікати. Якщо відображається стара картка, виконайте `Ctrl+F5` або очистьте кеш браузера.
+Після оновлення через HACS повністю перезапустіть Home Assistant. Інтеграція автоматично знаходить старі ресурси Smart Heating за назвою файлу, зокрема `/hacsfiles/...`, `/api/...` та старі `/local/...`, оновлює один до canonical URL `/hacsfiles/ha-smart-heating/smart-heating-card.js?v=<версія>&build=<build>` і видаляє дублікати. Маркер `build` змінюється при кожній повторній публікації — саме він змушує браузер завантажити нову картку. Якщо відображається стара картка, виконайте `Ctrl+F5` або очистьте кеш браузера.
 
 Якщо climate недоступний, перевірте сенсор кімнатної температури та його стан. Якщо `switch_1` не реагує, перевірте, що вибрана сутність є switch і Home Assistant має право викликати `turn_on` та `turn_off`. `switch_2` показує стан налаштованого вимикача і не є частиною автоматичного керування гістерезісом.
 

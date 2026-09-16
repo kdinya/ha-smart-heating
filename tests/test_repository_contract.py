@@ -1,6 +1,7 @@
 """Repository-level checks that do not require Home Assistant to be installed."""
 import json
 import pathlib
+import re
 import unittest
 
 
@@ -113,8 +114,15 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("endswith(\"/smart-heating-card.js\")", init)
         self.assertIn("card_resources = [", init)
         self.assertIn("await resources.async_delete_item(resource[\"id\"])", init)
-        self.assertIn("CARD_BUILD = \"reference-dashboard-v102-decouplefix1\"", init)
+        self.assertRegex(init, r'CARD_BUILD = "[A-Za-z0-9._-]+\d"')
         self.assertIn("StaticPathConfig(\"/hacsfiles/ha-smart-heating\", str(CARD_PATH)", init)
+
+    def test_card_version_matches_manifest(self):
+        manifest = json.loads((ROOT / "custom_components/smart_heating/manifest.json").read_text())
+        init = (ROOT / "custom_components/smart_heating/__init__.py").read_text()
+        match = re.search(r'CARD_VERSION = "([^"]+)"', init)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), manifest["version"])
 
     def test_hacs_files_and_brand_asset_exist(self):
         hacs = json.loads((ROOT / "hacs.json").read_text())
