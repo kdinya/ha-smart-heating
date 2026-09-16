@@ -22,6 +22,7 @@
 - Refreshed the Home Assistant card resource build identifier so the same v1.0.2 tag is fetched after these fixes.
 - Applied card radius through the actual `ha-card` variable, moved the entire header shell vertically together with the gradient line, and separated the date/time group from the signal indicator.
 - Fixed the later reference-skin `ha-card` rule that was overriding the configurable radius, while retaining container-relative sizing for layout coordinates when the card ratio changes.
+- Added a final layout override to neutralize the legacy UI-scale transform, keep the device anchored to the card bounds, and apply ratio/radius directly to the visible outer card.
 
 ## 1.0.1 — 2026-09-16
 
