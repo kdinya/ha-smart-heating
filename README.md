@@ -29,14 +29,14 @@
 
 1. копіює `www/smart-heating-card.js` у `config/www/smart-heating-card.js`;
 2. після запуску Home Assistant створює або оновлює ресурс типу `JavaScript module`;
-3. використовує стандартну адресу `/local/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102`.
+3. використовує стандартну адресу `/local/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102-layout7`.
 
 Адреса `/hacsfiles/ha-smart-heating/...` є типовою для HACS-репозиторіїв типу **Dashboard/Plugin**, які встановлюються у `www/community`. Цей репозиторій має тип **Integration** і встановлюється у `custom_components/smart_heating`, тому HACS сам по собі не публікує його `www` як `/hacsfiles`. Інтеграція тепер копіює картку в стандартний `/config/www`, тому використовується гарантований URL `/local`.
 
 Додавати ресурс вручну не потрібно. Після оновлення через HACS виконайте **повний перезапуск Home Assistant**, а потім оновіть браузер через `Ctrl+F5`. У розділі `Налаштування → Панелі керування → Ресурси` має з'явитися:
 
 ```text
-/local/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102
+/local/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102-layout7
 ```
 
 Якщо раніше були додані ресурси `/api/...` або `/hacsfiles/...`, їх можна видалити, щоб картка не завантажувалася двічі.
@@ -101,9 +101,9 @@ The visual editor provides language selection, block position and scale controls
 
 ### Updating and troubleshooting
 
-After a HACS update, restart Home Assistant completely. If the old card is still displayed, refresh the browser with `Ctrl+F5` or clear the browser cache. The expected resource is `/local/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102`. Remove older `/api/...` or `/hacsfiles/...` Smart Heating resources if the card appears twice.
+After a HACS update, restart Home Assistant completely. The integration automatically finds old Smart Heating resources by filename, updates one to `/local/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102-layout7`, and removes duplicates. If the old card is still displayed, refresh the browser with `Ctrl+F5` or clear the browser cache.
 
-If the climate entity is unavailable, check the configured room-temperature sensor and its state. If `switch_1` does not respond, verify that the selected entity is a switch and that Home Assistant can call its `turn_on` and `turn_off` services. The optional `switch_2` entity reflects the state of its configured switch and is not part of the automatic hysteresis output.
+The integration automatically finds old Smart Heating resources by filename, including `/hacsfiles/...`, `/api/...`, and old `/local/...` URLs, updates one to the canonical `/local` URL, and deletes duplicates. If the climate entity is unavailable, check the configured room-temperature sensor and its state. If `switch_1` does not respond, verify that the selected entity is a switch and that Home Assistant can call its `turn_on` and `turn_off` services. The optional `switch_2` entity reflects the state of its configured switch and is not part of the automatic hysteresis output.
 
 ### Development
 
@@ -142,6 +142,6 @@ entity: climate.ваша_сутність_smart_heating
 
 ### Оновлення та усунення проблем
 
-Після оновлення через HACS повністю перезапустіть Home Assistant. Якщо відображається стара картка, виконайте `Ctrl+F5` або очистьте кеш браузера. Очікуваний ресурс: `/local/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102`. Старі ресурси `/api/...` або `/hacsfiles/...` Smart Heating потрібно видалити, якщо картка завантажується двічі.
+Після оновлення через HACS повністю перезапустіть Home Assistant. Інтеграція автоматично знаходить старі ресурси Smart Heating за назвою файлу, зокрема `/hacsfiles/...`, `/api/...` та старі `/local/...`, оновлює один до canonical URL `/local/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102-layout7` і видаляє дублікати. Якщо відображається стара картка, виконайте `Ctrl+F5` або очистьте кеш браузера.
 
 Якщо climate недоступний, перевірте сенсор кімнатної температури та його стан. Якщо `switch_1` не реагує, перевірте, що вибрана сутність є switch і Home Assistant має право викликати `turn_on` та `turn_off`. `switch_2` показує стан налаштованого вимикача і не є частиною автоматичного керування гістерезісом.

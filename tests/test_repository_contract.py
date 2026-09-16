@@ -97,6 +97,15 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(manifest["integration_type"], "device")
         self.assertTrue(manifest["config_flow"])
 
+    def test_card_resource_lifecycle_handles_legacy_prefixes(self):
+        init = (ROOT / "custom_components/smart_heating/__init__.py").read_text()
+        self.assertIn("from urllib.parse import urlsplit", init)
+        self.assertIn("def _is_card_resource_url", init)
+        self.assertIn("endswith(\"/smart-heating-card.js\")", init)
+        self.assertIn("card_resources = [", init)
+        self.assertIn("await resources.async_delete_item(resource[\"id\"])", init)
+        self.assertIn("CARD_BUILD = \"reference-dashboard-v102-layout7\"", init)
+
     def test_hacs_files_and_brand_asset_exist(self):
         hacs = json.loads((ROOT / "hacs.json").read_text())
         self.assertEqual(hacs["name"], "Smart Heating")

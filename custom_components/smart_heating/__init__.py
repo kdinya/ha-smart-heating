@@ -5,6 +5,7 @@ import logging
 import shutil
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from homeassistant.components import frontend
 from homeassistant.components.http import StaticPathConfig
@@ -24,6 +25,11 @@ LOCAL_CARD_URL = "/local/smart-heating-card.js"
 LOCAL_CARD_PATH = "smart-heating-card.js"
 CARD_VERSION = "1.0.2"
 CARD_BUILD = "reference-dashboard-v102-layout7"
+
+
+def _is_card_resource_url(url: str) -> bool:
+    """Return true for the card file regardless of its old HACS/API prefix."""
+    return urlsplit(url).path.rstrip("/").endswith("/smart-heating-card.js")
 
 
 def _copy_card_to_www(www_path: str) -> None:
@@ -76,15 +82,11 @@ async def async_register_lovelace_resource(hass: HomeAssistant) -> None:
         )
         return
 
-    accepted_urls = {CARD_URL, LOCAL_CARD_URL}
-    existing = next(
-        (
-            resource
-            for resource in resources.async_items()
-            if resource["url"].split("?", 1)[0] in accepted_urls
-        ),
-        None,
-    )
+    card_resources = [
+        resource for resource in resources.async_items()
+        if _is_card_resource_url(resource["url"])
+    ]
+    existing = card_resources[0] if card_resources else None
     url = f"{LOCAL_CARD_URL}?v={CARD_VERSION}&build={CARD_BUILD}"
     if existing is None:
         await resources.async_create_item({"res_type": "module", "url": url})
@@ -94,6 +96,10 @@ async def async_register_lovelace_resource(hass: HomeAssistant) -> None:
             existing["id"], {"res_type": "module", "url": url}
         )
         _LOGGER.info("Updated Smart Heating Lovelace card resource to %s", url)
+
+    for resource in card_resources[1:]:
+        await resources.async_delete_item(resource["id"])
+        _LOGGER.info("Removed duplicate Smart Heating Lovelace card resource: %s", resource["url"])
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -125,10 +131,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     lovelace = hass.data.get("lovelace")
     resources = getattr(lovelace, "resources", None) if lovelace else None
-    accepted_urls = {CARD_URL, LOCAL_CARD_URL}
     if resources is not None and resources.loaded:
         for resource in list(resources.async_items()):
-            if resource["url"].split("?", 1)[0] in accepted_urls:
+            if _is_card_resource_url(resource["url"]):
                 await resources.async_delete_item(resource["id"])
 
     frontend.remove_extra_js_url(
