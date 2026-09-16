@@ -4,6 +4,8 @@
 
 - Reworked the card skin to closely match the supplied reference dashboard: wide 3:2 framing, layered metal housing, inset screen, orange/steel dial, dense side metrics, connection cards, and a five-button lower control rail.
 - Preserved all existing entities, controls, editor settings, hysteresis behavior, responsive aspect-ratio handling, and card resource registration.
+- Added finite-value validation for the aspect-ratio setting, height-aware compact rendering for extreme ratios, and aligned runtime flame defaults with the editor.
+- Verified power and temperature-adjustment service calls in a browser harness across wide, medium, and narrow layouts.
 
 ## 1.0.1 — 2026-09-16
 

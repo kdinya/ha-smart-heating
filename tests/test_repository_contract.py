@@ -16,9 +16,15 @@ class RepositoryContractTests(unittest.TestCase):
     def test_card_has_responsive_and_flame_layout_contract(self):
         card = (ROOT / "www/smart-heating-card.js").read_text()
         self.assertIn("const cardRatio=screenRatio", card)
+        self.assertIn("Number.isFinite(screenValue)", card)
+        self.assertIn("--effect-y:${n('effect_y',-2)}", card)
+        self.assertIn("@container (max-height:220px)", card)
         self.assertIn("position:relative;display:block", card)
         self.assertIn("control-panel{position:relative", card)
         self.assertIn("overflow:visible;display:grid", card)
+        self.assertIn("data-power", card)
+        self.assertIn("set_hvac_mode", card)
+        self.assertIn("set_temperature", card)
         self.assertIn("flame-effect", card)
 
     def test_manifest_is_release_ready(self):
