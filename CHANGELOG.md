@@ -6,6 +6,9 @@ Full audit of the integration and the card: bug fixes, dead-code removal, a rebu
 
 ### Fixed
 
+- The "Icon size" slider in the Climate tab's "Buttons" block had no effect: two later CSS rules hardcoded the +/− button icon `font-size`, overriding the configurable `--adjust-icon-size` variable. Those overrides are removed, so the slider now controls the actual icon size.
+- The outdoor-temperature icon was a generic compass-like glyph; replaced with a clear thermometer icon so it reads unambiguously as outdoor air temperature.
+- The precipitation icon is now dynamic: when the "Ентіті опадів" field points at a weather entity, its condition (sunny, cloudy, rainy, snowy, lightning, fog, windy, hail, etc.) picks a matching icon instead of always showing a static rain cloud. Unrecognized or numeric values keep the original rain-cloud icon.
 - The "Buttons, icons and labels" controls on the Panel tab wrote `panel-buttons_x/_y/_s` (with a dash) while the card read `panel_buttons_x/_y/_s` (with an underscore). Those three sliders did nothing; they work now.
 - The active connection scheme was hardcoded to the first card in the markup, so the `connection_mode` setting had no visible effect.
 - The flame effect lit up whenever the climate mode was `heat`, not when the boiler was actually firing. The card now reads the integration's `heating` attribute, falling back to `hvac_action` and then to the raw mode.
