@@ -60,9 +60,9 @@ ha-card{border-radius:clamp(22px,3.2cqw,52px);border:2px solid #344149;backgroun
 .control.active .button,.control.fire .button{border-color:var(--orange);box-shadow:0 0 0 4px #05090c,0 0 0 5px #26333a,0 0 13px #ff8a0080,inset 0 3px 5px #ffffff30}.button svg{width:clamp(22px,3.7cqw,56px);height:clamp(22px,3.7cqw,56px)}
 .flame-effect{top:-20%;width:44%;height:58%}
 .dial .dial-label{margin-top:clamp(4px,.7cqw,10px);font-size:clamp(8px,1.45cqw,21px);letter-spacing:.2px;color:#dce4ea}.dial .target{margin-top:clamp(5px,1cqw,15px);font-size:clamp(8px,1.35cqw,20px);line-height:1.05;color:var(--orange);font-weight:500}.dial .target strong{display:block;margin-top:clamp(2px,.3cqw,5px);font-size:clamp(16px,3.2cqw,46px);color:#f6f8fa;font-weight:500}.dial .flame{font-size:clamp(18px,3.4cqw,50px);color:var(--orange)}
-.center{justify-content:center;min-height:0;overflow:visible}.dial{width:min(100%,clamp(140px,29cqw,440px));flex:0 1 auto}.adjust{flex-shrink:0;margin-top:clamp(4px,.6cqw,9px)}.adjust button{width:clamp(42px,6.2cqw,94px);height:clamp(42px,6.2cqw,94px);font-size:clamp(22px,3.2cqw,44px)}
+.center{justify-content:center;min-height:0;overflow:visible}.dial{width:min(100%,clamp(140px,29cqw,440px));flex:0 1 auto}.adjust{flex-shrink:0;margin-top:clamp(4px,.6cqw,9px)}.adjust button{font-size:clamp(22px,3.2cqw,44px)}
 .center{position:relative}.adjust{position:absolute;left:50%;bottom:clamp(7px,1.4cqw,22px);margin:0;z-index:5;transform:translate(calc(-50% + var(--adjust-x,0) * 1cqw),calc(var(--adjust-y,0) * 1cqw)) scale(var(--adjust-s,1))}
-.dial{width:min(100%,clamp(42px,29cqw,440px),calc(100cqh - 125px))}.adjust button{width:clamp(24px,6.2cqw,94px);height:clamp(24px,6.2cqw,94px);font-size:clamp(16px,3.2cqw,44px)}
+.dial{width:min(100%,clamp(42px,29cqw,440px),calc(100cqh - 125px))}.adjust button{font-size:clamp(16px,3.2cqw,44px)}
 .adjust{bottom:clamp(10px,2cqw,30px)}
 @container (max-height:220px){.device{width:333.333%;height:333.333%;inset:0 auto auto -116.666%;transform:scale(.3);transform-origin:top center}}
 
