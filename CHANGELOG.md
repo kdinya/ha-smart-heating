@@ -6,6 +6,8 @@
 - Preserved all existing entities, controls, editor settings, hysteresis behavior, responsive aspect-ratio handling, and card resource registration.
 - Added finite-value validation for the aspect-ratio setting, height-aware compact rendering for extreme ratios, and aligned runtime flame defaults with the editor.
 - Verified power and temperature-adjustment service calls in a browser harness across wide, medium, and narrow layouts.
+- Reworked the climate circle position to use percentage coordinates relative to the screen container, keeping it stable when the card is resized.
+- Isolated room-humidity positioning from climate-group positioning so moving the circle no longer moves the humidity block.
 
 ## 1.0.1 — 2026-09-16
 

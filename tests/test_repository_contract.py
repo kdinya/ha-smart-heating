@@ -25,6 +25,10 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("data-power", card)
         self.assertIn("set_hvac_mode", card)
         self.assertIn("set_temperature", card)
+        self.assertIn(".group-climate{position:absolute", card)
+        self.assertIn("left:calc(50% + var(--climate-x,0) * 1%)", card)
+        self.assertIn("top:calc(50% + var(--climate-y,0) * 1%)", card)
+        self.assertIn("element-humidity group-humidity", card)
         self.assertIn("flame-effect", card)
 
     def test_manifest_is_release_ready(self):
