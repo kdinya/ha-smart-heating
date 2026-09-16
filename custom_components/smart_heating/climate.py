@@ -28,23 +28,27 @@ class SmartHeatingClimate(RestoreEntity, ClimateEntity):
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
-        if not last_state:
-            return
-        self.data.enabled = last_state.state != HVACMode.OFF
-        attributes = last_state.attributes
-        target = attributes.get(ATTR_TEMPERATURE, attributes.get("target_temperature"))
-        if target is not None:
-            try:
-                self.data.target_temperature = float(target)
-            except (TypeError, ValueError):
-                pass
-        hysteresis = attributes.get("hysteresis")
-        if hysteresis is not None:
-            try:
-                self.data.hysteresis = float(hysteresis)
-            except (TypeError, ValueError):
-                pass
-        self.data._evaluate()
+        if last_state:
+            self.data.enabled = last_state.state != HVACMode.OFF
+            attributes = last_state.attributes
+            target = attributes.get(ATTR_TEMPERATURE, attributes.get("target_temperature"))
+            if target is not None:
+                try:
+                    self.data.target_temperature = float(target)
+                except (TypeError, ValueError):
+                    pass
+            hysteresis = attributes.get("hysteresis")
+            if hysteresis is not None:
+                try:
+                    self.data.hysteresis = float(hysteresis)
+                except (TypeError, ValueError):
+                    pass
+            self.data._evaluate()
+        self._remove_listener = self.data.async_add_listener(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        if getattr(self, "_remove_listener", None):
+            self._remove_listener()
 
     @property
     def current_temperature(self): return self.data.room_temperature

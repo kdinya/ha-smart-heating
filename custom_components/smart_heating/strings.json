@@ -1,4 +1,4 @@
 {
-  "config": {"step": {"user": {"title": "Налаштування Smart Heating", "description": "Оберіть обов'язкову температуру кімнати та додаткові сенсори/перемикачі.", "data": {"name": "Назва пристрою", "room_temperature": "Температура в кімнаті", "switch_1": "Перемикач 1", "switch_2": "Перемикач 2", "humidity": "Вологість у кімнаті", "outdoor_temperature": "Температура на вулиці", "wind": "Вітер", "precipitation": "Опади"}}}},
+  "config": {"step": {"user": {"title": "Налаштування Smart Heating", "description": "Оберіть обов'язкову температуру кімнати та додаткові сенсори/перемикачі.", "data": {"name": "Назва пристрою", "room_temperature": "Температура в кімнаті", "switch_1": "Перемикач 1", "switch_2": "Перемикач 2", "humidity": "Вологість у кімнаті", "outdoor_temperature": "Температура на вулиці", "wind": "Вітер", "precipitation": "Опади"}}}, "error": {"duplicate_entity": "Одну й ту саму ентіті не можна обрати для двох різних полів."}},
   "options": {"step": {"init": {"title": "Параметри опалення", "data": {"target_temperature": "Цільова температура", "hysteresis": "Гістерезіс"}}}}
 }

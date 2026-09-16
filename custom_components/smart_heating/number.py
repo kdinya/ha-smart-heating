@@ -16,6 +16,11 @@ class Base(NumberEntity):
         self.data, self._attr_unique_id = data, f"{entry.entry_id}_{suffix}"
         self._attr_name = name
         self._attr_device_info = {"identifiers": {(DOMAIN, entry.entry_id)}, "name": data.name, "manufacturer": "Smart Heating"}
+    async def async_added_to_hass(self):
+        self._remove_listener = self.data.async_add_listener(self.async_write_ha_state)
+    async def async_will_remove_from_hass(self):
+        if getattr(self, "_remove_listener", None):
+            self._remove_listener()
 
 class HeatingTarget(Base):
     _attr_native_min_value, _attr_native_max_value = MIN_TARGET, MAX_TARGET

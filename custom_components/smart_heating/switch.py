@@ -17,6 +17,11 @@ class BoilerSwitch(SwitchEntity):
         self._attr_unique_id = f"{entry.entry_id}_{key}"
         self._attr_name = name
         self._attr_device_info = {"identifiers": {(DOMAIN, entry.entry_id)}, "name": data.name, "manufacturer": "Smart Heating"}
+    async def async_added_to_hass(self):
+        self._remove_listener = self.data.async_add_listener(self.async_write_ha_state)
+    async def async_will_remove_from_hass(self):
+        if getattr(self, "_remove_listener", None):
+            self._remove_listener()
     @property
     def is_on(self): return self.data.heating if self.key == CONF_SWITCH_1 else bool(self.data.hass.states.get(self.data.entry.data.get(self.key)) and self.data.hass.states.get(self.data.entry.data.get(self.key)).state == "on")
     async def async_turn_on(self, **kwargs):

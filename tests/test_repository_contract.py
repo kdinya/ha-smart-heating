@@ -21,7 +21,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("@container (max-height:220px)", card)
         self.assertIn("position:relative;display:block", card)
         self.assertIn("control-panel{position:relative", card)
-        self.assertIn("overflow:visible;display:grid", card)
+        self.assertIn("overflow:hidden;display:grid", card)
         self.assertIn("data-power", card)
         self.assertIn("set_hvac_mode", card)
         self.assertIn("set_temperature", card)

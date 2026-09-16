@@ -1,6 +1,8 @@
 """Runtime state and hysteresis controller for Smart Heating."""
 from __future__ import annotations
 
+from typing import Callable
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -22,6 +24,21 @@ class SmartHeatingData:
         self.heating = False
         self.room_temperature = None
         self._remove_listener = None
+        self._listeners: list[Callable[[], None]] = []
+
+    def async_add_listener(self, update_callback: Callable[[], None]) -> Callable[[], None]:
+        """Register a callback invoked after every evaluate() cycle. Returns an unsubscribe function."""
+        self._listeners.append(update_callback)
+
+        def _remove() -> None:
+            if update_callback in self._listeners:
+                self._listeners.remove(update_callback)
+
+        return _remove
+
+    def _notify_listeners(self) -> None:
+        for update_callback in list(self._listeners):
+            update_callback()
 
     async def async_start(self) -> None:
         entity_ids = [v for k, v in self.entry.data.items() if k not in {"name"} and v]
@@ -47,17 +64,20 @@ class SmartHeatingData:
             self.room_temperature = float(state.state) if state and state.state not in ("unknown", "unavailable") else None
         except ValueError:
             self.room_temperature = None
-        if self.room_temperature is None:
-            return
-        if not self.enabled:
-            self.heating = False
+        try:
+            if self.room_temperature is None:
+                return
+            if not self.enabled:
+                self.heating = False
+                self._sync_output()
+                return
+            if self.heating and self.room_temperature >= self.target_temperature:
+                self.heating = False
+            elif not self.heating and self.room_temperature <= self.target_temperature - self.hysteresis:
+                self.heating = True
             self._sync_output()
-            return
-        if self.heating and self.room_temperature >= self.target_temperature:
-            self.heating = False
-        elif not self.heating and self.room_temperature <= self.target_temperature - self.hysteresis:
-            self.heating = True
-        self._sync_output()
+        finally:
+            self._notify_listeners()
 
     @callback
     def _sync_output(self) -> None:
