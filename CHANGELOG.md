@@ -12,6 +12,8 @@
 - Fixed editor range `input`/`change` handling and immutable configuration updates so every slider and `+/-` control reliably changes and emits its setting.
 - Renamed the visual-editor `Device` tab to `Entities` and added a `Layout` tab for card ratio and corner radius.
 - Removed the decorative orange header line and separated controls for the header vertical offset, name, icon, date, current time, signal level, and retained line offset.
+- Moved the Climate tab directly after Header, expanded group and dial scaling beyond 1.5, and refined current/target temperature typography and +/- button controls.
+- Removed humidity, target-entity, hysteresis, and integer-temperature visibility controls from the Climate tab; changed the card resource build identifier to force Home Assistant cache refresh.
 
 ## 1.0.1 — 2026-09-16
 
