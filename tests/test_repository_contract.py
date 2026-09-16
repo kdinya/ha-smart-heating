@@ -67,6 +67,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("--adjust-button-size:${buttonSize}px", card)
         self.assertIn("Number.isFinite(raw)?Math.max(min,Math.min(max,raw)):min", card)
         self.assertIn("toFixed(6)", card)
+        self.assertLess(card.index("const oneDecimal="), card.index("oneDecimal(target)"))
 
     def test_manifest_is_release_ready(self):
         manifest = json.loads((ROOT / "custom_components/smart_heating/manifest.json").read_text())

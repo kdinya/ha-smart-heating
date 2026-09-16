@@ -14,6 +14,7 @@
 - Removed the decorative orange header line and separated controls for the header vertical offset, name, icon, date, current time, signal level, and retained line offset.
 - Moved the Climate tab directly after Header, expanded group and dial scaling beyond 1.5, and refined current/target temperature typography and +/- button controls.
 - Removed humidity, target-entity, hysteresis, and integer-temperature visibility controls from the Climate tab; changed the card resource build identifier to force Home Assistant cache refresh.
+- Fixed a runtime `oneDecimal` initialization error that prevented the card from rendering after the climate controls update.
 
 ## 1.0.1 — 2026-09-16
 
