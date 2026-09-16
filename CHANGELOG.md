@@ -28,6 +28,8 @@
 - Switched the card to one canonical HACS resource, `/hacsfiles/ha-smart-heating/smart-heating-card.js`, removed `/local` and extra-JS registration, and served the bundled font from the same HACS endpoint.
 - Stabilized the card canvas for ratio changes by removing the nested screen aspect-ratio constraint, anchoring the device to the card bounds, and using fixed relative 30%/40%/30% columns for the main objects.
 - Reworked resource delivery to use exactly one canonical HACS-style URL without `/local`, `/api` card routes, or extra-JS registration; the card font now uses the same endpoint.
+- Restored the fixed 600×400 logical canvas: the layout override no longer redeclares `.device` with `transform:none`, and `--ui-scale` can grow up to `10` so all `cqw`/`cqh` coordinates scale uniformly at larger card sizes.
+- Documented the manual resource replacement required for YAML-mode Lovelace dashboards, where integrations cannot write the dashboard resource store.
 
 ## 1.0.1 — 2026-09-16
 
