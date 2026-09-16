@@ -209,8 +209,7 @@ class SmartHeatingCardEditor extends HTMLElement {
       +this._ctrl('Заокруглення картки','card_radius',{min:0,max:100,step:1,unit:'px'})
       +this._ctrl('Вертикальний зсув рядка','row_offset_y',{min:-100,max:140,step:.5,unit:'%'})
       +this._ctrl('Ширина рамки екрана','frame_width',{min:0,max:8,step:.1,unit:''});
-    const header=this._element('Група шапки','header')
-      +this._ctrl('Зсув по Y','header_inner_y',{min:-100,max:100,step:.5,unit:'%'})
+    const header=this._ctrl('Зсув по Y','header_inner_y',{min:-100,max:100,step:.5,unit:'%'})
       +this._block('Назва та іконка',this._ctrl('Зсув по X','brand_group_x',{min:-100,max:100,step:.5,unit:'%'})+this._ctrl('Зсув по Y','brand_group_y',{min:-100,max:100,step:.5,unit:'%'})+this._element('Назва','brand')+this._element('Іконка','brand_icon'))
       +this._block('Дата і поточний час',this._ctrl('Зсув по X','date_group_x',{min:-100,max:100,step:.5,unit:'%'})+this._ctrl('Зсув по Y','date_group_y',{min:-100,max:100,step:.5,unit:'%'})+this._element('Дата','date')+this._element('Поточний час','clock'))
       +this._element('Рівень сигналу','signal')
