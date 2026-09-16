@@ -16,11 +16,10 @@ CARD = ROOT / "www/smart-heating-card.js"
 BUNDLED_CARD = COMPONENT / "www/smart-heating-card.js"
 
 #: Blocks that get a --<id>-x / -y / -s triplet from the card.
-GROUPS = ("header", "weather", "climate", "connection", "panel")
+GROUPS = ("weather", "climate", "panel")
 ITEMS = (
     "brand", "brand_icon", "date", "clock", "signal", "outdoor", "wind", "rain",
-    "dial", "room", "target", "adjust", "humidity", "humidity_int",
-    "humidity_dec", "humidity_unit", "scheme", "panel_buttons",
+    "dial", "room", "target", "adjust", "humidity", "scheme", "panel_buttons",
 )
 
 
@@ -158,7 +157,7 @@ class CardContractTests(unittest.TestCase):
         keys = set(re.findall(r"this\._toggle\('[^']*','([a-z_0-9]+)'\)", card_source()))
         for key in (
             "humidity_visible", "outdoor_visible", "wind_visible", "rain_visible",
-            "room_int_visible", "room_dec_visible", "room_unit_visible",
+            "room_dec_visible", "room_unit_visible",
             "target_dec_visible", "target_unit_visible", "effect_enabled",
         ):
             self.assertIn(key, keys, key)
