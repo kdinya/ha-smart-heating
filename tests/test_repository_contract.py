@@ -47,6 +47,8 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertGreaterEqual(card.count("border-radius:var(--card-radius,27px)"), 2)
         self.assertIn("<style data-layout-override>ha-card{aspect-ratio:var(--card-ratio,1.5);border-radius:var(--card-radius,27px);overflow:hidden}", card)
         self.assertIn(".device{position:absolute;inset:0;width:100%;height:100%;transform:none", card)
+        self.assertIn(".screen{flex:1 1 0;min-height:0;aspect-ratio:auto}", card)
+        self.assertIn(".screen-grid{position:relative;width:100%;height:100%;grid-template-columns:30% 40% 30%;grid-template-rows:100%;gap:0;align-items:center}", card)
         self.assertIn(".line{height:1px", card)
         self.assertIn("this._ctrl('Зсув по Y','header_inner_y'", card)
         self.assertIn(".header-shell{transform:translateY(calc(var(--header-inner-y,0) * 1cqh))", card)
@@ -106,7 +108,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("endswith(\"/smart-heating-card.js\")", init)
         self.assertIn("card_resources = [", init)
         self.assertIn("await resources.async_delete_item(resource[\"id\"])", init)
-        self.assertIn("CARD_BUILD = \"reference-dashboard-v102-hacs1\"", init)
+        self.assertIn("CARD_BUILD = \"reference-dashboard-v102-hacs2\"", init)
         self.assertIn("StaticPathConfig(\"/hacsfiles/ha-smart-heating\", str(CARD_PATH)", init)
 
     def test_hacs_files_and_brand_asset_exist(self):

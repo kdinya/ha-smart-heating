@@ -26,6 +26,8 @@
 - Made Lovelace resource lifecycle prefix-independent: legacy `/hacsfiles`, `/api`, and old `/local` card URLs are recognized by filename, migrated to the canonical resource, and duplicate resources are removed; removal cleans up all matching card resources.
 - Added a compatibility static route for the legacy HACS card path and separated the top-left device name container from its adjacent icon so editor controls affect only their intended element.
 - Switched the card to one canonical HACS resource, `/hacsfiles/ha-smart-heating/smart-heating-card.js`, removed `/local` and extra-JS registration, and served the bundled font from the same HACS endpoint.
+- Stabilized the card canvas for ratio changes by removing the nested screen aspect-ratio constraint, anchoring the device to the card bounds, and using fixed relative 30%/40%/30% columns for the main objects.
+- Reworked resource delivery to use exactly one canonical HACS-style URL without `/local`, `/api` card routes, or extra-JS registration; the card font now uses the same endpoint.
 
 ## 1.0.1 — 2026-09-16
 
