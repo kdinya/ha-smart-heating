@@ -44,6 +44,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("this._section('layout','▤','Розкладка'", card)
         self.assertIn("this._ctrl('Пропорція картки (Шир/Вис)','screen_aspect_ratio'", card)
         self.assertIn("this._ctrl('Заокруглення картки','card_radius'", card)
+        self.assertGreaterEqual(card.count("border-radius:var(--card-radius,27px)"), 2)
         self.assertIn(".line{height:1px", card)
         self.assertIn("this._ctrl('Зсув по Y','header_inner_y'", card)
         self.assertIn(".header-shell{transform:translateY(calc(var(--header-inner-y,0) * 1cqh))", card)

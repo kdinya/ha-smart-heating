@@ -36,7 +36,7 @@ class SmartHeatingCard extends HTMLElement {
 
 /* Reference-matched industrial dashboard skin (1.0.2). */
 :host{--orange:#ff951f;--ink:#070d11;--steel:#53616a;--white:#f1f4f7}
-ha-card{border-radius:clamp(22px,3.2cqw,52px);border:2px solid #344149;background:linear-gradient(145deg,#263238 0%,#111a20 16%,#080e12 62%,#1b252b 100%);box-shadow:0 24px 55px #000e,inset 0 2px #ffffff36,inset 0 -5px 18px #000,0 0 0 1px #06090b}
+ha-card{border-radius:var(--card-radius,27px);border:2px solid #344149;background:linear-gradient(145deg,#263238 0%,#111a20 16%,#080e12 62%,#1b252b 100%);box-shadow:0 24px 55px #000e,inset 0 2px #ffffff36,inset 0 -5px 18px #000,0 0 0 1px #06090b}
 .device{padding:clamp(10px,2.4cqw,36px) clamp(10px,2.4cqw,36px) 0;border-radius:clamp(20px,2.8cqw,46px);background:linear-gradient(150deg,#18242a 0%,#0b1217 42%,#071015 78%,#1d282e 100%);box-shadow:inset 0 0 0 2px #05090b,inset 0 0 0 4px #ffffff0d,inset 0 0 25px #000}
 .screen{flex:1 1 auto;border-radius:clamp(14px,1.8cqw,28px);padding:clamp(12px,2.1cqw,32px) clamp(14px,2.3cqw,36px) clamp(10px,1.8cqw,28px);border:2px solid #52616a;background:radial-gradient(ellipse at 50% 38%,#1b272d 0%,#10191e 52%,#080f13 100%);box-shadow:inset 0 0 35px #000e,0 1px #ffffff30,0 0 0 6px #080d11,0 0 0 7px #3d4a52}
 .screen:after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 18% 82%,#ffffff05 0 1px,transparent 2px),radial-gradient(circle at 83% 20%,#ffffff04 0 1px,transparent 2px);background-size:5px 5px;opacity:.32;mix-blend-mode:screen}
