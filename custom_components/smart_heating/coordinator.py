@@ -117,10 +117,22 @@ class SmartHeatingData:
 
     @callback
     def evaluate(self) -> None:
-        """Re-read the room sensor, apply hysteresis and drive the output switch."""
+        """Re-read the room sensor, apply hysteresis and drive the output switch.
+
+        If the room sensor is unavailable, heating is forced off rather than
+        left at its last value: a stuck-on boiler with no working thermostat
+        is a real hazard, an idle one is just an inconvenience.
+        """
         self.room_temperature = self._read_float(CONF_ROOM_TEMPERATURE)
         try:
             if self.room_temperature is None:
+                if self.heating:
+                    _LOGGER.warning(
+                        "%s: room sensor unavailable, turning heating off as a fail-safe",
+                        self.name,
+                    )
+                self.heating = False
+                self.sync_output()
                 return
             if not self.enabled:
                 self.heating = False

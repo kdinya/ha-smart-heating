@@ -57,11 +57,15 @@ class SmartHeatingClimate(RestoreEntity, ClimateEntity):
         self._remove_listener = None
 
     async def async_added_to_hass(self) -> None:
-        """Restore the previous mode, target temperature and hysteresis."""
+        """Restore the previous mode, target temperature and hysteresis.
+
+        Only an explicit `heat` re-enables the control. A restored `unknown` or
+        `unavailable` state (e.g. after a crash) must not be treated as `heat`.
+        """
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
         if last_state:
-            self.data.enabled = last_state.state != HVACMode.OFF
+            self.data.enabled = last_state.state == HVACMode.HEAT
             attributes = last_state.attributes
             target = attributes.get(ATTR_TEMPERATURE, attributes.get("target_temperature"))
             if target is not None:
