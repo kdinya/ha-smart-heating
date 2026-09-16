@@ -2,6 +2,9 @@
 
 ## 1.0.2 — 2026-09-16
 
+- Fixed: the "Device name" field in the Entities tab now renders on the card (brand title), instead of always showing the hardcoded "HEAT" label.
+- Fixed: the "Card ratio (W/H)" control in the Layout tab used a fixed 600×400 logical canvas to compute the uniform UI scale, so changing the ratio away from the 1.5 default made `cqw`/`cqh`-based element offsets (icons, dial, text blocks) drift out of sync with plain-percentage-based elements. The logical canvas height now follows the configured ratio, so every block repositions consistently and the card's internal layout no longer distorts when the ratio changes.
+- Renamed the Layout tab title from "Розкладка" to "РОЗКЛАДКА".
 - Fixed: restored the "Room humidity" block (visibility toggle, horizontal/vertical position, size) in the Climate editor tab, bound to its own `humidity_x`/`humidity_y`/`humidity_s`/`humidity_visible` keys. It no longer shares config with the central dial (`dial_x`/`dial_y`/`dial_s`), so adjusting humidity parameters never changes the central-circuit dial's position, size, or any other setting.
 - Reworked the card skin to closely match the supplied reference dashboard: wide 3:2 framing, layered metal housing, inset screen, orange/steel dial, dense side metrics, connection cards, and a five-button lower control rail.
 - Preserved all existing entities, controls, editor settings, hysteresis behavior, responsive aspect-ratio handling, and card resource registration.
