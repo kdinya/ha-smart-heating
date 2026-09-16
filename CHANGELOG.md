@@ -20,6 +20,7 @@
 - Refined the Climate editor so Current temperature contains only its requested controls, while target typography controls remain grouped with Target temperature; added reset-to-default buttons for toggles and made reset values independent from saved values.
 - Fixed card-radius application and removed the actual thick orange header border; made the whole header Y-only, separated brand and date/time group offsets, and kept time changes from moving the date or signal.
 - Refreshed the Home Assistant card resource build identifier so the same v1.0.2 tag is fetched after these fixes.
+- Applied card radius through the actual `ha-card` variable, moved the entire header shell vertically together with the gradient line, and separated the date/time group from the signal indicator.
 
 ## 1.0.1 — 2026-09-16
 
