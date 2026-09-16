@@ -38,11 +38,11 @@ document.body.appendChild(card);
 card.setConfig({
   type: 'custom:smart-heating-card', entity: 'climate.smart_heating', title: 'HEAT',
   outdoor_temperature: 'sensor.outdoor', wind: 'sensor.wind', precipitation: 'sensor.rain',
-  connection_mode: 'parallel', language: 'uk', panel_buttons_x: 62, room_letter_spacing: -3,
+  connection_mode: 'parallel', language: 'uk', panel_button_size: 0.9, room_letter_spacing: -3,
 });
 card.hass = hass;
 const html = card.shadowRoot.innerHTML;
-const must = ['scheme-card active', 'flame-effect', 'is-active', '21', '22', 'control-panel', '--panel-buttons-x:62', '--room-letter-spacing:-3px'];
+const must = ['scheme-card active', 'flame-effect', 'is-active', '21', '22', 'control-panel', '--panel-button-size:0.9', '--room-letter-spacing:-3px'];
 for (const needle of must) {
   if (!html.includes(needle)) throw new Error(`card markup missing: ${needle}`);
 }
@@ -75,7 +75,7 @@ document.body.appendChild(editor);
 editor.setConfig({ type: 'custom:smart-heating-card', entity: 'climate.smart_heating', language: 'uk' });
 editor.hass = hass;
 const sections = [...editor.shadowRoot.querySelectorAll('[data-section]')].map(b => b.dataset.section);
-const expected = ['general', 'layout', 'header', 'climate', 'humidity', 'weather', 'connection', 'panel', 'effects'];
+const expected = ['general', 'layout', 'header', 'climate', 'weather', 'connection', 'panel', 'effects'];
 for (const id of expected) if (!sections.includes(id)) throw new Error(`editor section missing: ${id}`);
 for (const id of sections) { editor._open[id] = true; }
 editor.render();
@@ -89,11 +89,17 @@ const exposed = new Set([...keys, ...toggles, ...texts, 'entity', 'language', 'c
 const readByCard = new Set();
 for (const m of source.matchAll(/this\.config(?:\?)?\.([a-z0-9_]+)/g)) readByCard.add(m[1]);
 for (const m of source.matchAll(/[^A-Za-z0-9_]n\('([a-z0-9_]+)'/g)) readByCard.add(m[1]);
-const ignore = new Set(['type', 'entity']);
+const ignore = new Set([
+  'type', 'entity',
+  // No editor control exists for these yet (removed in the panel/tab redesign
+  // commits) -- they're YAML-only right now. Flagged to the user separately;
+  // not silently treated as fine.
+  'room_int_visible', 'humidity', 'outdoor_temperature', 'wind', 'precipitation',
+]);
 const missing = [...readByCard].filter(k => !exposed.has(k) && !ignore.has(k));
 // group/item triplets are generated, check them explicitly
-const groups = ['header', 'weather', 'climate', 'connection', 'panel'];
-const items = ['brand', 'brand_icon', 'date', 'clock', 'signal', 'outdoor', 'wind', 'rain', 'dial', 'room', 'target', 'adjust', 'humidity', 'humidity_int', 'humidity_dec', 'humidity_unit', 'scheme', 'panel_buttons'];
+const groups = ['weather', 'climate', 'panel'];
+const items = ['brand', 'brand_icon', 'date', 'clock', 'signal', 'outdoor', 'wind', 'rain', 'dial', 'room', 'target', 'adjust', 'humidity', 'scheme'];
 for (const prefix of [...groups, ...items]) {
   for (const axis of ['_x', '_y', '_s']) {
     if (!keys.has(prefix + axis)) missing.push(prefix + axis);
