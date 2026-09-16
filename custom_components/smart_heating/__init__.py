@@ -2,12 +2,10 @@
 from __future__ import annotations
 
 import logging
-import shutil
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-from homeassistant.components import frontend
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, CoreState, HomeAssistant
@@ -18,14 +16,10 @@ from .coordinator import SmartHeatingData
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["climate", "number", "switch"]
-URL_BASE = "/api/smart_heating"
-CARD_URL = f"{URL_BASE}/smart-heating-card.js"
 CARD_PATH = Path(__file__).parent / "www"
-LOCAL_CARD_URL = "/local/smart-heating-card.js"
-LOCAL_CARD_PATH = "smart-heating-card.js"
-LEGACY_CARD_URL = "/hacsfiles/ha-smart-heating/www"
+CANONICAL_CARD_URL = "/hacsfiles/ha-smart-heating/smart-heating-card.js"
 CARD_VERSION = "1.0.2"
-CARD_BUILD = "reference-dashboard-v102-layout8"
+CARD_BUILD = "reference-dashboard-v102-hacs1"
 
 
 def _is_card_resource_url(url: str) -> bool:
@@ -33,23 +27,11 @@ def _is_card_resource_url(url: str) -> bool:
     return urlsplit(url).path.rstrip("/").endswith("/smart-heating-card.js")
 
 
-def _copy_card_to_www(www_path: str) -> None:
-    """Install the bundled card in Home Assistant's standard /local directory."""
-    destination_dir = Path(www_path)
-    destination_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(CARD_PATH / LOCAL_CARD_PATH, destination_dir / LOCAL_CARD_PATH)
-    font_dir = destination_dir / "fonts"
-    font_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(CARD_PATH / "fonts" / "7segment.woff", font_dir / "7segment.woff")
-
-
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up Smart Heating and install its Lovelace card automatically."""
     await hass.http.async_register_static_paths([
-        StaticPathConfig(URL_BASE, str(CARD_PATH), cache_headers=False),
-        StaticPathConfig(LEGACY_CARD_URL, str(CARD_PATH), cache_headers=False),
+        StaticPathConfig("/hacsfiles/ha-smart-heating", str(CARD_PATH), cache_headers=False),
     ])
-    await hass.async_add_executor_job(_copy_card_to_www, hass.config.path("www"))
 
     async def _register_frontend(_event: Any = None) -> None:
         """Register the card only after Lovelace has initialized."""
@@ -70,8 +52,7 @@ async def async_register_lovelace_resource(hass: HomeAssistant) -> None:
 
     if resources is None or mode != "storage":
         # YAML dashboards do not have a writable Lovelace resource store.
-        frontend.add_extra_js_url(hass, f"{LOCAL_CARD_URL}?v={CARD_VERSION}&build={CARD_BUILD}")
-        _LOGGER.debug("Lovelace is not in storage mode; registered extra JS URL")
+        _LOGGER.debug("Lovelace is not in storage mode; add the canonical HACS resource in YAML")
         return
 
     if not resources.loaded:
@@ -89,7 +70,7 @@ async def async_register_lovelace_resource(hass: HomeAssistant) -> None:
         if _is_card_resource_url(resource["url"])
     ]
     existing = card_resources[0] if card_resources else None
-    url = f"{LOCAL_CARD_URL}?v={CARD_VERSION}&build={CARD_BUILD}"
+    url = f"{CANONICAL_CARD_URL}?v={CARD_VERSION}&build={CARD_BUILD}"
     if existing is None:
         await resources.async_create_item({"res_type": "module", "url": url})
         _LOGGER.info("Registered Smart Heating Lovelace card resource: %s", url)
@@ -123,7 +104,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Remove shared Lovelace resources and copied assets after the last entry."""
+    """Remove the shared Lovelace card resource after the last entry."""
     remaining = [
         item for item in hass.config_entries.async_entries(DOMAIN)
         if item.entry_id != entry.entry_id
@@ -137,14 +118,3 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         for resource in list(resources.async_items()):
             if _is_card_resource_url(resource["url"]):
                 await resources.async_delete_item(resource["id"])
-
-    frontend.remove_extra_js_url(
-        hass, f"{LOCAL_CARD_URL}?v={CARD_VERSION}&build={CARD_BUILD}"
-    )
-
-    def _remove_files() -> None:
-        www = Path(hass.config.path("www"))
-        (www / LOCAL_CARD_PATH).unlink(missing_ok=True)
-        (www / "fonts" / "7segment.woff").unlink(missing_ok=True)
-
-    await hass.async_add_executor_job(_remove_files)

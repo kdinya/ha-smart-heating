@@ -24,7 +24,7 @@ class SmartHeatingCard extends HTMLElement {
     const enabled=c?.state!=='off'&&c?.state!=='unavailable';const effectEnabled=this.config.effect_enabled!==false;const heating=enabled&&(c?.state==='heat'||a.hvac_action==='heating');
     const date=new Date().toLocaleDateString('uk-UA',{weekday:'short',day:'2-digit',month:'long',year:'numeric'}).toUpperCase(),time=new Date().toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
     this.shadowRoot.innerHTML=`<style>
-      @font-face{font-family:'7segment';src:url('/api/smart_heating/fonts/7segment.woff') format('woff');font-display:swap}
+      @font-face{font-family:'7segment';src:url('/hacsfiles/ha-smart-heating/fonts/7segment.woff') format('woff');font-display:swap}
       :host{display:block;width:100%;max-width:100%;overflow:visible;color:#eef2f8;font-family:Arial,Helvetica,sans-serif;--orange:#ff9418;--silver:#d8dee6;--muted:#b7c1cf}
       ha-card{container-type:size;position:relative;display:block;width:100%;max-width:100%;aspect-ratio:var(--card-ratio,1.5);box-sizing:border-box;padding:0;overflow:hidden;border-radius:var(--card-radius,27px);border:1px solid #52606b;background:linear-gradient(145deg,#172027 0%,#080e12 42%,#121b21 100%);box-shadow:0 20px 45px #000d,inset 0 1px #ffffff40,inset 0 -4px 14px #000;}
       .device{box-sizing:border-box;position:absolute;inset:0;width:100%;height:100%;min-height:0;display:flex;flex-direction:column;padding:clamp(7px,1.15cqw,17px) clamp(7px,1.15cqw,17px) clamp(6px,.9cqw,13px);border-radius:var(--card-radius,27px);background:linear-gradient(150deg,#243139 0%,#10181d 17%,#080d11 72%,#1a242b 100%);box-shadow:inset 0 0 0 2px #060a0d,inset 0 0 0 4px #ffffff0b,inset 0 0 20px #000;}

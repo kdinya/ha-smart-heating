@@ -27,23 +27,23 @@
 
 Під час запуску інтеграція автоматично:
 
-1. копіює `www/smart-heating-card.js` у `config/www/smart-heating-card.js`;
+1. подає `www/smart-heating-card.js` через єдиний HACS-style endpoint;
 2. після запуску Home Assistant створює або оновлює ресурс типу `JavaScript module`;
-3. використовує стандартну адресу `/local/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102-layout8`.
+3. використовує стандартну адресу `/hacsfiles/ha-smart-heating/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102-hacs1`.
 
-Адреса `/hacsfiles/ha-smart-heating/...` є типовою для HACS-репозиторіїв типу **Dashboard/Plugin**, які встановлюються у `www/community`. Цей репозиторій має тип **Integration** і встановлюється у `custom_components/smart_heating`, тому HACS сам по собі не публікує його `www` як `/hacsfiles`. Інтеграція тепер копіює картку в стандартний `/config/www`, тому використовується гарантований URL `/local`.
+Цей репозиторій подає картку через canonical HACS-style endpoint `/hacsfiles/ha-smart-heating/smart-heating-card.js`; картка не копіюється в `/config/www` і не реєструється через `/local`.
 
 Додавати ресурс вручну не потрібно. Після оновлення через HACS виконайте **повний перезапуск Home Assistant**, а потім оновіть браузер через `Ctrl+F5`. У розділі `Налаштування → Панелі керування → Ресурси` має з'явитися:
 
 ```text
-/local/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102-layout8
+/hacsfiles/ha-smart-heating/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102-hacs1
 ```
 
-Якщо раніше були додані ресурси `/api/...` або `/hacsfiles/...`, їх можна видалити, щоб картка не завантажувалася двічі.
+Якщо раніше були додані старі ресурси `/api/...`, `/local/...` або `/hacsfiles/...`, інтеграція автоматично оновить один ресурс до canonical URL і видалить дублікати.
 
 ## Видалення
 
-Спочатку видаліть запис **Smart Heating** у `Налаштування → Пристрої та сервіси`, дочекайтеся завершення видалення та перезапустіть Home Assistant. Інтеграція видалить Lovelace-ресурс і скопійовані файли картки та шрифту, якщо це був останній запис Smart Heating. Лише після цього видаляйте репозиторій через HACS. Якщо спочатку видалити файли інтеграції через HACS, автоматичне очищення не запуститься; у такому разі ресурс `/local/smart-heating-card.js` потрібно видалити вручну в `Налаштування → Панелі керування → Ресурси`.
+Спочатку видаліть запис **Smart Heating** у `Налаштування → Пристрої та сервіси`, дочекайтеся завершення видалення та перезапустіть Home Assistant. Інтеграція видалить єдиний Lovelace-ресурс, якщо це був останній запис Smart Heating. Лише після цього видаляйте репозиторій через HACS. Якщо спочатку видалити файли інтеграції через HACS, автоматичне очищення не запуститься; у такому разі ресурс `/hacsfiles/ha-smart-heating/smart-heating-card.js` потрібно видалити вручну в `Налаштування → Панелі керування → Ресурси`.
 
 ## Картка
 
@@ -74,7 +74,7 @@ Open HACS, choose **Custom repositories**, add `kdinya/ha-smart-heating`, select
 
 ### Manual installation
 
-Copy the `custom_components/smart_heating` directory into your Home Assistant `config/custom_components/` directory. Restart Home Assistant. The integration copies its bundled card and 7-segment font into `config/www/` and registers the `/local/smart-heating-card.js` Lovelace module automatically.
+Copy the `custom_components/smart_heating` directory into your Home Assistant `config/custom_components/` directory. Restart Home Assistant. The integration serves its bundled card through the HACS-style `/hacsfiles/ha-smart-heating/smart-heating-card.js` Lovelace module automatically.
 
 ### Configuration
 
@@ -101,7 +101,7 @@ The visual editor provides language selection, block position and scale controls
 
 ### Updating and troubleshooting
 
-After a HACS update, restart Home Assistant completely. The integration automatically finds old Smart Heating resources by filename, updates one to `/local/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102-layout8`, and removes duplicates. If the old card is still displayed, refresh the browser with `Ctrl+F5` or clear the browser cache.
+After a HACS update, restart Home Assistant completely. The integration automatically finds old Smart Heating resources by filename, updates one to `/hacsfiles/ha-smart-heating/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102-hacs1`, and removes duplicates. If the old card is still displayed, refresh the browser with `Ctrl+F5` or clear the browser cache.
 
 The integration automatically finds old Smart Heating resources by filename, including `/hacsfiles/...`, `/api/...`, and old `/local/...` URLs, updates one to the canonical `/local` URL, and deletes duplicates. If the climate entity is unavailable, check the configured room-temperature sensor and its state. If `switch_1` does not respond, verify that the selected entity is a switch and that Home Assistant can call its `turn_on` and `turn_off` services. The optional `switch_2` entity reflects the state of its configured switch and is not part of the automatic hysteresis output.
 
@@ -117,7 +117,7 @@ The source card is `www/smart-heating-card.js`; the bundled runtime copy is `cus
 
 ### Ручне встановлення
 
-Скопіюйте каталог `custom_components/smart_heating` до `config/custom_components/` Home Assistant і перезапустіть систему. Інтеграція автоматично копіює картку та шрифт у `config/www/` і реєструє Lovelace-ресурс `/local/smart-heating-card.js`.
+Скопіюйте каталог `custom_components/smart_heating` до `config/custom_components/` Home Assistant і перезапустіть систему. Інтеграція автоматично подає картку через HACS-style endpoint і реєструє єдиний Lovelace-ресурс `/hacsfiles/ha-smart-heating/smart-heating-card.js`.
 
 ### Налаштування
 
@@ -142,6 +142,6 @@ entity: climate.ваша_сутність_smart_heating
 
 ### Оновлення та усунення проблем
 
-Після оновлення через HACS повністю перезапустіть Home Assistant. Інтеграція автоматично знаходить старі ресурси Smart Heating за назвою файлу, зокрема `/hacsfiles/...`, `/api/...` та старі `/local/...`, оновлює один до canonical URL `/local/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102-layout8` і видаляє дублікати. Якщо відображається стара картка, виконайте `Ctrl+F5` або очистьте кеш браузера.
+Після оновлення через HACS повністю перезапустіть Home Assistant. Інтеграція автоматично знаходить старі ресурси Smart Heating за назвою файлу, зокрема `/hacsfiles/...`, `/api/...` та старі `/local/...`, оновлює один до canonical URL `/hacsfiles/ha-smart-heating/smart-heating-card.js?v=1.0.2&build=reference-dashboard-v102-hacs1` і видаляє дублікати. Якщо відображається стара картка, виконайте `Ctrl+F5` або очистьте кеш браузера.
 
 Якщо climate недоступний, перевірте сенсор кімнатної температури та його стан. Якщо `switch_1` не реагує, перевірте, що вибрана сутність є switch і Home Assistant має право викликати `turn_on` та `turn_off`. `switch_2` показує стан налаштованого вимикача і не є частиною автоматичного керування гістерезісом.
