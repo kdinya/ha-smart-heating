@@ -18,7 +18,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("const cardRatio=screenRatio", card)
         self.assertIn("Number.isFinite(screenValue)", card)
         self.assertIn("--effect-y:${n('effect_y',-2)}", card)
-        self.assertIn("--ui-scale:clamp(.25,calc(100cqw / 600px),1)", card)
+        self.assertIn("--ui-scale:clamp(.01,min(calc(100cqw / 600px),calc(100cqh / 400px)),1)", card)
         self.assertIn("width:calc(100% / var(--ui-scale))", card)
         self.assertIn("position:relative;display:block", card)
         self.assertIn("control-panel{position:relative", card)
@@ -33,8 +33,16 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("var(--weather-y,0) * 1cqh", card)
         self.assertIn("var(--dial-y,0) * 1cqh", card)
         self.assertIn("var(--item-y,0) * 1cqh", card)
-        self.assertIn("this.config={...this.config,[k]:v}", card)
+        self.assertIn("this.config={...this.config,[k]:value}", card)
         self.assertIn("flame-effect", card)
+
+    def test_responsive_coordinates_and_editor_numeric_updates_are_safe(self):
+        card = (ROOT / "www/smart-heating-card.js").read_text()
+        self.assertIn("calc(var(--row-offset,0) * 1cqh)", card)
+        self.assertIn("calc(100cqh / 400px)", card)
+        self.assertIn("--adjust-button-size:${buttonSize}px", card)
+        self.assertIn("Number.isFinite(raw)?Math.max(min,Math.min(max,raw)):min", card)
+        self.assertIn("toFixed(6)", card)
 
     def test_manifest_is_release_ready(self):
         manifest = json.loads((ROOT / "custom_components/smart_heating/manifest.json").read_text())
