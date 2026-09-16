@@ -221,9 +221,9 @@ class SmartHeatingCardEditor extends HTMLElement {
       +this._block('Кнопки −/+',this._place('adjust')+this._ctrl('Відстань між кнопками','adjust_gap',{min:18,max:180,step:1,unit:'px'})+this._ctrl('Діаметр кнопок','adjust_button_size',{min:48,max:86,step:1,unit:'px'})+this._ctrl('Розмір іконок кнопок','adjust_icon_size',{min:12,max:100,step:1,unit:'px'}))
       +this._block('Вологість в кімнаті',this._toggle('Показувати вологість','humidity_visible')+this._place('humidity'));
     const weather=this._element('Група погоди','weather')
-      +this._block('Температура на вулиці',this._toggle('Показувати температуру на вулиці','outdoor_visible')+this._place('outdoor')+this._field('Ентіті температури на вулиці','outdoor_temperature',c.outdoor_temperature,'sensor.outdoor_temperature'))
-      +this._block('Вітер',this._toggle('Показувати вітер','wind_visible')+this._place('wind')+this._field('Ентіті вітру','wind',c.wind,'sensor.wind'))
-      +this._block('Опади',this._toggle('Показувати опади','rain_visible')+this._place('rain')+this._field('Ентіті опадів','precipitation',c.precipitation,'sensor.precipitation'));
+      +this._block('Температура на вулиці',this._toggle('Показувати температуру на вулиці','outdoor_visible')+this._place('outdoor'))
+      +this._block('Вітер',this._toggle('Показувати вітер','wind_visible')+this._place('wind'))
+      +this._block('Опади',this._toggle('Показувати опади','rain_visible')+this._place('rain'));
     const connection=this._element('Група підключення','connection')
       +this._element('Варіанти підключення','scheme')
       +`<div class="field"><label>${this._ui('Активна схема')}</label><div class="choices"><button data-choice="direct" class="${!c.connection_mode||c.connection_mode==='direct'?'active':''}">${this._ui('Прямий контакт')}</button><button data-choice="old" class="${c.connection_mode==='old'?'active':''}">${this._ui('Старий програматор')}</button><button data-choice="parallel" class="${c.connection_mode==='parallel'?'active':''}">${this._ui('Паралельно')}</button></div></div>`;
