@@ -12,6 +12,8 @@ from .const import (
     ATTR_HEATING,
     CONF_HUMIDITY,
     CONF_HYSTERESIS,
+    CONF_HYSTERESIS_ON,
+    CONF_HYSTERESIS_OFF,
     CONF_NAME,
     CONF_OUTDOOR_TEMPERATURE,
     CONF_PRECIPITATION,
@@ -21,12 +23,18 @@ from .const import (
     CONF_TARGET_TEMPERATURE,
     CONF_WIND,
     DEFAULT_HYSTERESIS,
+    DEFAULT_HYSTERESIS_ON,
+    DEFAULT_HYSTERESIS_OFF,
     DEFAULT_NAME,
     DEFAULT_TARGET,
     ENTITY_KEYS,
     MAX_HYSTERESIS,
     MAX_TARGET,
     MIN_HYSTERESIS,
+    MIN_HYSTERESIS_ON,
+    MAX_HYSTERESIS_ON,
+    MIN_HYSTERESIS_OFF,
+    MAX_HYSTERESIS_OFF,
     MIN_TARGET,
 )
 
@@ -51,10 +59,15 @@ class SmartHeatingData:
             MIN_TARGET,
             MAX_TARGET,
         )
-        self.hysteresis = clamp(
-            float(entry.options.get(CONF_HYSTERESIS, DEFAULT_HYSTERESIS)),
-            MIN_HYSTERESIS,
-            MAX_HYSTERESIS,
+        self.hysteresis_on = clamp(
+            float(entry.options.get(CONF_HYSTERESIS_ON, entry.options.get(CONF_HYSTERESIS, DEFAULT_HYSTERESIS_ON))),
+            MIN_HYSTERESIS_ON,
+            MAX_HYSTERESIS_ON,
+        )
+        self.hysteresis_off = clamp(
+            float(entry.options.get(CONF_HYSTERESIS_OFF, DEFAULT_HYSTERESIS_OFF)),
+            MIN_HYSTERESIS_OFF,
+            MAX_HYSTERESIS_OFF,
         )
         self.enabled = True
         self.heating = False
@@ -139,9 +152,9 @@ class SmartHeatingData:
                 self.heating = False
                 self.sync_output()
                 return
-            if self.heating and self.room_temperature >= self.target_temperature:
+            if self.heating and self.room_temperature >= self.target_temperature + self.hysteresis_off:
                 self.heating = False
-            elif not self.heating and self.room_temperature <= self.target_temperature - self.hysteresis:
+            elif not self.heating and self.room_temperature <= self.target_temperature - self.hysteresis_on:
                 self.heating = True
             self.sync_output()
         finally:
@@ -181,9 +194,23 @@ class SmartHeatingData:
         self.target_temperature = clamp(float(value), MIN_TARGET, MAX_TARGET)
         self.evaluate()
 
+    @property
+    def hysteresis(self) -> float:
+        """Legacy single hysteresis alias (points to hysteresis_on)."""
+        return self.hysteresis_on
+
     def set_hysteresis(self, value: float) -> None:
         """Change the hysteresis band and re-evaluate."""
-        self.hysteresis = clamp(float(value), MIN_HYSTERESIS, MAX_HYSTERESIS)
+        self.set_hysteresis_on(value)
+
+    def set_hysteresis_on(self, value: float) -> None:
+        """Change the turn-on delta and re-evaluate."""
+        self.hysteresis_on = clamp(float(value), MIN_HYSTERESIS_ON, MAX_HYSTERESIS_ON)
+        self.evaluate()
+
+    def set_hysteresis_off(self, value: float) -> None:
+        """Change the turn-off delta and re-evaluate."""
+        self.hysteresis_off = clamp(float(value), MIN_HYSTERESIS_OFF, MAX_HYSTERESIS_OFF)
         self.evaluate()
 
     # -- card-facing data --------------------------------------------------
@@ -205,6 +232,8 @@ class SmartHeatingData:
             "room_temperature": self.room_temperature,
             "target_temperature": self.target_temperature,
             "hysteresis": self.hysteresis,
+            "hysteresis_on": self.hysteresis_on,
+            "hysteresis_off": self.hysteresis_off,
             "humidity": self.source_value(CONF_HUMIDITY),
             "outdoor_temperature": self.source_value(CONF_OUTDOOR_TEMPERATURE),
             "wind": self.source_value(CONF_WIND),

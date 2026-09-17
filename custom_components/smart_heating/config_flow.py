@@ -9,6 +9,8 @@ from homeassistant.helpers import selector
 from .const import (
     CONF_HUMIDITY,
     CONF_HYSTERESIS,
+    CONF_HYSTERESIS_ON,
+    CONF_HYSTERESIS_OFF,
     CONF_NAME,
     CONF_OUTDOOR_TEMPERATURE,
     CONF_PRECIPITATION,
@@ -18,13 +20,18 @@ from .const import (
     CONF_TARGET_TEMPERATURE,
     CONF_WIND,
     DEFAULT_HYSTERESIS,
+    DEFAULT_HYSTERESIS_ON,
+    DEFAULT_HYSTERESIS_OFF,
     DEFAULT_NAME,
     DEFAULT_TARGET,
     DOMAIN,
     ENTITY_KEYS,
     MAX_HYSTERESIS,
+    MAX_HYSTERESIS_ON,
+    MIN_HYSTERESIS_ON,
+    MAX_HYSTERESIS_OFF,
+    MIN_HYSTERESIS_OFF,
     MAX_TARGET,
-    MIN_HYSTERESIS,
     MIN_TARGET,
 )
 
@@ -102,11 +109,18 @@ class SmartHeatingOptionsFlow(config_entries.OptionsFlow):
                         default=options.get(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET),
                     ): vol.All(vol.Coerce(float), vol.Range(min=MIN_TARGET, max=MAX_TARGET)),
                     vol.Required(
-                        CONF_HYSTERESIS,
-                        default=options.get(CONF_HYSTERESIS, DEFAULT_HYSTERESIS),
+                        CONF_HYSTERESIS_ON,
+                        default=options.get(CONF_HYSTERESIS_ON, options.get(CONF_HYSTERESIS, DEFAULT_HYSTERESIS_ON)),
                     ): vol.All(
                         vol.Coerce(float),
-                        vol.Range(min=MIN_HYSTERESIS, max=MAX_HYSTERESIS),
+                        vol.Range(min=MIN_HYSTERESIS_ON, max=MAX_HYSTERESIS_ON),
+                    ),
+                    vol.Required(
+                        CONF_HYSTERESIS_OFF,
+                        default=options.get(CONF_HYSTERESIS_OFF, DEFAULT_HYSTERESIS_OFF),
+                    ): vol.All(
+                        vol.Coerce(float),
+                        vol.Range(min=MIN_HYSTERESIS_OFF, max=MAX_HYSTERESIS_OFF),
                     ),
                 }
             ),

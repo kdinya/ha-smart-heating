@@ -29,7 +29,8 @@
         "title": "Heating parameters",
         "data": {
           "target_temperature": "Target temperature",
-          "hysteresis": "Hysteresis"
+          "hysteresis_on": "Turn-on delta (hysteresis on)",
+          "hysteresis_off": "Turn-off delta (hysteresis off)"
         }
       }
     }

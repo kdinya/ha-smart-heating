@@ -6,22 +6,28 @@ from homeassistant.const import UnitOfTemperature
 
 from .const import (
     DOMAIN,
-    MAX_HYSTERESIS,
+    MAX_HYSTERESIS_OFF,
+    MAX_HYSTERESIS_ON,
     MAX_TARGET,
-    MIN_HYSTERESIS,
+    MIN_HYSTERESIS_OFF,
+    MIN_HYSTERESIS_ON,
     MIN_TARGET,
 )
 from .coordinator import SmartHeatingData
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the target-temperature and hysteresis controls."""
+    """Set up the target-temperature and dual hysteresis controls when the device is created."""
     data = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([HeatingTarget(data, entry), HeatingHysteresis(data, entry)])
+    async_add_entities([
+        HeatingTarget(data, entry),
+        HeatingHysteresisOn(data, entry),
+        HeatingHysteresisOff(data, entry),
+    ])
 
 
 class SmartHeatingNumber(NumberEntity):
-    """Shared plumbing for the two numeric controls."""
+    """Shared plumbing for the numeric controls."""
 
     _attr_has_entity_name = True
     _attr_mode = NumberMode.BOX
@@ -67,19 +73,38 @@ class HeatingTarget(SmartHeatingNumber):
         self.async_write_ha_state()
 
 
-class HeatingHysteresis(SmartHeatingNumber):
-    """Width of the hysteresis band below the target temperature."""
+class HeatingHysteresisOn(SmartHeatingNumber):
+    """Width of the hysteresis band below target for turning contact 1 ON."""
 
-    _attr_native_min_value = MIN_HYSTERESIS
-    _attr_native_max_value = MAX_HYSTERESIS
+    _attr_native_min_value = MIN_HYSTERESIS_ON
+    _attr_native_max_value = MAX_HYSTERESIS_ON
 
     def __init__(self, data: SmartHeatingData, entry) -> None:
-        super().__init__(data, entry, "hysteresis", "Гістерезіс")
+        # Keep _hysteresis as unique id suffix for backward compatibility with existing setups
+        super().__init__(data, entry, "hysteresis", "Гістерезіс увімкнення")
 
     @property
     def native_value(self) -> float:
-        return self.data.hysteresis
+        return self.data.hysteresis_on
 
     async def async_set_native_value(self, value: float) -> None:
-        self.data.set_hysteresis(value)
+        self.data.set_hysteresis_on(value)
+        self.async_write_ha_state()
+
+
+class HeatingHysteresisOff(SmartHeatingNumber):
+    """Width of the hysteresis band above target for turning contact 1 OFF."""
+
+    _attr_native_min_value = MIN_HYSTERESIS_OFF
+    _attr_native_max_value = MAX_HYSTERESIS_OFF
+
+    def __init__(self, data: SmartHeatingData, entry) -> None:
+        super().__init__(data, entry, "hysteresis_off", "Гістерезіс вимкнення")
+
+    @property
+    def native_value(self) -> float:
+        return self.data.hysteresis_off
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.data.set_hysteresis_off(value)
         self.async_write_ha_state()

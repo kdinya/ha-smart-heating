@@ -73,12 +73,18 @@ class SmartHeatingClimate(RestoreEntity, ClimateEntity):
                     self.data.set_target(float(target))
                 except (TypeError, ValueError):
                     _LOGGER.debug("Ignoring restored target temperature %r", target)
-            hysteresis = attributes.get(CONF_HYSTERESIS)
-            if hysteresis is not None:
+            h_on = attributes.get("hysteresis_on", attributes.get(CONF_HYSTERESIS))
+            if h_on is not None:
                 try:
-                    self.data.set_hysteresis(float(hysteresis))
+                    self.data.set_hysteresis_on(float(h_on))
                 except (TypeError, ValueError):
-                    _LOGGER.debug("Ignoring restored hysteresis %r", hysteresis)
+                    _LOGGER.debug("Ignoring restored turn-on delta %r", h_on)
+            h_off = attributes.get("hysteresis_off")
+            if h_off is not None:
+                try:
+                    self.data.set_hysteresis_off(float(h_off))
+                except (TypeError, ValueError):
+                    _LOGGER.debug("Ignoring restored turn-off delta %r", h_off)
             self.data.evaluate()
         self._remove_listener = self.data.async_add_listener(self.async_write_ha_state)
 
