@@ -154,6 +154,33 @@ if (editor.config.panel_gap !== 3) throw new Error('slider did not write config'
   localStorage.removeItem('smart-heating-language');
 }
 
+// the target-temperature step (Hysteresis tab) should drive the dial's +/-
+// buttons immediately and persist for new card instances.
+{
+  const stepCard = document.createElement('smart-heating-card');
+  document.body.appendChild(stepCard);
+  stepCard.setConfig({ type: 'custom:smart-heating-card', entity: 'climate.smart_heating' });
+  stepCard.hass = hass;
+  const defaultPlus = stepCard.shadowRoot.querySelector('.adjust button[data-delta]:last-child');
+  if (defaultPlus.dataset.delta !== '0.5') throw new Error('default temp step should be 0.5, got ' + defaultPlus.dataset.delta);
+  stepCard._menuOpen = true;
+  stepCard._menuTab = 'hysteresis';
+  stepCard.render();
+  const stepSlider = stepCard.shadowRoot.querySelector('[data-temp-step-slider]');
+  if (!stepSlider) throw new Error('temp step slider missing from the Hysteresis tab');
+  stepSlider.value = '1.0';
+  stepSlider.dispatchEvent(new window.Event('input', { bubbles: true }));
+  const plusAfter = stepCard.shadowRoot.querySelector('.adjust button[data-delta]:last-child');
+  if (plusAfter.dataset.delta !== '1') throw new Error('adjust button did not pick up the new step');
+  const freshStepCard = document.createElement('smart-heating-card');
+  document.body.appendChild(freshStepCard);
+  freshStepCard.setConfig({ type: 'custom:smart-heating-card', entity: 'climate.smart_heating' });
+  freshStepCard.hass = hass;
+  const freshPlus = freshStepCard.shadowRoot.querySelector('.adjust button[data-delta]:last-child');
+  if (freshPlus.dataset.delta !== '1') throw new Error('temp step did not persist to a new card instance');
+  localStorage.removeItem('smart-heating-temp-step');
+}
+
 console.log('SMOKE OK');
 
 process.exit(0);
