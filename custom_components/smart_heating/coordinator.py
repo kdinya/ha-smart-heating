@@ -208,4 +208,7 @@ class SmartHeatingData:
             "outdoor_temperature": self.source_value(CONF_OUTDOOR_TEMPERATURE),
             "wind": self.source_value(CONF_WIND),
             "precipitation": self.source_value(CONF_PRECIPITATION),
+            "switch_1": self.entry.data.get(CONF_SWITCH_1),
+            "switch_2": self.entry.data.get(CONF_SWITCH_2),
+            "switch_2_state": self.source_value(CONF_SWITCH_2),
         }
