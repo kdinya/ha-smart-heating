@@ -85,6 +85,12 @@ class SmartHeatingClimate(RestoreEntity, ClimateEntity):
                     self.data.set_hysteresis_off(float(h_off))
                 except (TypeError, ValueError):
                     _LOGGER.debug("Ignoring restored turn-off delta %r", h_off)
+            c1 = attributes.get("contact_1_enabled")
+            if c1 is not None:
+                self.data.contact_1_enabled = bool(c1)
+            c2 = attributes.get("contact_2_enabled")
+            if c2 is not None:
+                self.data.contact_2_enabled = bool(c2)
             self.data.evaluate()
         self._remove_listener = self.data.async_add_listener(self.async_write_ha_state)
 
@@ -111,7 +117,7 @@ class SmartHeatingClimate(RestoreEntity, ClimateEntity):
         """Report whether the boiler is actually firing right now."""
         if not self.data.enabled:
             return HVACAction.OFF
-        return HVACAction.HEATING if self.data.heating else HVACAction.IDLE
+        return HVACAction.HEATING if (self.data.contact_1_enabled and self.data.heating) else HVACAction.IDLE
 
     @property
     def extra_state_attributes(self) -> dict:

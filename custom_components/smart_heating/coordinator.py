@@ -79,6 +79,8 @@ class SmartHeatingData:
         )
         self.enabled = True
         self.heating = False
+        self.contact_1_enabled = True
+        self.contact_2_enabled = False
         self.room_temperature: float | None = None
         self._remove_listener: Callable[[], None] | None = None
         self._listeners: list[Callable[[], None]] = []
@@ -147,16 +149,16 @@ class SmartHeatingData:
         """
         self.room_temperature = self._read_float(CONF_ROOM_TEMPERATURE)
         try:
+            if not self.enabled or not self.contact_1_enabled:
+                self.heating = False
+                self.sync_output()
+                return
             if self.room_temperature is None:
                 if self.heating:
                     _LOGGER.warning(
                         "%s: room sensor unavailable, turning heating off as a fail-safe",
                         self.name,
                     )
-                self.heating = False
-                self.sync_output()
-                return
-            if not self.enabled:
                 self.heating = False
                 self.sync_output()
                 return
@@ -170,20 +172,32 @@ class SmartHeatingData:
 
     @callback
     def sync_output(self) -> None:
-        """Push the desired state to the controlled switch, if it differs."""
-        switch_id = self.get_config_or_option(CONF_SWITCH_1)
-        if not switch_id:
-            return
-        desired = "on" if self.heating else "off"
-        current = self.hass.states.get(switch_id)
-        if current and current.state != desired:
-            self.hass.async_create_task(
-                self.hass.services.async_call(
-                    "switch",
-                    "turn_on" if self.heating else "turn_off",
-                    {"entity_id": switch_id},
+        """Push the desired state to both output switches, if configured."""
+        switch_1_id = self.get_config_or_option(CONF_SWITCH_1)
+        if switch_1_id:
+            desired_1 = "on" if (self.enabled and self.contact_1_enabled and self.heating) else "off"
+            current_1 = self.hass.states.get(switch_1_id)
+            if current_1 and current_1.state != desired_1:
+                self.hass.async_create_task(
+                    self.hass.services.async_call(
+                        "switch",
+                        "turn_on" if desired_1 == "on" else "turn_off",
+                        {"entity_id": switch_1_id},
+                    )
                 )
-            )
+
+        switch_2_id = self.get_config_or_option(CONF_SWITCH_2)
+        if switch_2_id:
+            desired_2 = "on" if (self.enabled and self.contact_2_enabled) else "off"
+            current_2 = self.hass.states.get(switch_2_id)
+            if current_2 and current_2.state != desired_2:
+                self.hass.async_create_task(
+                    self.hass.services.async_call(
+                        "switch",
+                        "turn_on" if desired_2 == "on" else "turn_off",
+                        {"entity_id": switch_2_id},
+                    )
+                )
 
     # -- setters used by the entities -------------------------------------
 
@@ -196,6 +210,17 @@ class SmartHeatingData:
             self._notify_listeners()
             return
         self.evaluate()
+
+    def set_contact_1(self, enabled: bool) -> None:
+        """Enable or disable contact 1 smart thermostat control."""
+        self.contact_1_enabled = bool(enabled)
+        self.evaluate()
+
+    def set_contact_2(self, enabled: bool) -> None:
+        """Enable or disable contact 2 programmer bypass."""
+        self.contact_2_enabled = bool(enabled)
+        self.sync_output()
+        self._notify_listeners()
 
     def set_target(self, value: float) -> None:
         """Change the target temperature and re-evaluate."""
@@ -234,9 +259,14 @@ class SmartHeatingData:
     @property
     def attributes(self) -> dict[str, Any]:
         """Extra attributes consumed by the Lovelace card."""
+        is_burning = self.heating if (self.enabled and self.contact_1_enabled) else False
         return {
             "enabled": self.enabled,
-            ATTR_HEATING: self.heating,
+            ATTR_HEATING: is_burning,
+            "contact_1_enabled": self.contact_1_enabled,
+            "contact_2_enabled": self.contact_2_enabled,
+            "contact_1_state": is_burning,
+            "contact_2_state": (self.source_value(CONF_SWITCH_2) == "on") if self.enabled else False,
             "room_temperature": self.room_temperature,
             "target_temperature": self.target_temperature,
             "hysteresis": self.hysteresis,

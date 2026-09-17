@@ -19,7 +19,7 @@ PLATFORMS = ["climate", "number", "switch"]
 CARD_PATH = Path(__file__).parent / "www"
 CANONICAL_CARD_URL = "/hacsfiles/ha-smart-heating/smart-heating-card.js"
 CARD_VERSION = "1.0.3"
-CARD_BUILD = "reference-dashboard-v103-12"
+CARD_BUILD = "reference-dashboard-v103-13"
 
 
 def _is_card_resource_url(url: str) -> bool:
@@ -36,6 +36,25 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     async def _register_frontend(_event: Any = None) -> None:
         """Register the card only after Lovelace has initialized."""
         await async_register_lovelace_resource(hass)
+
+    async def async_handle_set_contact(call: Any) -> None:
+        entity_id = call.data.get("entity_id")
+        contact_1 = call.data.get("contact_1")
+        contact_2 = call.data.get("contact_2")
+
+        entries = hass.data.get(DOMAIN, {})
+        target_datas = []
+        for entry_id, data in entries.items():
+            if isinstance(data, SmartHeatingData):
+                target_datas.append(data)
+
+        for data in target_datas:
+            if contact_1 is not None:
+                data.set_contact_1(bool(contact_1))
+            if contact_2 is not None:
+                data.set_contact_2(bool(contact_2))
+
+    hass.services.async_register(DOMAIN, "set_contact", async_handle_set_contact)
 
     if hass.state is CoreState.running:
         hass.async_create_task(_register_frontend())

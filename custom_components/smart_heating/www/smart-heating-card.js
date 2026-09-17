@@ -86,13 +86,13 @@ class SmartHeatingCard extends HTMLElement {
     const outdoor=this.attr('outdoor_temperature'),wind=this.attr('wind'),rain=this.attr('precipitation'),rainIcon=SH_RAIN_ICON(rain);const outdoorVisible=this.config.outdoor_visible!==false,windVisible=this.config.wind_visible!==false,rainVisible=this.config.rain_visible!==false;
     const enabled=c?.state!=='off'&&c?.state!=='unavailable';const effectEnabled=this.config.effect_enabled!==false;
     /* Prefer the integration's own `heating` flag, then hvac_action, then the raw mode. */
-    const burning=a.heating!==undefined?Boolean(a.heating):(a.hvac_action?a.hvac_action==='heating':c?.state==='heat');const heating=enabled&&burning;
+    const burning=a.heating!==undefined?Boolean(a.heating):(a.hvac_action?a.hvac_action==='heating':c?.state==='heat');const heating=enabled&&contact1On&&burning;
     const schemeMode=['direct','old','parallel'].includes(this.config.connection_mode)?this.config.connection_mode:'direct';
     const hasContact1 = Boolean(a.switch_1 || this.config.switch_1);
     const hasContact2 = Boolean(a.switch_2 || this.config.switch_2);
     const hasAnyContact = hasContact1 || hasContact2;
-    const contact1On = this._visualContact1 !== undefined ? this._visualContact1 : (this.config.contact_1_active !== false);
-    const contact2On = this._visualContact2 !== undefined ? this._visualContact2 : Boolean(this.config.contact_2_active);
+    const contact1On = a.contact_1_enabled !== undefined ? Boolean(a.contact_1_enabled) : (this._visualContact1 !== undefined ? this._visualContact1 : (this.config.contact_1_active !== false));
+    const contact2On = a.contact_2_enabled !== undefined ? Boolean(a.contact_2_enabled) : (this._visualContact2 !== undefined ? this._visualContact2 : Boolean(this.config.contact_2_active));
     const now=new Date();const date=now.toLocaleDateString(locale,{weekday:'short',day:'2-digit',month:'long',year:'numeric'}).toUpperCase(),time=now.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'});
     this.shadowRoot.innerHTML=`<style>
       @font-face{font-family:'7segment';src:url('/hacsfiles/ha-smart-heating/fonts/7segment.woff') format('woff');font-display:swap}
@@ -168,17 +168,18 @@ ha-card{--ui-scale:clamp(.01,min(calc(100cqw / 600px),calc(100cqh / (600px / var
     root.querySelector('[data-scheme-toggle="1"]')?.addEventListener('click', () => {
       const willBeOn = !contact1On;
       const impact = willBeOn 
-        ? (contact2On ? 'Обидва контакти будуть активні та дублюватимуть один одного.' : 'Керування за автоматикою термостата (гістерезис).')
-        : (contact2On ? 'Автоматику вимкнено. Керування тільки старим програматором.' : 'Обидва контакти вимкнені: тільки моніторинг температури.');
+        ? (contact2On ? 'Обидва контакти активні: термостат керує Контактом 1, а старий програматор працює паралельно через Контакт 2.' : 'Активний тільки Блок 1: котел керується за датчиком температури та гістерезисом.')
+        : (contact2On ? 'Блок 1 вимкнено. Керування здійснюється тільки старим програматором через Контакт 2.' : 'Обидва блоки вимкнені: режим очікування, котел не запускається.');
       this._confirmDialog = {
         title: willBeOn ? 'Увімкнення Контакту 1' : 'Вимкнення Контакту 1',
         message: willBeOn 
-          ? 'Увімкнути Контакт 1 (автоматичний термостат)? Відображатиме роботу за датчиком температури та гістерезисом картки.'
-          : 'Вимкнути Контакт 1 (автоматичний термостат)? Відображатиме зупинку автоматичного термостата.',
-        impact: impact + ' (Візуальний режим: фізичне перемикання котла не виконується)',
+          ? 'Увімкнути Контакт 1 (автоматичний термостат)? Котел працюватиме за температурою та гістерезисом.'
+          : 'Вимкнути Контакт 1 (автоматичний термостат)? Автоматичне керування за температурою буде вимкнено.',
+        impact: impact,
         action: () => {
           this._visualContact1 = willBeOn;
           SH_WRITE_STORE('visual_contact_1', willBeOn);
+          this._hass.callService('smart_heating', 'set_contact', { entity_id: this.config.entity, contact_1: willBeOn });
         }
       };
       this.render();
@@ -187,17 +188,18 @@ ha-card{--ui-scale:clamp(.01,min(calc(100cqw / 600px),calc(100cqh / (600px / var
     root.querySelector('[data-scheme-toggle="2"]')?.addEventListener('click', () => {
       const willBeOn = !contact2On;
       const impact = willBeOn 
-        ? (contact1On ? 'Обидва контакти будуть активні та дублюватимуть один одного.' : 'Керування виключно старим програматором.')
-        : (contact1On ? 'Старий програматор вимкнено. Керування за Контактом 1.' : 'Обидва контакти вимкнені: тільки моніторинг температури.');
+        ? (contact1On ? 'Обидва контакти активні: старий програматор працює паралельно з автоматичним термостатом.' : 'Активний тільки Блок 2: котел керується виключно зовнішнім програматором, автоматика в режимі очікування.')
+        : (contact1On ? 'Контакт 2 вимкнено. Керування тільки за автоматикою Контакту 1.' : 'Обидва блоки вимкнені: режим очікування, котел не запускається.');
       this._confirmDialog = {
         title: willBeOn ? 'Увімкнення Контакту 2' : 'Вимкнення Контакту 2',
         message: willBeOn 
-          ? 'Підключити Контакт 2 (старий програматор)? Відображатиме підключення лінії старого програматора.'
-          : 'Відключити Контакт 2 (старий програматор)? Відображатиме відключення старого програматора.',
-        impact: impact + ' (Візуальний режим: фізичне перемикання котла не виконується)',
+          ? 'Підключити лінію старого програматора через Контакт 2?'
+          : 'Відключити лінію старого програматора (Контакт 2)?',
+        impact: impact,
         action: () => {
           this._visualContact2 = willBeOn;
           SH_WRITE_STORE('visual_contact_2', willBeOn);
+          this._hass.callService('smart_heating', 'set_contact', { entity_id: this.config.entity, contact_2: willBeOn });
         }
       };
       this.render();

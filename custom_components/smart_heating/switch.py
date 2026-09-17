@@ -58,7 +58,9 @@ class BoilerSwitch(SwitchEntity):
     @property
     def is_on(self) -> bool:
         if self.key == CONF_SWITCH_1:
-            return self.data.heating
+            return self.data.contact_1_enabled
+        if self.key == CONF_SWITCH_2:
+            return self.data.contact_2_enabled
         state = self.data.hass.states.get(self._source_entity_id or "")
         return bool(state and state.state == "on")
 
@@ -71,9 +73,19 @@ class BoilerSwitch(SwitchEntity):
         )
 
     async def async_turn_on(self, **kwargs) -> None:
-        await self._call("turn_on")
+        if self.key == CONF_SWITCH_1:
+            self.data.set_contact_1(True)
+        elif self.key == CONF_SWITCH_2:
+            self.data.set_contact_2(True)
+        else:
+            await self._call("turn_on")
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
-        await self._call("turn_off")
+        if self.key == CONF_SWITCH_1:
+            self.data.set_contact_1(False)
+        elif self.key == CONF_SWITCH_2:
+            self.data.set_contact_2(False)
+        else:
+            await self._call("turn_off")
         self.async_write_ha_state()

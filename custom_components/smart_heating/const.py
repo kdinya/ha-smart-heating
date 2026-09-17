@@ -44,3 +44,11 @@ MIN_HYSTERESIS_OFF = 0.0
 MAX_HYSTERESIS_OFF = 5.0
 
 ATTR_HEATING = "heating"
+
+CONF_CONTACT_1_ENABLED = "contact_1_enabled"
+CONF_CONTACT_2_ENABLED = "contact_2_enabled"
+ATTR_CONTACT_1_ENABLED = "contact_1_enabled"
+ATTR_CONTACT_2_ENABLED = "contact_2_enabled"
+ATTR_CONTACT_1_STATE = "contact_1_state"
+ATTR_CONTACT_2_STATE = "contact_2_state"
+SERVICE_SET_CONTACT = "set_contact"
