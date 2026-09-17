@@ -30,7 +30,7 @@ class SmartHeatingNumber(NumberEntity):
     """Shared plumbing for the numeric controls."""
 
     _attr_has_entity_name = True
-    _attr_mode = NumberMode.BOX
+    _attr_mode = NumberMode.SLIDER
     _attr_native_step = 0.1
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
