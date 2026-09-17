@@ -12,7 +12,10 @@
           "humidity": "Room humidity",
           "outdoor_temperature": "Outdoor temperature",
           "wind": "Wind",
-          "precipitation": "Precipitation"
+          "precipitation": "Precipitation",
+          "target_temperature": "Target temperature",
+          "hysteresis_on": "Turn-on delta (hysteresis on)",
+          "hysteresis_off": "Turn-off delta (hysteresis off)"
         }
       }
     },
@@ -30,7 +33,9 @@
         "data": {
           "target_temperature": "Target temperature",
           "hysteresis_on": "Turn-on delta (hysteresis on)",
-          "hysteresis_off": "Turn-off delta (hysteresis off)"
+          "hysteresis_off": "Turn-off delta (hysteresis off)",
+          "switch_1": "Switch 1 (driven by hysteresis)",
+          "switch_2": "Switch 2 (status only)"
         }
       }
     }

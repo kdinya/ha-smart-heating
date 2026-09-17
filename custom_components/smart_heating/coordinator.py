@@ -50,22 +50,30 @@ def clamp(value: float, low: float, high: float) -> float:
 class SmartHeatingData:
     """State container shared by all entities of one heating device."""
 
+    def get_config_or_option(self, key: str, default: Any = None) -> Any:
+        """Read a setting or entity ID, giving precedence to options over data."""
+        if key in self.entry.options:
+            val = self.entry.options[key]
+            return val if val is not None and val != "" else None
+        val = self.entry.data.get(key)
+        return val if val is not None and val != "" else default
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         self.hass = hass
         self.entry = entry
         self.name = entry.data.get(CONF_NAME, DEFAULT_NAME)
         self.target_temperature = clamp(
-            float(entry.options.get(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET)),
+            float(self.get_config_or_option(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET)),
             MIN_TARGET,
             MAX_TARGET,
         )
         self.hysteresis_on = clamp(
-            float(entry.options.get(CONF_HYSTERESIS_ON, entry.options.get(CONF_HYSTERESIS, DEFAULT_HYSTERESIS_ON))),
+            float(self.get_config_or_option(CONF_HYSTERESIS_ON, self.get_config_or_option(CONF_HYSTERESIS, DEFAULT_HYSTERESIS_ON))),
             MIN_HYSTERESIS_ON,
             MAX_HYSTERESIS_ON,
         )
         self.hysteresis_off = clamp(
-            float(entry.options.get(CONF_HYSTERESIS_OFF, DEFAULT_HYSTERESIS_OFF)),
+            float(self.get_config_or_option(CONF_HYSTERESIS_OFF, DEFAULT_HYSTERESIS_OFF)),
             MIN_HYSTERESIS_OFF,
             MAX_HYSTERESIS_OFF,
         )
@@ -98,7 +106,7 @@ class SmartHeatingData:
         entity_ids = [
             entity_id
             for key in ENTITY_KEYS
-            if (entity_id := self.entry.data.get(key))
+            if (entity_id := self.get_config_or_option(key))
         ]
         if entity_ids:
             self._remove_listener = async_track_state_change_event(
@@ -119,7 +127,7 @@ class SmartHeatingData:
     # -- control loop ------------------------------------------------------
 
     def _read_float(self, key: str) -> float | None:
-        entity_id = self.entry.data.get(key)
+        entity_id = self.get_config_or_option(key)
         state = self.hass.states.get(entity_id) if entity_id else None
         if not state or state.state in UNAVAILABLE_STATES:
             return None
@@ -163,7 +171,7 @@ class SmartHeatingData:
     @callback
     def sync_output(self) -> None:
         """Push the desired state to the controlled switch, if it differs."""
-        switch_id = self.entry.data.get(CONF_SWITCH_1)
+        switch_id = self.get_config_or_option(CONF_SWITCH_1)
         if not switch_id:
             return
         desired = "on" if self.heating else "off"
@@ -217,7 +225,7 @@ class SmartHeatingData:
 
     def source_value(self, key: str) -> str | None:
         """Raw state of an optional source entity, or None when unusable."""
-        entity_id = self.entry.data.get(key)
+        entity_id = self.get_config_or_option(key)
         state = self.hass.states.get(entity_id) if entity_id else None
         if not state or state.state in UNAVAILABLE_STATES:
             return None
@@ -238,7 +246,7 @@ class SmartHeatingData:
             "outdoor_temperature": self.source_value(CONF_OUTDOOR_TEMPERATURE),
             "wind": self.source_value(CONF_WIND),
             "precipitation": self.source_value(CONF_PRECIPITATION),
-            "switch_1": self.entry.data.get(CONF_SWITCH_1),
-            "switch_2": self.entry.data.get(CONF_SWITCH_2),
+            "switch_1": self.get_config_or_option(CONF_SWITCH_1),
+            "switch_2": self.get_config_or_option(CONF_SWITCH_2),
             "switch_2_state": self.source_value(CONF_SWITCH_2),
         }

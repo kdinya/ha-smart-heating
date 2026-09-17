@@ -16,7 +16,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             (CONF_SWITCH_1, "Котел — контакт 1"),
             (CONF_SWITCH_2, "Котел — контакт 2"),
         )
-        if entry.data.get(key)
+        if data.get_config_or_option(key)
     ]
     async_add_entities(entities)
 
@@ -53,7 +53,7 @@ class BoilerSwitch(SwitchEntity):
 
     @property
     def _source_entity_id(self) -> str | None:
-        return self.data.entry.data.get(self.key)
+        return self.data.get_config_or_option(self.key)
 
     @property
     def is_on(self) -> bool:

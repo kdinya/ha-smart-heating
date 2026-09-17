@@ -46,13 +46,35 @@ def _user_schema() -> vol.Schema:
         )
         return selector.EntitySelector(config)
 
-    switch = selector.EntitySelector(selector.EntitySelectorConfig(domain="switch"))
+    def switch() -> selector.EntitySelector:
+        return selector.EntitySelector(selector.EntitySelectorConfig(domain="switch"))
+
+    def number_slider(min_val: float, max_val: float, step: float = 0.1) -> selector.NumberSelector:
+        return selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=min_val,
+                max=max_val,
+                step=step,
+                mode=selector.NumberSelectorMode.SLIDER,
+                unit_of_measurement="°C",
+            )
+        )
+
     return vol.Schema(
         {
             vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
             vol.Required(CONF_ROOM_TEMPERATURE): sensor("temperature"),
-            vol.Optional(CONF_SWITCH_1): switch,
-            vol.Optional(CONF_SWITCH_2): switch,
+            vol.Required(CONF_TARGET_TEMPERATURE, default=DEFAULT_TARGET): number_slider(
+                MIN_TARGET, MAX_TARGET, 0.5
+            ),
+            vol.Required(CONF_HYSTERESIS_ON, default=DEFAULT_HYSTERESIS_ON): number_slider(
+                MIN_HYSTERESIS_ON, MAX_HYSTERESIS_ON, 0.1
+            ),
+            vol.Required(CONF_HYSTERESIS_OFF, default=DEFAULT_HYSTERESIS_OFF): number_slider(
+                MIN_HYSTERESIS_OFF, MAX_HYSTERESIS_OFF, 0.1
+            ),
+            vol.Optional(CONF_SWITCH_1): switch(),
+            vol.Optional(CONF_SWITCH_2): switch(),
             vol.Optional(CONF_HUMIDITY): sensor("humidity"),
             vol.Optional(CONF_OUTDOOR_TEMPERATURE): sensor("temperature"),
             vol.Optional(CONF_WIND): sensor(),
@@ -79,7 +101,13 @@ class SmartHeatingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=user_input[CONF_NAME],
+                    data=user_input,
+                    options={
+                        CONF_TARGET_TEMPERATURE: user_input.get(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET),
+                        CONF_HYSTERESIS_ON: user_input.get(CONF_HYSTERESIS_ON, DEFAULT_HYSTERESIS_ON),
+                        CONF_HYSTERESIS_OFF: user_input.get(CONF_HYSTERESIS_OFF, DEFAULT_HYSTERESIS_OFF),
+                    },
                 )
         return self.async_show_form(
             step_id="user", data_schema=_user_schema(), errors=errors
@@ -93,35 +121,80 @@ class SmartHeatingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class SmartHeatingOptionsFlow(config_entries.OptionsFlow):
-    """Change the starting target temperature and hysteresis band."""
+    """Change runtime options and contact switches."""
 
     async def async_step_init(self, user_input=None):
-        """Show and store the two runtime options."""
+        """Show and store runtime options."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            s1 = user_input.get(CONF_SWITCH_1)
+            s2 = user_input.get(CONF_SWITCH_2)
+            if s1 and s2 and s1 == s2:
+                errors["base"] = "duplicate_entity"
+            else:
+                payload = dict(user_input)
+                if not payload.get(CONF_SWITCH_1):
+                    payload[CONF_SWITCH_1] = None
+                if not payload.get(CONF_SWITCH_2):
+                    payload[CONF_SWITCH_2] = None
+                return self.async_create_entry(title="", data=payload)
+
         options = self.config_entry.options
+        data = self.config_entry.data
+
+        current_switch_1 = options.get(CONF_SWITCH_1) if CONF_SWITCH_1 in options else data.get(CONF_SWITCH_1)
+        current_switch_2 = options.get(CONF_SWITCH_2) if CONF_SWITCH_2 in options else data.get(CONF_SWITCH_2)
+
+        def switch_selector() -> selector.EntitySelector:
+            return selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="switch")
+            )
+
+        def number_slider(min_val: float, max_val: float, step: float = 0.1) -> selector.NumberSelector:
+            return selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=min_val,
+                    max=max_val,
+                    step=step,
+                    mode=selector.NumberSelectorMode.SLIDER,
+                    unit_of_measurement="°C",
+                )
+            )
+
+        schema_dict = {
+            vol.Required(
+                CONF_TARGET_TEMPERATURE,
+                default=options.get(
+                    CONF_TARGET_TEMPERATURE, data.get(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET)
+                ),
+            ): number_slider(MIN_TARGET, MAX_TARGET, 0.5),
+            vol.Required(
+                CONF_HYSTERESIS_ON,
+                default=options.get(
+                    CONF_HYSTERESIS_ON,
+                    options.get(CONF_HYSTERESIS, data.get(CONF_HYSTERESIS_ON, DEFAULT_HYSTERESIS_ON)),
+                ),
+            ): number_slider(MIN_HYSTERESIS_ON, MAX_HYSTERESIS_ON, 0.1),
+            vol.Required(
+                CONF_HYSTERESIS_OFF,
+                default=options.get(
+                    CONF_HYSTERESIS_OFF, data.get(CONF_HYSTERESIS_OFF, DEFAULT_HYSTERESIS_OFF)
+                ),
+            ): number_slider(MIN_HYSTERESIS_OFF, MAX_HYSTERESIS_OFF, 0.1),
+        }
+
+        if current_switch_1:
+            schema_dict[vol.Optional(CONF_SWITCH_1, default=current_switch_1)] = switch_selector()
+        else:
+            schema_dict[vol.Optional(CONF_SWITCH_1)] = switch_selector()
+
+        if current_switch_2:
+            schema_dict[vol.Optional(CONF_SWITCH_2, default=current_switch_2)] = switch_selector()
+        else:
+            schema_dict[vol.Optional(CONF_SWITCH_2)] = switch_selector()
+
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_TARGET_TEMPERATURE,
-                        default=options.get(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET),
-                    ): vol.All(vol.Coerce(float), vol.Range(min=MIN_TARGET, max=MAX_TARGET)),
-                    vol.Required(
-                        CONF_HYSTERESIS_ON,
-                        default=options.get(CONF_HYSTERESIS_ON, options.get(CONF_HYSTERESIS, DEFAULT_HYSTERESIS_ON)),
-                    ): vol.All(
-                        vol.Coerce(float),
-                        vol.Range(min=MIN_HYSTERESIS_ON, max=MAX_HYSTERESIS_ON),
-                    ),
-                    vol.Required(
-                        CONF_HYSTERESIS_OFF,
-                        default=options.get(CONF_HYSTERESIS_OFF, DEFAULT_HYSTERESIS_OFF),
-                    ): vol.All(
-                        vol.Coerce(float),
-                        vol.Range(min=MIN_HYSTERESIS_OFF, max=MAX_HYSTERESIS_OFF),
-                    ),
-                }
-            ),
+            data_schema=vol.Schema(schema_dict),
+            errors=errors,
         )
