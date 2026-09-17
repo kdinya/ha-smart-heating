@@ -100,14 +100,14 @@ class SmartHeatingCard extends HTMLElement {
     const currentHOff=c?.attributes?.hysteresis_off??0.5;
     const outdoor=this.attr('outdoor_temperature'),wind=this.attr('wind'),rain=this.attr('precipitation'),rainIcon=SH_RAIN_ICON(rain);const outdoorVisible=this.config.outdoor_visible!==false,windVisible=this.config.wind_visible!==false,rainVisible=this.config.rain_visible!==false;
     const enabled=c?.state!=='off'&&c?.state!=='unavailable';const effectEnabled=this.config.effect_enabled!==false;
-    /* Prefer the integration's own `heating` flag, then hvac_action, then the raw mode. */
-    const burning=a.heating!==undefined?Boolean(a.heating):(a.hvac_action?a.hvac_action==='heating':c?.state==='heat');const heating=enabled&&contact1On&&burning;
-    const schemeMode=['direct','old','parallel'].includes(this.config.connection_mode)?this.config.connection_mode:'direct';
     const hasContact1 = Boolean(a.switch_1 || this.config.switch_1);
     const hasContact2 = Boolean(a.switch_2 || this.config.switch_2);
     const hasAnyContact = hasContact1 || hasContact2;
     const contact1On = a.contact_1_enabled !== undefined ? Boolean(a.contact_1_enabled) : (this._visualContact1 !== undefined ? this._visualContact1 : (this.config.contact_1_active !== false));
     const contact2On = a.contact_2_enabled !== undefined ? Boolean(a.contact_2_enabled) : (this._visualContact2 !== undefined ? this._visualContact2 : Boolean(this.config.contact_2_active));
+    /* Prefer the integration's own `heating` flag, then hvac_action, then the raw mode. */
+    const burning=a.heating!==undefined?Boolean(a.heating):(a.hvac_action?a.hvac_action==='heating':c?.state==='heat');const heating=enabled&&contact1On&&burning;
+    const schemeMode=['direct','old','parallel'].includes(this.config.connection_mode)?this.config.connection_mode:'direct';
     const now=new Date();const date=now.toLocaleDateString(locale,{weekday:'short',day:'2-digit',month:'long',year:'numeric'}).toUpperCase(),time=now.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'});
     this.shadowRoot.innerHTML=`<style>
       @font-face{font-family:'7segment';src:url('/hacsfiles/ha-smart-heating/fonts/7segment.woff') format('woff');font-display:swap}
