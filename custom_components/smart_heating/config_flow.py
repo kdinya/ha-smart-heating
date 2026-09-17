@@ -1,6 +1,7 @@
 """Config and options flow for Smart Heating."""
 from __future__ import annotations
 
+from typing import Any
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
@@ -27,7 +28,6 @@ from .const import (
     DEFAULT_TARGET,
     DOMAIN,
     ENTITY_KEYS,
-    MAX_HYSTERESIS,
     MAX_HYSTERESIS_ON,
     MIN_HYSTERESIS_ON,
     MAX_HYSTERESIS_OFF,
@@ -37,52 +37,59 @@ from .const import (
 )
 
 
+def _sensor_selector(device_class: str | None = None) -> selector.EntitySelector:
+    config = (
+        selector.EntitySelectorConfig(domain="sensor", device_class=device_class)
+        if device_class
+        else selector.EntitySelectorConfig(domain="sensor")
+    )
+    return selector.EntitySelector(config)
+
+
+def _switch_selector() -> selector.EntitySelector:
+    return selector.EntitySelector(selector.EntitySelectorConfig(domain="switch"))
+
+
+def _weather_selector() -> selector.EntitySelector:
+    return selector.EntitySelector(
+        selector.EntitySelectorConfig(domain=["weather", "sensor"])
+    )
+
+
+def _number_slider(min_val: float, max_val: float, step: float = 0.1) -> selector.NumberSelector:
+    return selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=min_val,
+            max=max_val,
+            step=step,
+            mode=selector.NumberSelectorMode.SLIDER,
+            unit_of_measurement="°C",
+        )
+    )
+
+
 def _user_schema() -> vol.Schema:
     """Schema of the initial setup step."""
-    def sensor(device_class: str | None = None) -> selector.EntitySelector:
-        config = (
-            selector.EntitySelectorConfig(domain="sensor", device_class=device_class)
-            if device_class
-            else selector.EntitySelectorConfig(domain="sensor")
-        )
-        return selector.EntitySelector(config)
-
-    def switch() -> selector.EntitySelector:
-        return selector.EntitySelector(selector.EntitySelectorConfig(domain="switch"))
-
-    def number_slider(min_val: float, max_val: float, step: float = 0.1) -> selector.NumberSelector:
-        return selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=min_val,
-                max=max_val,
-                step=step,
-                mode=selector.NumberSelectorMode.SLIDER,
-                unit_of_measurement="°C",
-            )
-        )
-
     return vol.Schema(
         {
             vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-            vol.Required(CONF_ROOM_TEMPERATURE): sensor("temperature"),
-            vol.Required(CONF_TARGET_TEMPERATURE, default=DEFAULT_TARGET): number_slider(
+            vol.Required(CONF_ROOM_TEMPERATURE): _sensor_selector("temperature"),
+            vol.Required(CONF_TARGET_TEMPERATURE, default=DEFAULT_TARGET): _number_slider(
                 MIN_TARGET, MAX_TARGET, 0.5
             ),
-            vol.Required(CONF_HYSTERESIS_ON, default=DEFAULT_HYSTERESIS_ON): number_slider(
+            vol.Required(CONF_HYSTERESIS_ON, default=DEFAULT_HYSTERESIS_ON): _number_slider(
                 MIN_HYSTERESIS_ON, MAX_HYSTERESIS_ON, 0.1
             ),
-            vol.Required(CONF_HYSTERESIS_OFF, default=DEFAULT_HYSTERESIS_OFF): number_slider(
+            vol.Required(CONF_HYSTERESIS_OFF, default=DEFAULT_HYSTERESIS_OFF): _number_slider(
                 MIN_HYSTERESIS_OFF, MAX_HYSTERESIS_OFF, 0.1
             ),
-            vol.Optional(CONF_SWITCH_1): switch(),
-            vol.Optional(CONF_SWITCH_2): switch(),
-            vol.Optional(CONF_HUMIDITY): sensor("humidity"),
-            vol.Optional(CONF_WEATHER): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain=["weather", "sensor"])
-            ),
-            vol.Optional(CONF_OUTDOOR_TEMPERATURE): sensor("temperature"),
-            vol.Optional(CONF_WIND): sensor(),
-            vol.Optional(CONF_PRECIPITATION): sensor(),
+            vol.Optional(CONF_SWITCH_1): _switch_selector(),
+            vol.Optional(CONF_SWITCH_2): _switch_selector(),
+            vol.Optional(CONF_WEATHER): _weather_selector(),
+            vol.Optional(CONF_OUTDOOR_TEMPERATURE): _sensor_selector("temperature"),
+            vol.Optional(CONF_HUMIDITY): _sensor_selector("humidity"),
+            vol.Optional(CONF_WIND): _sensor_selector(),
+            vol.Optional(CONF_PRECIPITATION): _sensor_selector(),
         }
     )
 
@@ -125,78 +132,74 @@ class SmartHeatingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class SmartHeatingOptionsFlow(config_entries.OptionsFlow):
-    """Change runtime options and contact switches."""
+    """Change runtime options, entities and sensors."""
 
     async def async_step_init(self, user_input=None):
         """Show and store runtime options."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            s1 = user_input.get(CONF_SWITCH_1)
-            s2 = user_input.get(CONF_SWITCH_2)
-            if s1 and s2 and s1 == s2:
+            chosen = [user_input[key] for key in ENTITY_KEYS if user_input.get(key)]
+            if len(chosen) != len(set(chosen)):
                 errors["base"] = "duplicate_entity"
             else:
                 payload = dict(user_input)
-                if not payload.get(CONF_SWITCH_1):
-                    payload[CONF_SWITCH_1] = None
-                if not payload.get(CONF_SWITCH_2):
-                    payload[CONF_SWITCH_2] = None
+                for k in ENTITY_KEYS:
+                    if not payload.get(k):
+                        payload[k] = None
                 return self.async_create_entry(title="", data=payload)
 
         options = self.config_entry.options
         data = self.config_entry.data
 
-        current_switch_1 = options.get(CONF_SWITCH_1) if CONF_SWITCH_1 in options else data.get(CONF_SWITCH_1)
-        current_switch_2 = options.get(CONF_SWITCH_2) if CONF_SWITCH_2 in options else data.get(CONF_SWITCH_2)
+        def get_val(key: str, default: Any = None) -> Any:
+            if key in options:
+                val = options[key]
+                return val if val is not None and val != "" else default
+            val = data.get(key)
+            return val if val is not None and val != "" else default
 
-        def switch_selector() -> selector.EntitySelector:
-            return selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="switch")
-            )
+        cur_room = get_val(CONF_ROOM_TEMPERATURE)
+        cur_target = float(get_val(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET))
+        cur_h_on = float(get_val(CONF_HYSTERESIS_ON, get_val(CONF_HYSTERESIS, DEFAULT_HYSTERESIS_ON)))
+        cur_h_off = float(get_val(CONF_HYSTERESIS_OFF, DEFAULT_HYSTERESIS_OFF))
 
-        def number_slider(min_val: float, max_val: float, step: float = 0.1) -> selector.NumberSelector:
-            return selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=min_val,
-                    max=max_val,
-                    step=step,
-                    mode=selector.NumberSelectorMode.SLIDER,
-                    unit_of_measurement="°C",
-                )
-            )
+        schema_dict: dict[Any, Any] = {}
 
-        schema_dict = {
-            vol.Required(
-                CONF_TARGET_TEMPERATURE,
-    CONF_WEATHER,
-                default=options.get(
-                    CONF_TARGET_TEMPERATURE, data.get(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET)
-                ),
-            ): number_slider(MIN_TARGET, MAX_TARGET, 0.5),
-            vol.Required(
-                CONF_HYSTERESIS_ON,
-                default=options.get(
-                    CONF_HYSTERESIS_ON,
-                    options.get(CONF_HYSTERESIS, data.get(CONF_HYSTERESIS_ON, DEFAULT_HYSTERESIS_ON)),
-                ),
-            ): number_slider(MIN_HYSTERESIS_ON, MAX_HYSTERESIS_ON, 0.1),
-            vol.Required(
-                CONF_HYSTERESIS_OFF,
-                default=options.get(
-                    CONF_HYSTERESIS_OFF, data.get(CONF_HYSTERESIS_OFF, DEFAULT_HYSTERESIS_OFF)
-                ),
-            ): number_slider(MIN_HYSTERESIS_OFF, MAX_HYSTERESIS_OFF, 0.1),
-        }
-
-        if current_switch_1:
-            schema_dict[vol.Optional(CONF_SWITCH_1, default=current_switch_1)] = switch_selector()
+        # Room temperature sensor is required
+        if cur_room:
+            schema_dict[vol.Required(CONF_ROOM_TEMPERATURE, default=cur_room)] = _sensor_selector("temperature")
         else:
-            schema_dict[vol.Optional(CONF_SWITCH_1)] = switch_selector()
+            schema_dict[vol.Required(CONF_ROOM_TEMPERATURE)] = _sensor_selector("temperature")
 
-        if current_switch_2:
-            schema_dict[vol.Optional(CONF_SWITCH_2, default=current_switch_2)] = switch_selector()
-        else:
-            schema_dict[vol.Optional(CONF_SWITCH_2)] = switch_selector()
+        # Target temperature & hysteresis
+        schema_dict[vol.Required(CONF_TARGET_TEMPERATURE, default=cur_target)] = _number_slider(
+            MIN_TARGET, MAX_TARGET, 0.5
+        )
+        schema_dict[vol.Required(CONF_HYSTERESIS_ON, default=cur_h_on)] = _number_slider(
+            MIN_HYSTERESIS_ON, MAX_HYSTERESIS_ON, 0.1
+        )
+        schema_dict[vol.Required(CONF_HYSTERESIS_OFF, default=cur_h_off)] = _number_slider(
+            MIN_HYSTERESIS_OFF, MAX_HYSTERESIS_OFF, 0.1
+        )
+
+        # Output switches
+        cur_s1 = get_val(CONF_SWITCH_1)
+        cur_s2 = get_val(CONF_SWITCH_2)
+        schema_dict[vol.Optional(CONF_SWITCH_1, default=cur_s1) if cur_s1 else vol.Optional(CONF_SWITCH_1)] = _switch_selector()
+        schema_dict[vol.Optional(CONF_SWITCH_2, default=cur_s2) if cur_s2 else vol.Optional(CONF_SWITCH_2)] = _switch_selector()
+
+        # Weather & environmental sensors
+        cur_w = get_val(CONF_WEATHER)
+        cur_out = get_val(CONF_OUTDOOR_TEMPERATURE)
+        cur_hum = get_val(CONF_HUMIDITY)
+        cur_wind = get_val(CONF_WIND)
+        cur_precip = get_val(CONF_PRECIPITATION)
+
+        schema_dict[vol.Optional(CONF_WEATHER, default=cur_w) if cur_w else vol.Optional(CONF_WEATHER)] = _weather_selector()
+        schema_dict[vol.Optional(CONF_OUTDOOR_TEMPERATURE, default=cur_out) if cur_out else vol.Optional(CONF_OUTDOOR_TEMPERATURE)] = _sensor_selector("temperature")
+        schema_dict[vol.Optional(CONF_HUMIDITY, default=cur_hum) if cur_hum else vol.Optional(CONF_HUMIDITY)] = _sensor_selector("humidity")
+        schema_dict[vol.Optional(CONF_WIND, default=cur_wind) if cur_wind else vol.Optional(CONF_WIND)] = _sensor_selector()
+        schema_dict[vol.Optional(CONF_PRECIPITATION, default=cur_precip) if cur_precip else vol.Optional(CONF_PRECIPITATION)] = _sensor_selector()
 
         return self.async_show_form(
             step_id="init",
