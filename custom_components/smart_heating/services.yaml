@@ -1,0 +1,47 @@
+set_contact:
+  name: Set contact switch
+  description: Enable or disable contact 1 (heating relay) or contact 2.
+  target:
+    entity:
+      integration: smart_heating
+  fields:
+    contact_1:
+      name: Contact 1
+      description: State for contact 1 (main heating relay).
+      required: false
+      selector:
+        boolean:
+    contact_2:
+      name: Contact 2
+      description: State for contact 2.
+      required: false
+      selector:
+        boolean:
+
+set_hysteresis:
+  name: Set hysteresis delta
+  description: Set turn-on and turn-off hysteresis temperature thresholds.
+  target:
+    entity:
+      integration: smart_heating
+  fields:
+    hysteresis_on:
+      name: Turn-on delta
+      description: Temperature drop below target to activate heating.
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 5.0
+          step: 0.1
+          unit_of_measurement: "°C"
+    hysteresis_off:
+      name: Turn-off delta
+      description: Temperature rise above target to stop heating.
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 5.0
+          step: 0.1
+          unit_of_measurement: "°C"
