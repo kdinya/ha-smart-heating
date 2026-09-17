@@ -138,14 +138,19 @@ class SmartHeatingOptionsFlow(config_entries.OptionsFlow):
         """Show and store runtime options."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            chosen = [user_input[key] for key in ENTITY_KEYS if user_input.get(key)]
+            # Empty strings mean "field cleared" - normalise them before validating,
+            # so a removed sensor is never compared against the remaining ones.
+            cleaned = {
+                key: (value if value not in (None, "") else None)
+                for key, value in user_input.items()
+            }
+            chosen = [cleaned[key] for key in ENTITY_KEYS if cleaned.get(key)]
             if len(chosen) != len(set(chosen)):
                 errors["base"] = "duplicate_entity"
             else:
-                payload = dict(user_input)
-                for k in ENTITY_KEYS:
-                    if not payload.get(k):
-                        payload[k] = None
+                payload = dict(cleaned)
+                for key in ENTITY_KEYS:
+                    payload.setdefault(key, None)
                 return self.async_create_entry(title="", data=payload)
 
         options = self.config_entry.options
@@ -158,18 +163,30 @@ class SmartHeatingOptionsFlow(config_entries.OptionsFlow):
             val = data.get(key)
             return val if val is not None and val != "" else default
 
-        cur_room = get_val(CONF_ROOM_TEMPERATURE)
         cur_target = float(get_val(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET))
         cur_h_on = float(get_val(CONF_HYSTERESIS_ON, get_val(CONF_HYSTERESIS, DEFAULT_HYSTERESIS_ON)))
         cur_h_off = float(get_val(CONF_HYSTERESIS_OFF, DEFAULT_HYSTERESIS_OFF))
 
+        def optional_entity(key: str) -> Any:
+            """Optional entity field that can be left empty or cleared again.
+
+            `suggested_value` pre-fills the picker without making the value sticky:
+            with `default=` voluptuous re-inserts the old entity when the user
+            clears the field, which used to resurface it as a duplicate.
+            """
+            current = get_val(key)
+            description = {"suggested_value": current} if current else None
+            return vol.Optional(key, description=description)
+
         schema_dict: dict[Any, Any] = {}
 
         # Room temperature sensor is required
-        if cur_room:
-            schema_dict[vol.Required(CONF_ROOM_TEMPERATURE, default=cur_room)] = _sensor_selector("temperature")
-        else:
-            schema_dict[vol.Required(CONF_ROOM_TEMPERATURE)] = _sensor_selector("temperature")
+        schema_dict[
+            vol.Required(
+                CONF_ROOM_TEMPERATURE,
+                description={"suggested_value": get_val(CONF_ROOM_TEMPERATURE)},
+            )
+        ] = _sensor_selector("temperature")
 
         # Target temperature & hysteresis
         schema_dict[vol.Required(CONF_TARGET_TEMPERATURE, default=cur_target)] = _number_slider(
@@ -183,23 +200,15 @@ class SmartHeatingOptionsFlow(config_entries.OptionsFlow):
         )
 
         # Output switches
-        cur_s1 = get_val(CONF_SWITCH_1)
-        cur_s2 = get_val(CONF_SWITCH_2)
-        schema_dict[vol.Optional(CONF_SWITCH_1, default=cur_s1) if cur_s1 else vol.Optional(CONF_SWITCH_1)] = _switch_selector()
-        schema_dict[vol.Optional(CONF_SWITCH_2, default=cur_s2) if cur_s2 else vol.Optional(CONF_SWITCH_2)] = _switch_selector()
+        schema_dict[optional_entity(CONF_SWITCH_1)] = _switch_selector()
+        schema_dict[optional_entity(CONF_SWITCH_2)] = _switch_selector()
 
         # Weather & environmental sensors
-        cur_w = get_val(CONF_WEATHER)
-        cur_out = get_val(CONF_OUTDOOR_TEMPERATURE)
-        cur_hum = get_val(CONF_HUMIDITY)
-        cur_wind = get_val(CONF_WIND)
-        cur_precip = get_val(CONF_PRECIPITATION)
-
-        schema_dict[vol.Optional(CONF_WEATHER, default=cur_w) if cur_w else vol.Optional(CONF_WEATHER)] = _weather_selector()
-        schema_dict[vol.Optional(CONF_OUTDOOR_TEMPERATURE, default=cur_out) if cur_out else vol.Optional(CONF_OUTDOOR_TEMPERATURE)] = _sensor_selector("temperature")
-        schema_dict[vol.Optional(CONF_HUMIDITY, default=cur_hum) if cur_hum else vol.Optional(CONF_HUMIDITY)] = _sensor_selector("humidity")
-        schema_dict[vol.Optional(CONF_WIND, default=cur_wind) if cur_wind else vol.Optional(CONF_WIND)] = _sensor_selector()
-        schema_dict[vol.Optional(CONF_PRECIPITATION, default=cur_precip) if cur_precip else vol.Optional(CONF_PRECIPITATION)] = _sensor_selector()
+        schema_dict[optional_entity(CONF_WEATHER)] = _weather_selector()
+        schema_dict[optional_entity(CONF_OUTDOOR_TEMPERATURE)] = _sensor_selector("temperature")
+        schema_dict[optional_entity(CONF_HUMIDITY)] = _sensor_selector("humidity")
+        schema_dict[optional_entity(CONF_WIND)] = _sensor_selector()
+        schema_dict[optional_entity(CONF_PRECIPITATION)] = _sensor_selector()
 
         return self.async_show_form(
             step_id="init",

@@ -23,6 +23,9 @@ const hass = {
       attributes: {
         current_temperature: 21.4, temperature: 22, humidity: 47.5, heating: true,
         hvac_action: 'heating', min_temp: 5, max_temp: 35, target_temp_step: 0.5,
+        switch_1: 'switch.boiler', switch_2: 'switch.programmer',
+        contact_1_enabled: true, contact_2_enabled: false,
+        outdoor_temperature: '17.2', wind: '2.11', precipitation: '0', weather_condition: 'sunny',
       },
     },
     'sensor.outdoor': { state: '-3.2', attributes: {} },
@@ -42,6 +45,15 @@ card.setConfig({
 });
 card.hass = hass;
 const html = card.shadowRoot.innerHTML;
+// weather values must also come straight from the integration attributes
+const bare = document.createElement('smart-heating-card');
+document.body.appendChild(bare);
+bare.setConfig({ type: 'custom:smart-heating-card', entity: 'climate.smart_heating', language: 'uk' });
+bare.hass = hass;
+const bareHtml = bare.shadowRoot.innerHTML;
+for (const needle of ['17.2', '2.1']) {
+  if (!bareHtml.includes(needle)) throw new Error(`weather attribute fallback missing: ${needle}`);
+}
 const must = ['scheme-card active', 'flame-effect', 'is-active', '21', '22', 'control-panel', '--panel-button-size:0.9', '--room-letter-spacing:-3px'];
 for (const needle of must) {
   if (!html.includes(needle)) throw new Error(`card markup missing: ${needle}`);
@@ -98,6 +110,8 @@ const ignore = new Set([
   // commits) -- they're YAML-only right now. Flagged to the user separately;
   // not silently treated as fine.
   'room_int_visible', 'humidity', 'outdoor_temperature', 'wind', 'precipitation',
+  // Supplied by the Smart Heating device (integration attributes), not by the card editor.
+  'switch_1', 'switch_2', 'contact_1_active', 'contact_2_active', 'title',
 ]);
 const missing = [...readByCard].filter(k => !exposed.has(k) && !ignore.has(k));
 // group/item triplets are generated, check them explicitly
