@@ -346,7 +346,7 @@ ha-card{--ui-scale:clamp(.01,min(calc(100cqw / 600px),calc(100cqh / (600px / var
     root.querySelector('.modal')?.focus?.({preventScroll:true});
     if(_menuEl===null&&_tabsEl!==null){_tabsEl.scrollTop=_tabsScroll;}else if(_menuEl!==null){_menuEl.scrollTop=_menuScroll;const t=this.shadowRoot.querySelector('.tabs');if(t)t.scrollTop=_tabsScroll;}
     root.querySelectorAll('[data-menu-section]').forEach(b=>b.addEventListener('click',()=>{this._menuTab=this._menuTab===b.dataset.menuSection?'':b.dataset.menuSection;this.render()}));
-    root.querySelectorAll('[data-popup-lang]').forEach(b=>b.addEventListener('click',()=>{SH_WRITE_STORE(SH_LANG_KEY,b.dataset.popupLang);this.config={...this.config,language:b.dataset.popupLang};this.render()}));
+    root.querySelectorAll('[data-popup-lang]').forEach(b=>b.addEventListener('click',()=>{SH_WRITE_STORE(SH_LANG_KEY,b.dataset.popupLang);this.config={...this.config,language:b.dataset.popupLang};window.dispatchEvent(new CustomEvent('sh-language-changed',{detail:{language:b.dataset.popupLang}}));this.render()}));
     const applyHyst=(onVal,offVal)=>{
       const newOn=Math.min(5,Math.max(0,Number(Number(onVal).toFixed(1))));
       const newOff=Math.min(5,Math.max(0,Number(Number(offVal).toFixed(1))));
@@ -469,7 +469,12 @@ class SmartHeatingCardEditor extends HTMLElement {
   _emit(){this.dispatchEvent(new CustomEvent('config-changed',{detail:{config:{...this.config}},bubbles:true,composed:true}))}
   _set(k,v){const value=typeof v==='number'?(Number.isFinite(v)?v:(this.config[k]??0)):v;this.config={...this.config,[k]:value};this._emit()}
   _toggleSection(k){if(k==='connection'&&!this._hasAnyContact())return;this._open[k]=!this._open[k];SH_WRITE_STORE(SH_OPEN_KEY,JSON.stringify(this._open));this.render()}
-  _ui(value){return (this.config?.language||'en')==='en'?(SH_EDITOR_EN[value]||value):value}
+  connectedCallback(){if(this._onLangChange)return;this._onLangChange=()=>this.render();window.addEventListener('sh-language-changed',this._onLangChange);}
+  disconnectedCallback(){if(!this._onLangChange)return;window.removeEventListener('sh-language-changed',this._onLangChange);this._onLangChange=null;}
+  /* Same language the running card shows: explicit config value first, then the
+     shared local preference set from the card's own settings window. */
+  _language(){return this.config?.language||SH_READ_STORE(SH_LANG_KEY)||'en';}
+  _ui(value){return this._language()==='en'?(SH_EDITOR_EN[value]||value):value}
   _default(key,fallback){return Object.prototype.hasOwnProperty.call(SH_DEFAULTS,key)?SH_DEFAULTS[key]:fallback}
   _field(label,id,value,placeholder=''){return `<div class="field"><label>${this._ui(label)}</label><input id="${id}" type="text" value="${value??''}" placeholder="${placeholder}"></div>`}
   /* One slider row: −/+ steppers, range, live value and a reset-to-default button. */
@@ -490,7 +495,7 @@ class SmartHeatingCardEditor extends HTMLElement {
     if(!this.shadowRoot)this.attachShadow({mode:'open'});
     if(!this._hass||!this.config)return;
     if(!this._open)this._open=this._restoreOpen();
-    const c=this.config,lang=c.language||'en';
+    const c=this.config,lang=this._language();
     const general=`<div class="field"><label>${this._ui('Ентіті пристрою')}</label><ha-entity-picker id="entity"></ha-entity-picker></div>`;
     const layout=this._ctrl('Пропорція картки (Шир/Вис)','screen_aspect_ratio',{min:1.2,max:2.5,step:.05,unit:''})
       +this._ctrl('Заокруглення картки','card_radius',{min:0,max:100,step:1,unit:'px'})

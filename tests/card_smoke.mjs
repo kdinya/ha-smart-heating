@@ -128,6 +128,32 @@ editor.shadowRoot.getElementById('panel_gap').value = '3';
 editor.shadowRoot.getElementById('panel_gap').dispatchEvent(new window.Event('input', { bubbles: true }));
 if (editor.config.panel_gap !== 3) throw new Error('slider did not write config');
 
+// language chosen from the card's own settings window must reach the (separate)
+// editor instance immediately, and a freshly created editor must remember it.
+{
+  const langCard = document.createElement('smart-heating-card');
+  const langEditor = document.createElement('smart-heating-card-editor');
+  document.body.appendChild(langCard);
+  document.body.appendChild(langEditor);
+  langCard.setConfig({ type: 'custom:smart-heating-card', entity: 'climate.smart_heating' });
+  langCard.hass = hass;
+  langEditor.setConfig({ type: 'custom:smart-heating-card', entity: 'climate.smart_heating' });
+  langEditor.hass = hass;
+  if (!langEditor.shadowRoot.innerHTML.includes('Device entity')) throw new Error('editor should default to English labels');
+  langCard._menuOpen = true;
+  langCard._menuTab = 'language';
+  langCard.render();
+  langCard.shadowRoot.querySelector('[data-popup-lang="uk"]').click();
+  if (!langEditor.shadowRoot.innerHTML.includes('Ентіті пристрою')) throw new Error('editor did not follow the language chosen in the card settings window');
+  if (localStorage.getItem('smart-heating-language') !== 'uk') throw new Error('chosen language was not persisted');
+  const freshEditor = document.createElement('smart-heating-card-editor');
+  document.body.appendChild(freshEditor);
+  freshEditor.setConfig({ type: 'custom:smart-heating-card', entity: 'climate.smart_heating' });
+  freshEditor.hass = hass;
+  if (!freshEditor.shadowRoot.innerHTML.includes('Ентіті пристрою')) throw new Error('a newly opened editor did not restore the persisted language');
+  localStorage.removeItem('smart-heating-language');
+}
+
 console.log('SMOKE OK');
 
 process.exit(0);
