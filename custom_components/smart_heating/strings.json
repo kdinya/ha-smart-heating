@@ -15,7 +15,8 @@
           "precipitation": "Precipitation",
           "target_temperature": "Target temperature",
           "hysteresis_on": "Turn-on delta (hysteresis on)",
-          "hysteresis_off": "Turn-off delta (hysteresis off)"
+          "hysteresis_off": "Turn-off delta (hysteresis off)",
+          "weather": "Weather (Open-Meteo)"
         }
       }
     },
@@ -35,7 +36,13 @@
           "hysteresis_on": "Turn-on delta (hysteresis on)",
           "hysteresis_off": "Turn-off delta (hysteresis off)",
           "switch_1": "Switch 1 (driven by hysteresis)",
-          "switch_2": "Switch 2 (status only)"
+          "switch_2": "Switch 2 (status only)",
+          "room_temperature": "Room temperature",
+          "weather": "Weather (Open-Meteo)",
+          "outdoor_temperature": "Outdoor temperature",
+          "humidity": "Room humidity",
+          "wind": "Wind",
+          "precipitation": "Precipitation"
         }
       }
     }

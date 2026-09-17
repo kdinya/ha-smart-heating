@@ -11,6 +11,7 @@ CONF_HUMIDITY = "humidity"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_WIND = "wind"
 CONF_PRECIPITATION = "precipitation"
+CONF_WEATHER = "weather"
 
 CONF_TARGET_TEMPERATURE = "target_temperature"
 CONF_HYSTERESIS = "hysteresis"
@@ -26,6 +27,7 @@ ENTITY_KEYS = (
     CONF_OUTDOOR_TEMPERATURE,
     CONF_WIND,
     CONF_PRECIPITATION,
+    CONF_WEATHER,
 )
 
 DEFAULT_NAME = "Smart Heating"

@@ -21,6 +21,7 @@ from .const import (
     CONF_SWITCH_1,
     CONF_SWITCH_2,
     CONF_TARGET_TEMPERATURE,
+    CONF_WEATHER,
     CONF_WIND,
     DEFAULT_HYSTERESIS,
     DEFAULT_HYSTERESIS_ON,
@@ -256,10 +257,44 @@ class SmartHeatingData:
             return None
         return state.state
 
+    def weather_attr(self, attr_name: str) -> Any:
+        """Read attribute from configured weather entity."""
+        entity_id = self.get_config_or_option(CONF_WEATHER)
+        state = self.hass.states.get(entity_id) if entity_id else None
+        if not state or state.state in UNAVAILABLE_STATES:
+            return None
+        if attr_name == "state":
+            return state.state
+        return state.attributes.get(attr_name)
+
     @property
     def attributes(self) -> dict[str, Any]:
         """Extra attributes consumed by the Lovelace card."""
         is_burning = self.heating if (self.enabled and self.contact_1_enabled) else False
+        outdoor = self.source_value(CONF_OUTDOOR_TEMPERATURE)
+        if outdoor is None:
+            w_temp = self.weather_attr("temperature")
+            if w_temp is not None:
+                outdoor = str(w_temp)
+
+        hum = self.source_value(CONF_HUMIDITY)
+        if hum is None:
+            w_hum = self.weather_attr("humidity")
+            if w_hum is not None:
+                hum = str(w_hum)
+
+        wind = self.source_value(CONF_WIND)
+        if wind is None:
+            w_wind = self.weather_attr("wind_speed")
+            if w_wind is not None:
+                wind = str(w_wind)
+
+        precip = self.source_value(CONF_PRECIPITATION)
+        if precip is None:
+            w_precip = self.weather_attr("precipitation")
+            if w_precip is not None:
+                precip = str(w_precip)
+
         return {
             "enabled": self.enabled,
             ATTR_HEATING: is_burning,
@@ -272,10 +307,12 @@ class SmartHeatingData:
             "hysteresis": self.hysteresis,
             "hysteresis_on": self.hysteresis_on,
             "hysteresis_off": self.hysteresis_off,
-            "humidity": self.source_value(CONF_HUMIDITY),
-            "outdoor_temperature": self.source_value(CONF_OUTDOOR_TEMPERATURE),
-            "wind": self.source_value(CONF_WIND),
-            "precipitation": self.source_value(CONF_PRECIPITATION),
+            "humidity": hum,
+            "outdoor_temperature": outdoor,
+            "weather": self.source_value(CONF_WEATHER),
+            "weather_condition": self.weather_attr("state"),
+            "wind": wind,
+            "precipitation": precip,
             "switch_1": self.get_config_or_option(CONF_SWITCH_1),
             "switch_2": self.get_config_or_option(CONF_SWITCH_2),
             "switch_2_state": self.source_value(CONF_SWITCH_2),

@@ -18,6 +18,7 @@ from .const import (
     CONF_SWITCH_1,
     CONF_SWITCH_2,
     CONF_TARGET_TEMPERATURE,
+    CONF_WEATHER,
     CONF_WIND,
     DEFAULT_HYSTERESIS,
     DEFAULT_HYSTERESIS_ON,
@@ -76,6 +77,9 @@ def _user_schema() -> vol.Schema:
             vol.Optional(CONF_SWITCH_1): switch(),
             vol.Optional(CONF_SWITCH_2): switch(),
             vol.Optional(CONF_HUMIDITY): sensor("humidity"),
+            vol.Optional(CONF_WEATHER): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain=["weather", "sensor"])
+            ),
             vol.Optional(CONF_OUTDOOR_TEMPERATURE): sensor("temperature"),
             vol.Optional(CONF_WIND): sensor(),
             vol.Optional(CONF_PRECIPITATION): sensor(),
@@ -164,6 +168,7 @@ class SmartHeatingOptionsFlow(config_entries.OptionsFlow):
         schema_dict = {
             vol.Required(
                 CONF_TARGET_TEMPERATURE,
+    CONF_WEATHER,
                 default=options.get(
                     CONF_TARGET_TEMPERATURE, data.get(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET)
                 ),
