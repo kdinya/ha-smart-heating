@@ -43,8 +43,8 @@ const SH_RAIN_ICONS = {
 };
 const SH_RAIN_ICON = (state) => SH_RAIN_ICONS[String(state ?? '').trim().toLowerCase()] || SH_RAIN_ICON_RAINY;
 const SH_DICT = {
-  uk: {power: 'ЖИВЛЕННЯ', program: 'ПРОГРАМА', history: 'ІСТОРІЯ', settings: 'НАЛАШТУВАННЯ', outdoor: 'Температура на вулиці', wind: 'Вітер на вулиці', rain: 'Опади на вулиці', humidity: 'ВОЛОГІСТЬ В КІМНАТІ', scheme: 'СХЕМА ПІДКЛЮЧЕННЯ', contact1: 'КОНТАКТ 1<br>ТЕРМОСТАТ', contact2: 'КОНТАКТ 2<br>ПРОГРАМАТОР', direct: 'ПРЯМИЙ<br>КОНТАКТ', old: 'СТАРИЙ<br>ПРОГРАМАТОР', parallel: 'ПАРАЛЕЛЬНО', boiler: 'КОТЕЛ ПРАЦЮЄ', waiting: 'КОТЕЛ', overview: 'ОГЛЯД', appearance: 'ВИГЛЯД', entities: 'ЕНТІТІ', language: 'МОВА', locale: 'uk-UA', hint_overview: 'Керуйте температурою котла кнопками картки.', hint_appearance: 'Використовуйте візуальний редактор для зміни положення та розміру кожного блоку.', hint_entities: 'Дані беруться з конфігурації пристрою Smart Heating.', title_appearance: 'Вигляд картки', title_entities: 'Підключені ентіті'},
-  en: {power: 'POWER', program: 'PROGRAM', history: 'HISTORY', settings: 'SETTINGS', outdoor: 'Outdoor temperature', wind: 'Wind outside', rain: 'Precipitation', humidity: 'ROOM HUMIDITY', scheme: 'CONNECTION SCHEME', contact1: 'CONTACT 1<br>THERMOSTAT', contact2: 'CONTACT 2<br>PROGRAMMER', direct: 'DIRECT<br>CONTACT', old: 'OLD<br>PROGRAMMER', parallel: 'PARALLEL', boiler: 'BOILER RUNNING', waiting: 'BOILER', overview: 'OVERVIEW', appearance: 'APPEARANCE', entities: 'ENTITIES', language: 'LANGUAGE', locale: 'en-GB', hint_overview: 'Control the boiler temperature from the card buttons.', hint_appearance: 'Use the visual editor to change each block position and size.', hint_entities: 'Data is read from the Smart Heating device configuration.', title_appearance: 'Card appearance', title_entities: 'Connected entities'},
+  uk: {power: 'ЖИВЛЕННЯ', program: 'ПРОГРАМА', history: 'ІСТОРІЯ', settings: 'НАЛАШТУВАННЯ', outdoor: 'Температура на вулиці', wind: 'Вітер на вулиці', rain: 'Опади на вулиці', humidity: 'ВОЛОГІСТЬ В КІМНАТІ', scheme: 'СХЕМА ПІДКЛЮЧЕННЯ', contact1: 'КОНТАКТ 1<br>ТЕРМОСТАТ', contact2: 'КОНТАКТ 2<br>ПРОГРАМАТОР', direct: 'ПРЯМИЙ<br>КОНТАКТ', old: 'СТАРИЙ<br>ПРОГРАМАТОР', parallel: 'ПАРАЛЕЛЬНО', boiler: 'КОТЕЛ ПРАЦЮЄ', waiting: 'КОТЕЛ', overview: 'ОГЛЯД', appearance: 'ВИГЛЯД', entities: 'ЕНТІТІ', language: 'МОВА', locale: 'uk-UA', hint_overview: 'Керуйте температурою котла кнопками картки.', hint_appearance: 'Використовуйте візуальний редактор для зміни положення та розміру кожного блоку.', hint_entities: 'Дані беруться з конфігурації пристрою Smart Heating.', title_appearance: 'Вигляд картки', title_entities: 'Підключені ентіті', contact1_status: 'Контакт 1 (Термостат)', contact2_status: 'Контакт 2 (Програматор)', contact2_entity: 'Сутність Контакту 2'},
+  en: {power: 'POWER', program: 'PROGRAM', history: 'HISTORY', settings: 'SETTINGS', outdoor: 'Outdoor temperature', wind: 'Wind outside', rain: 'Precipitation', humidity: 'ROOM HUMIDITY', scheme: 'CONNECTION SCHEME', contact1: 'CONTACT 1<br>THERMOSTAT', contact2: 'CONTACT 2<br>PROGRAMMER', direct: 'DIRECT<br>CONTACT', old: 'OLD<br>PROGRAMMER', parallel: 'PARALLEL', boiler: 'BOILER RUNNING', waiting: 'BOILER', overview: 'OVERVIEW', appearance: 'APPEARANCE', entities: 'ENTITIES', language: 'LANGUAGE', locale: 'en-GB', hint_overview: 'Control the boiler temperature from the card buttons.', hint_appearance: 'Use the visual editor to change each block position and size.', hint_entities: 'Data is read from the Smart Heating device configuration.', title_appearance: 'Card appearance', title_entities: 'Connected entities', contact1_status: 'Contact 1 (Thermostat)', contact2_status: 'Contact 2 (Programmer)', contact2_entity: 'Contact 2 Entity'},
 };
 const SH_CLAMP = (value, min, max, fallback) => {
   const parsed = Number(value);
@@ -88,8 +88,8 @@ class SmartHeatingCard extends HTMLElement {
     /* Prefer the integration's own `heating` flag, then hvac_action, then the raw mode. */
     const burning=a.heating!==undefined?Boolean(a.heating):(a.hvac_action?a.hvac_action==='heating':c?.state==='heat');const heating=enabled&&burning;
     const schemeMode=['direct','old','parallel'].includes(this.config.connection_mode)?this.config.connection_mode:'direct';
-    const contact1On = this._visualContact1 !== undefined ? this._visualContact1 : true;
-    const contact2On = this._visualContact2 !== undefined ? this._visualContact2 : false;
+    const contact1On = this._visualContact1 !== undefined ? this._visualContact1 : (this.config.contact_1_active !== false);
+    const contact2On = this._visualContact2 !== undefined ? this._visualContact2 : Boolean(this.config.contact_2_active);
     const now=new Date();const date=now.toLocaleDateString(locale,{weekday:'short',day:'2-digit',month:'long',year:'numeric'}).toUpperCase(),time=now.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'});
     this.shadowRoot.innerHTML=`<style>
       @font-face{font-family:'7segment';src:url('/hacsfiles/ha-smart-heating/fonts/7segment.woff') format('woff');font-display:swap}
@@ -313,7 +313,12 @@ class SmartHeatingCardEditor extends HTMLElement {
       +this._block('Температура на вулиці',this._toggle('Показувати температуру на вулиці','outdoor_visible')+this._place('outdoor'))
       +this._block('Вітер',this._toggle('Показувати вітер','wind_visible')+this._place('wind'))
       +this._block('Опади',this._toggle('Показувати опади','rain_visible')+this._place('rain'));
-    const connection=this._element('Варіанти підключення','scheme');
+    const c1Active = this.config.contact_1_active !== false;
+    const c2Active = Boolean(this.config.contact_2_active);
+    const connection = this._element('Варіанти підключення','scheme')
+      + `<div class="field"><label>${this._ui('contact2_entity')}</label><ha-entity-picker id="switch_2"></ha-entity-picker></div>`
+      + `<div class="field"><label>${this._ui('contact1_status')}</label><div class="choices"><button data-c1-mode="on" class="${c1Active?'active':''}">ON</button><button data-c1-mode="off" class="${!c1Active?'active':''}">OFF</button></div></div>`
+      + `<div class="field"><label>${this._ui('contact2_status')}</label><div class="choices"><button data-c2-mode="on" class="${c2Active?'active':''}">ON</button><button data-c2-mode="off" class="${!c2Active?'active':''}">OFF</button></div></div>`;
     const panel=this._element('Група нижньої панелі','panel')
       +this._ctrl('Розмір кнопок','panel_button_size',{min:.5,max:2,step:.05,unit:'',fallback:1})
       +this._ctrl('Висота панелі','panel_h',{min:-20,max:40,step:1,unit:'%'})
@@ -329,6 +334,19 @@ class SmartHeatingCardEditor extends HTMLElement {
     const root=this.shadowRoot;
     const picker=root.getElementById('entity');
     if(picker){picker.hass=this._hass;picker.value=this.config.entity||'';picker.includeDomains=['climate'];picker.addEventListener('value-changed',e=>this._set('entity',e.detail.value))}
+    const picker2 = root.getElementById('switch_2');
+    if (picker2) {
+      picker2.hass = this._hass;
+      picker2.value = this.config.switch_2 || '';
+      picker2.includeDomains = ['switch', 'input_boolean'];
+      picker2.addEventListener('value-changed', e => this._set('switch_2', e.detail.value));
+    }
+    root.querySelectorAll('[data-c1-mode]').forEach(b => b.addEventListener('click', () => {
+      this._set('contact_1_active', b.dataset.c1Mode === 'on');
+    }));
+    root.querySelectorAll('[data-c2-mode]').forEach(b => b.addEventListener('click', () => {
+      this._set('contact_2_active', b.dataset.c2Mode === 'on');
+    }));
     root.querySelectorAll('[data-section]').forEach(b=>b.onclick=()=>this._toggleSection(b.dataset.section));
     root.querySelectorAll('input:not([type=range])').forEach(el=>el.addEventListener('change',()=>this._set(el.id,el.value)));
     root.querySelectorAll('input[type=range]').forEach(el=>{
