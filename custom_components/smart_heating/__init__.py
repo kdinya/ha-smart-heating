@@ -19,7 +19,7 @@ PLATFORMS = ["climate", "number", "switch"]
 CARD_PATH = Path(__file__).parent / "www"
 CANONICAL_CARD_URL = "/hacsfiles/ha-smart-heating/smart-heating-card.js"
 CARD_VERSION = "1.0.3"
-CARD_BUILD = "reference-dashboard-v103-13"
+CARD_BUILD = "reference-dashboard-v103-14"
 
 
 def _is_card_resource_url(url: str) -> bool:
@@ -55,6 +55,25 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
                 data.set_contact_2(bool(contact_2))
 
     hass.services.async_register(DOMAIN, "set_contact", async_handle_set_contact)
+
+    async def async_handle_set_hysteresis(call: Any) -> None:
+        entity_id = call.data.get("entity_id")
+        h_on = call.data.get("hysteresis_on", call.data.get("hysteresis"))
+        h_off = call.data.get("hysteresis_off")
+
+        entries = hass.data.get(DOMAIN, {})
+        target_datas = []
+        for entry_id, data in entries.items():
+            if isinstance(data, SmartHeatingData):
+                target_datas.append(data)
+
+        for data in target_datas:
+            if h_on is not None:
+                data.set_hysteresis_on(float(h_on))
+            if h_off is not None:
+                data.set_hysteresis_off(float(h_off))
+
+    hass.services.async_register(DOMAIN, "set_hysteresis", async_handle_set_hysteresis)
 
     if hass.state is CoreState.running:
         hass.async_create_task(_register_frontend())
