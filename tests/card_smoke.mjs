@@ -31,6 +31,7 @@ const hass = {
     'sensor.outdoor': { state: '-3.2', attributes: {} },
     'sensor.wind': { state: '4 m/s', attributes: {} },
     'sensor.rain': { state: '0 mm', attributes: {} },
+    'weather.home_assistant': { state: 'sunny', attributes: { temperature: 17.2, wind_speed: 2.11, wind_speed_unit: 'm/s' } },
   },
   callService: (...args) => calls.push(args),
 };
@@ -40,11 +41,16 @@ const card = document.createElement('smart-heating-card');
 document.body.appendChild(card);
 card.setConfig({
   type: 'custom:smart-heating-card', entity: 'climate.smart_heating', title: 'HEAT',
-  outdoor_temperature: 'sensor.outdoor', wind: 'sensor.wind', precipitation: 'sensor.rain',
+  weather: 'weather.home_assistant', outdoor_temperature: 'sensor.outdoor', wind: 'sensor.wind', precipitation: 'sensor.rain',
   connection_mode: 'parallel', language: 'uk', panel_button_size: 0.9, room_letter_spacing: -3,
 });
 card.hass = hass;
 const html = card.shadowRoot.innerHTML;
+localStorage.setItem('smart-heating-language', 'en');
+card.render();
+if (card._language() !== 'en') throw new Error('stored settings language did not override card config language');
+localStorage.setItem('smart-heating-language', 'uk');
+card.render();
 // weather values must also come straight from the integration attributes
 const bare = document.createElement('smart-heating-card');
 document.body.appendChild(bare);
@@ -58,6 +64,7 @@ const must = ['scheme-card active', 'flame-effect', 'is-active', '21', '22', 'co
 for (const needle of must) {
   if (!html.includes(needle)) throw new Error(`card markup missing: ${needle}`);
 }
+if (!html.includes('17.2') || !html.includes('2.1 m/s')) throw new Error('weather entity attributes were not rendered');
 if (html.includes('undefined') || html.includes('NaN')) throw new Error('card markup contains undefined/NaN');
 const schemeCards = [...card.shadowRoot.querySelectorAll('.scheme-card')];
 // Validates contact switch cards render properly
@@ -85,6 +92,7 @@ card.shadowRoot.querySelector('.modal-close').click();
 if (card.shadowRoot.querySelector('.modal')) throw new Error('settings modal did not close');
 
 // editor
+localStorage.removeItem('smart-heating-language');
 const editor = document.createElement('smart-heating-card-editor');
 document.body.appendChild(editor);
 editor.setConfig({ type: 'custom:smart-heating-card', entity: 'climate.smart_heating', language: 'uk' });
@@ -100,7 +108,7 @@ const texts = new Set([...editor.shadowRoot.querySelectorAll('input[type=text]')
 console.log('editor sliders:', keys.size, '| toggles:', toggles.size, '| text fields:', texts.size);
 
 // every config key the card reads must be reachable from the editor
-const exposed = new Set([...keys, ...toggles, ...texts, 'entity', 'language', 'connection_mode']);
+const exposed = new Set([...keys, ...toggles, ...texts, 'entity', 'weather', 'language', 'connection_mode']);
 const readByCard = new Set();
 for (const m of source.matchAll(/this\.config(?:\?)?\.([a-z0-9_]+)/g)) readByCard.add(m[1]);
 for (const m of source.matchAll(/[^A-Za-z0-9_]n\('([a-z0-9_]+)'/g)) readByCard.add(m[1]);

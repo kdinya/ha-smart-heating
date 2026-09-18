@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.5 — 2026-09-18
+
+- Read outdoor temperature, wind speed, wind units, and weather condition directly from the configured Home Assistant `weather` entity while preserving existing fallbacks.
+- Include the configured weather entity in watched state updates so weather changes refresh the card.
+- Make the settings-window language preference authoritative and keep the visual editor synchronized with it.
+- Add a clearable weather entity picker to the visual editor.
+- Remove the duplicate extra-JS loader and keep the canonical Lovelace resource path as the single loading mechanism.
+- Add regression coverage for weather-entity rendering, language persistence, and resource-loader uniqueness.
+
 ## 1.0.4 — 2026-09-18
 
 New 24-hour heating schedule programs, quick Eco timer, relay reverse feedback verification, performance optimizations, and UI refinements.

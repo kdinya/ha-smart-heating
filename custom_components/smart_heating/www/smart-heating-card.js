@@ -1,5 +1,5 @@
-/* Smart Heating Card 1.0.4 — reference-matched 3D boiler controller */
-const SH_VERSION = '1.0.4';
+/* Smart Heating Card 1.0.5 — reference-matched 3D boiler controller */
+const SH_VERSION = '1.0.5';
 const SH_LANG_KEY = 'smart-heating-language';
 const SH_TEMP_STEP_KEY = 'smart-heating-temp-step';
 const SH_OPEN_KEY = 'smart-heating-open-sections';
@@ -148,16 +148,17 @@ class SmartHeatingCard extends HTMLElement {
   }
   getCardSize(){return 9;}
   /* Re-render only when a watched entity actually changed: `hass` is replaced on every state update in HA. */
-  _watchedEntities(){return [this.config?.entity,this.config?.switch_2,this._hass?.states?.[this.config?.entity]?.attributes?.switch_2,this.config?.humidity,this.config?.outdoor_temperature,this.config?.wind,this.config?.precipitation].filter(Boolean);}
+  _watchedEntities(){return [this.config?.entity,this.config?.switch_2,this._hass?.states?.[this.config?.entity]?.attributes?.switch_2,this.config?.weather,this.config?.humidity,this.config?.outdoor_temperature,this.config?.wind,this.config?.precipitation].filter(Boolean);}
   _shouldRender(previous,next){if(!previous||!next||!this.config)return true;return this._watchedEntities().some(id=>previous.states?.[id]!==next.states?.[id]);}
   _tickClock(){if(!this.shadowRoot)return;const lang=this._language(),locale=SH_DICT[lang]?.locale||'uk-UA',now=new Date();const date=this.shadowRoot.querySelector('.clock .date'),time=this.shadowRoot.querySelector('.clock-time');if(date)date.textContent=now.toLocaleDateString(locale,{weekday:'short',day:'2-digit',month:'long',year:'numeric'}).toUpperCase();if(time)time.textContent=now.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'});}
-  _language(){return this.config?.language||SH_READ_STORE(SH_LANG_KEY)||'en';}
+  _language(){return SH_READ_STORE(SH_LANG_KEY)||this.config?.language||'en';}
   /* User-chosen step for the dial's +/- buttons; falls back to the climate
      entity's own target_temp_step, then to the historical 0.5 default. */
   _tempStep(){const v=Number(SH_READ_STORE(SH_TEMP_STEP_KEY));return Number.isFinite(v)&&v>0?Math.min(2,Math.max(.1,v)):null;}
   state(id){return id&&this._hass?.states[id];}
   _contact1EntityId(){const a=this.state(this.config?.entity)?.attributes||{};return a.switch_1||this.config?.switch_1||'';}
   attr(name,fallback='—'){const id=this.config?.[name],s=this.state(id);return s&&!SH_UNAVAILABLE.includes(s.state)?s.state:fallback;}
+  _weatherValues(){const weather=this.state(this.config?.weather);const a=weather?.attributes||{};const unavailable=!weather||SH_UNAVAILABLE.includes(weather.state);const value=(v,fallback='—')=>v!==undefined&&v!==null&&v!==''?v:fallback;return {state:unavailable?'—':weather.state,temperature:value(a.temperature),wind:value(a.wind_speed),windUnit:value(a.wind_speed_unit,''),precipitation:value(a.precipitation)};}
 
   _getPrograms() {
     const attrProgs = this.state(this.config?.entity)?.attributes?.programs;
@@ -230,9 +231,11 @@ class SmartHeatingCard extends HTMLElement {
     const currentHOff=c?.attributes?.hysteresis_off??0.5;
     const currentTempStep=a.temp_step!==undefined?Number(a.temp_step):(this._tempStep()??0.5);
     const shNum=(v)=>{const num=Number(v);return Number.isFinite(num)?String(Math.round(num*10)/10):v};
-    const outdoor=shNum(this.attr('outdoor_temperature',a.outdoor_temperature??'—'));
-    const wind=shNum(this.attr('wind',a.wind??'—'));
-    const rawWeather=a.weather_condition||a.weather||this.attr('precipitation',a.precipitation??'—');
+    const weatherValues=this._weatherValues();
+    const outdoor=shNum(weatherValues.temperature!=='—'?weatherValues.temperature:this.attr('outdoor_temperature',a.outdoor_temperature??'—'));
+    const windValue=weatherValues.wind!=='—'?weatherValues.wind:this.attr('wind',a.wind??'—');
+    const wind=shNum(windValue)+(weatherValues.windUnit?` ${this.safe(weatherValues.windUnit)}`:'');
+    const rawWeather=weatherValues.state!=='—'?weatherValues.state:(a.weather_condition||a.weather||this.attr('precipitation',a.precipitation??'—'));
     const rain=SH_WEATHER_TEXT(rawWeather,tr);
     const rainIcon=SH_RAIN_ICON(a.weather_condition||a.weather||this.attr('precipitation',a.precipitation));const outdoorVisible=this.config.outdoor_visible!==false,windVisible=this.config.wind_visible!==false,rainVisible=this.config.rain_visible!==false;
     
@@ -1153,7 +1156,7 @@ const SH_EDITOR_EN = {
   'Налаштування блоків': 'Block settings', 'ОСНОВНЕ': 'GENERAL', 'РОЗКЛАДКА': 'LAYOUT', 'ШАПКА': 'HEADER',
   'КЛІМАТ': 'CLIMATE', 'ВОЛОГІСТЬ': 'HUMIDITY', 'ПОГОДА': 'WEATHER', 'КЕРУВАННЯ': 'CONTROL',
   'ПАНЕЛЬ': 'PANEL', 'ВІЗУАЛЬНІ ЕФЕКТИ': 'VISUAL EFFECTS',
-  'Назва пристрою': 'Device name', 'Ентіті пристрою': 'Device entity', 'Мова інтерфейсу': 'Interface language',
+  'Назва пристрою': 'Device name', 'Ентіті пристрою': 'Device entity', 'Ентіті погоди': 'Weather entity', 'Мова інтерфейсу': 'Interface language',
   'Пропорція картки (Шир/Вис)': 'Card ratio (W/H)', 'Заокруглення картки': 'Card corner radius', 'Ширина рамки екрана': 'Screen frame width',
   'Вертикальний зсув рядка': 'Content row offset',
   'Горизонталь': 'Horizontal position', 'Вертикаль': 'Vertical position', 'Розмір': 'Size',
@@ -1191,9 +1194,9 @@ class SmartHeatingCardEditor extends HTMLElement {
   _toggleSection(k){if(k==='connection'&&!this._hasAnyContact())return;this._open[k]=!this._open[k];SH_WRITE_STORE(SH_OPEN_KEY,JSON.stringify(this._open));this.render()}
   connectedCallback(){if(this._onLangChange)return;this._onLangChange=()=>this.render();window.addEventListener('sh-language-changed',this._onLangChange);}
   disconnectedCallback(){if(!this._onLangChange)return;window.removeEventListener('sh-language-changed',this._onLangChange);this._onLangChange=null;}
-  /* Same language the running card shows: explicit config value first, then the
-     shared local preference set from the card's own settings window. */
-  _language(){return this.config?.language||SH_READ_STORE(SH_LANG_KEY)||'en';}
+  /* The settings-window preference is authoritative; config.language is only a
+     migration fallback for cards that have no saved local preference yet. */
+  _language(){return SH_READ_STORE(SH_LANG_KEY)||this.config?.language||'en';}
   _ui(value){return this._language()==='en'?(SH_EDITOR_EN[value]||value):value}
   _default(key,fallback){return Object.prototype.hasOwnProperty.call(SH_DEFAULTS,key)?SH_DEFAULTS[key]:fallback}
   _field(label,id,value,placeholder=''){return `<div class="field"><label>${this._ui(label)}</label><input id="${id}" type="text" value="${value??''}" placeholder="${placeholder}"></div>`}
@@ -1216,7 +1219,7 @@ class SmartHeatingCardEditor extends HTMLElement {
     if(!this._hass||!this.config)return;
     if(!this._open)this._open=this._restoreOpen();
     const c=this.config,lang=this._language();
-    const general=`<div class="field"><label>${this._ui('Ентіті пристрою')}</label><ha-entity-picker id="entity"></ha-entity-picker></div>`;
+    const general=`<div class="field"><label>${this._ui('Ентіті пристрою')}</label><ha-entity-picker id="entity"></ha-entity-picker></div><div class="field"><label>${this._ui('Ентіті погоди')}</label><ha-entity-picker id="weather"></ha-entity-picker></div>`;
     const layout=this._ctrl('Пропорція картки (Шир/Вис)','screen_aspect_ratio',{min:1.2,max:2.5,step:.05,unit:''})
       +this._ctrl('Заокруглення картки','card_radius',{min:0,max:100,step:1,unit:'px'})
       +this._ctrl('Вертикальний зсув рядка','row_offset_y',{min:-100,max:140,step:.5,unit:'%'})
@@ -1252,6 +1255,8 @@ class SmartHeatingCardEditor extends HTMLElement {
     const root=this.shadowRoot;
     const picker=root.getElementById('entity');
     if(picker){picker.hass=this._hass;picker.value=this.config.entity||'';picker.includeDomains=['climate'];picker.addEventListener('value-changed',e=>this._set('entity',e.detail.value))}
+    const weatherPicker=root.getElementById('weather');
+    if(weatherPicker){weatherPicker.hass=this._hass;weatherPicker.value=this.config.weather||'';weatherPicker.includeDomains=['weather'];weatherPicker.addEventListener('value-changed',e=>this._set('weather',e.detail.value||''))}
     root.querySelectorAll('[data-section]').forEach(b=>b.onclick=()=>this._toggleSection(b.dataset.section));
     root.querySelectorAll('input:not([type=range])').forEach(el=>el.addEventListener('change',()=>this._set(el.id,el.value)));
     root.querySelectorAll('input[type=range]').forEach(el=>{

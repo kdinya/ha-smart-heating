@@ -110,9 +110,17 @@ class VersionTests(unittest.TestCase):
         init = (COMPONENT / "__init__.py").read_text()
         self.assertRegex(init, r'CARD_BUILD = "[A-Za-z0-9._-]+\d"')
 
+    def test_card_weather_entity_and_language_contract(self):
+        source = card_source()
+        self.assertIn("this.config?.weather", source)
+        self.assertIn("a.temperature", source)
+        self.assertIn("a.wind_speed", source)
+        self.assertIn("SH_READ_STORE(SH_LANG_KEY)||this.config?.language", source)
+
     def test_card_resource_url_carries_version_and_build(self):
         init = (COMPONENT / "__init__.py").read_text()
         self.assertIn("?v={CARD_VERSION}&build={CARD_BUILD}", init)
+        self.assertNotIn("add_extra_js_url", init)
 
 
 class CardContractTests(unittest.TestCase):
