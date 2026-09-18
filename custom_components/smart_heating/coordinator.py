@@ -304,12 +304,24 @@ class SmartHeatingData:
 
     @property
     def effective_target_temperature(self) -> float:
-        """Target temperature taking into account eco timer or active schedule."""
+        """Target temperature taking into account eco timer or active schedule.
+
+        When no program is explicitly selected, the card still runs on the
+        default schedule (P1) rather than ignoring schedules altogether --
+        only an explicit deactivate (active_program cleared with no
+        fallback) or a program list without P1 falls through to the raw
+        manual target.
+        """
         now_ts = time.time()
         if self.eco_timer_until and now_ts < self.eco_timer_until:
             return self.eco_temperature
         if self.active_program and self.active_program in self.programs:
             prog = self.programs[self.active_program]
+        elif not self.active_program and "P1" in self.programs:
+            prog = self.programs["P1"]
+        else:
+            prog = None
+        if prog is not None:
             hours = prog.get("hours", [])
             # HA core or system local hour
             import datetime

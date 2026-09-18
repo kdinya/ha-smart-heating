@@ -160,7 +160,7 @@ class SmartHeatingCard extends HTMLElement {
   attr(name,fallback='—'){const id=this.config?.[name],s=this.state(id);return s&&!SH_UNAVAILABLE.includes(s.state)?s.state:fallback;}
 
   _getPrograms() {
-    const attrProgs = this.attr('programs', null);
+    const attrProgs = this.state(this.config?.entity)?.attributes?.programs;
     if (attrProgs && typeof attrProgs === 'object' && Object.keys(attrProgs).length > 0) {
       return attrProgs;
     }
@@ -178,8 +178,10 @@ class SmartHeatingCard extends HTMLElement {
     return p;
   }
   _getActiveProgram() {
-    const attrAct = this.attr('active_program', null);
-    if (attrAct !== null && attrAct !== undefined) return String(attrAct);
+    const attrs = this.state(this.config?.entity)?.attributes;
+    if (attrs && 'active_program' in attrs) {
+      return attrs.active_program ? String(attrs.active_program) : '';
+    }
     return SH_READ_STORE(SH_ACTIVE_PROG_KEY) || '';
   }
   _getEcoTemp() {
@@ -237,7 +239,9 @@ class SmartHeatingCard extends HTMLElement {
     const progs = this._getPrograms();
     const activeProgId = this._getActiveProgram();
     const activeProg = progs[activeProgId] || null;
-    const ecoUntil = this._getEcoTimerUntil();
+    const ecoUntil = (a.eco_timer_until !== undefined && a.eco_timer_until !== null && Number(a.eco_timer_until) > 0)
+      ? Number(a.eco_timer_until) * 1000
+      : this._getEcoTimerUntil();
     const nowEpoch = Date.now();
     const ecoTimerActive = ecoUntil > nowEpoch;
     const ecoRemainingMin = ecoTimerActive ? Math.ceil((ecoUntil - nowEpoch) / 60000) : 0;
@@ -372,7 +376,11 @@ ha-card{--ui-scale:clamp(.01,min(calc(100cqw / 600px),calc(100cqh / (600px / var
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
     <div style="background:#142028;border:1px solid #ff8a0044;border-radius:10px;padding:10px 12px">
       <div style="color:var(--orange);font-size:11px;font-weight:700;margin-bottom:4px">🔥 ${tr('target_mode')}</div>
-      <div style="font-size:18px;font-weight:700;color:#fff">${Number(target).toFixed(1)} °C</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button class="sh-step-btn" data-target-temp-step="-${currentTempStep}" style="width:24px;height:24px;font-size:14px;padding:0;line-height:1">−</button>
+        <span style="font-size:18px;font-weight:700;color:#fff;min-width:55px;text-align:center" data-target-temp-val>${Number(target).toFixed(1)} °C</span>
+        <button class="sh-step-btn" data-target-temp-step="${currentTempStep}" style="width:24px;height:24px;font-size:14px;padding:0;line-height:1">+</button>
+      </div>
     </div>
     <div style="background:#142028;border:1px solid #10b98144;border-radius:10px;padding:10px 12px">
       <div style="color:#10b981;font-size:11px;font-weight:700;margin-bottom:4px">🌱 ${tr('eco_temp')}</div>
@@ -393,12 +401,11 @@ ha-card{--ui-scale:clamp(.01,min(calc(100cqw / 600px),calc(100cqh / (600px / var
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
             <input type="radio" name="active_prog" value="${pid}" ${isProgActive ? 'checked' : ''} data-select-prog="${pid}" style="accent-color:var(--orange);width:16px;height:16px;cursor:pointer"/>
             <b style="color:${isProgActive ? 'var(--orange)' : '#e2e8f0'};font-size:14px">${this.safe(p.name || pid)}</b>
-            ${isProgActive ? `<span style="background:var(--orange);color:#000;font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px">${tr('active_prog')}</span>` : ''}
           </label>
           <div style="display:flex;gap:6px">
             <button class="sh-prog-fill" data-fill-prog="${pid}" data-fill="target" style="padding:3px 8px;border-radius:4px;border:1px solid #ff8a0055;background:#ff8a0015;color:var(--orange);font-size:10px;cursor:pointer">${tr('all_comfort')}</button>
             <button class="sh-prog-fill" data-fill-prog="${pid}" data-fill="eco" style="padding:3px 8px;border-radius:4px;border:1px solid #10b98155;background:#10b98115;color:#10b981;font-size:10px;cursor:pointer">${tr('all_eco')}</button>
-            ${Object.keys(progs).length > 1 ? `<button class="sh-delete-prog" data-del-prog="${pid}" style="padding:3px 8px;border-radius:4px;border:1px solid #ef444455;background:#ef444415;color:#ef4444;font-size:10px;cursor:pointer">✕</button>` : ''}
+            ${(Object.keys(progs).length > 1 && pid !== 'P1') ? `<button class="sh-delete-prog" data-del-prog="${pid}" style="padding:3px 8px;border-radius:4px;border:1px solid #ef444455;background:#ef444415;color:#ef4444;font-size:10px;cursor:pointer">✕</button>` : ''}
           </div>
         </div>
         <!-- 24h interactive timeline -->
@@ -616,7 +623,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
       const newPid = 'P' + nextNum;
       pList[newPid] = {
         name: 'Програма ' + nextNum,
-        hours: [0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0]
+        hours: Array(24).fill(1)
       };
       this._saveProgramsList(pList);
       this._hass.callService('smart_heating', 'set_program', { programs: pList });
@@ -628,7 +635,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
       btn.addEventListener('click', () => {
         const pid = btn.dataset.delProg;
         const pList = this._getProgramsList();
-        if (Object.keys(pList).length > 1) {
+        if (Object.keys(pList).length > 1 && pid !== 'P1') {
           delete pList[pid];
           if (this._activeProgId === pid) {
             this._activeProgId = Object.keys(pList)[0] || '';
@@ -654,7 +661,29 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     root.querySelectorAll('[data-eco-timer]').forEach(btn => {
       btn.addEventListener('click', () => {
         const dur = Number(btn.dataset.ecoTimer);
+        SH_WRITE_STORE(SH_ECO_TIMER_KEY, String(dur > 0 ? Date.now() + dur * 60000 : 0));
         this._hass.callService('smart_heating', 'set_eco_timer', { duration: dur });
+        this.render();
+      });
+    });
+
+    // Target temp step (same step configured in the Hysteresis tab)
+    root.querySelectorAll('[data-target-temp-step]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const step = Number(btn.dataset.targetTempStep);
+        const curTarget = Number(a.temperature ?? target);
+        if (!Number.isFinite(curTarget)) return;
+        const min = Number.isFinite(Number(a.min_temp)) ? Number(a.min_temp) : 5;
+        const max = Number.isFinite(Number(a.max_temp)) ? Number(a.max_temp) : 35;
+        const nextTarget = Math.min(max, Math.max(min, Number((curTarget + step).toFixed(2))));
+        if (nextTarget === curTarget) return;
+        this._hass.callService('climate', 'set_temperature', { entity_id: this.config.entity, temperature: nextTarget });
+        // eco must stay at least 0.5 below target; pull it down if the new
+        // target no longer leaves room for it.
+        const curEco = Number(a.eco_temperature ?? this._getEcoTemp());
+        if (Number.isFinite(curEco) && curEco > nextTarget - 0.5) {
+          this._hass.callService('smart_heating', 'set_eco_temperature', { temperature: Number((nextTarget - 0.5).toFixed(1)) });
+        }
         this.render();
       });
     });
@@ -664,8 +693,11 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
       btn.addEventListener('click', () => {
         const step = Number(btn.dataset.ecoTempStep);
         const curEco = Number(a.eco_temperature ?? 18);
-        const nextEco = Math.max(10, Math.min(30, Number((curEco + step).toFixed(1))));
+        const curTarget = Number(a.temperature ?? target);
+        const ecoCeiling = Number.isFinite(curTarget) ? curTarget - 0.5 : 30;
+        const nextEco = Math.max(10, Math.min(30, Math.min(ecoCeiling, Number((curEco + step).toFixed(1)))));
         this._hass.callService('smart_heating', 'set_eco_temperature', { temperature: nextEco });
+        this.render();
       });
     });
 

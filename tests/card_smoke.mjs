@@ -215,6 +215,97 @@ if (editor.config.panel_gap !== 3) throw new Error('slider did not write config'
   if (blueSegs < 1) throw new Error('room temperature line missing');
 }
 
+// programs window: real backend data drives the list/selection (not just
+// this browser's localStorage), the eco timer reflects eco_timer_until,
+// the target/eco step controls respect the invariants, P1 is protected,
+// and new programs default to all-comfort.
+{
+  const progHass = (attrs, svc) => ({
+    states: { 'climate.progtest': { state: 'heat', attributes: {
+      current_temperature: 21, temperature: 22, humidity: 47, heating: false,
+      min_temp: 5, max_temp: 35, contact_1_enabled: true, contact_2_enabled: true,
+      switch_1: 'switch.a', switch_2: 'switch.b',
+      active_program: 'P1',
+      programs: { P1: { name: 'P1', hours: Array(24).fill(1) } },
+      eco_temperature: 18,
+      ...attrs,
+    } } },
+    callService: svc || (() => {}),
+  });
+  const progCard = document.createElement('smart-heating-card');
+  document.body.appendChild(progCard);
+  progCard.setConfig({ type: 'custom:smart-heating-card', entity: 'climate.progtest', language: 'uk' });
+
+  // a program list living only on the backend (never touched by this
+  // browser) must still show up, not just localStorage's own copy.
+  localStorage.removeItem('smart-heating-programs');
+  progCard.hass = progHass({ active_program: 'P1', programs: {
+    P1: { name: 'P1', hours: Array(24).fill(1) },
+    P2: { name: 'Програма 2', hours: Array(24).fill(1) },
+  } });
+  progCard._scheduleOpen = true;
+  progCard.render();
+  let ph = progCard.shadowRoot.innerHTML;
+  if (!ph.includes('Програма 2')) throw new Error('program list should come from the backend attribute, not only localStorage');
+  if (ph.includes('Активна')) throw new Error('the redundant "active" label should be gone');
+  if (!progCard.shadowRoot.querySelector('[data-select-prog="P1"]').checked) throw new Error('active_program from the backend should drive the selected radio');
+  if (progCard.shadowRoot.querySelector('[data-del-prog="P1"]')) throw new Error('P1 must never get a delete button');
+  if (!progCard.shadowRoot.querySelector('[data-del-prog="P2"]')) throw new Error('a non-P1 program should still be deletable');
+
+  // eco timer set on the backend must be reflected without this browser
+  // ever having written it itself.
+  localStorage.removeItem('smart-heating-eco-timer');
+  const untilSec = Math.floor(Date.now() / 1000) + 3600;
+  progCard.hass = progHass({ eco_timer_until: untilSec });
+  progCard._scheduleOpen = true;
+  progCard.render();
+  if (!/60\s*хв/.test(progCard.shadowRoot.innerHTML)) throw new Error('eco timer remaining time should read from eco_timer_until, not local storage');
+
+  // clicking a duration calls the real service (with the right param name)
+  let ecoTimerCall = null;
+  progCard.hass = progHass({}, (domain, svc, data) => { if (svc === 'set_eco_timer') ecoTimerCall = data; });
+  progCard._scheduleOpen = true;
+  progCard.render();
+  progCard.shadowRoot.querySelector('[data-eco-timer="60"]').click();
+  if (!ecoTimerCall || ecoTimerCall.duration !== 60) throw new Error('eco timer button did not call set_eco_timer with duration:60');
+
+  // target +/- uses the configured step and pulls eco down if it would
+  // otherwise sit closer than 0.5 to the new target.
+  localStorage.setItem('smart-heating-temp-step', '1');
+  let setTemp = null, setEco = null;
+  progCard.hass = progHass({}, (domain, svc, data) => {
+    if (svc === 'set_temperature') setTemp = data.temperature;
+    if (svc === 'set_eco_temperature') setEco = data.temperature;
+  });
+  progCard._scheduleOpen = true;
+  progCard.render();
+  const targetPlusBtn = progCard.shadowRoot.querySelector('[data-target-temp-step="1"]');
+  if (!targetPlusBtn) throw new Error('target temperature +/- buttons missing from the programs window');
+  targetPlusBtn.click();
+  if (setTemp !== 23) throw new Error('target +1 should call set_temperature with 23, got ' + setTemp);
+
+  // eco can never end up within 0.5 of target
+  progCard.hass = progHass({ eco_temperature: 21.8 }, (domain, svc, data) => { if (svc === 'set_eco_temperature') setEco = data.temperature; });
+  progCard._scheduleOpen = true;
+  progCard.render();
+  progCard.shadowRoot.querySelector('[data-eco-temp-step="0.5"]').click();
+  if (setEco !== 21.5) throw new Error('eco should clamp to target-0.5 (21.5), got ' + setEco);
+
+  // a freshly added program starts fully on the comfort (target) setpoint
+  let savedPrograms = null;
+  progCard.hass = progHass({}, (domain, svc, data) => { if (svc === 'set_program') savedPrograms = data.programs; });
+  progCard._scheduleOpen = true;
+  progCard.render();
+  progCard.shadowRoot.querySelector('.sh-add-prog-btn').click();
+  const newPid = savedPrograms && Object.keys(savedPrograms).find(k => k !== 'P1');
+  if (!newPid || !savedPrograms[newPid].hours.every(h => h === 1)) {
+    throw new Error('a newly added program should default to all-comfort hours, not a day/night split');
+  }
+  localStorage.removeItem('smart-heating-eco-timer');
+  localStorage.removeItem('smart-heating-temp-step');
+  localStorage.removeItem('smart-heating-programs');
+}
+
 console.log('SMOKE OK');
 
 process.exit(0);
