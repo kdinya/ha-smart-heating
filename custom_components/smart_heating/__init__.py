@@ -18,8 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["climate", "number", "switch"]
 CARD_PATH = Path(__file__).parent / "www"
 CANONICAL_CARD_URL = "/hacsfiles/ha-smart-heating/smart-heating-card.js"
-CARD_VERSION = "1.0.3"
-CARD_BUILD = "reference-dashboard-v103-21"
+CARD_VERSION = "1.0.4"
+CARD_BUILD = "reference-dashboard-v104-1"
 
 
 def _is_card_resource_url(url: str) -> bool:
@@ -130,6 +130,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await data.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+    
+    async def async_handle_set_program(call) -> None:
+        entity_id = call.data.get("entity_id")
+        program = call.data.get("program")
+        programs = call.data.get("programs")
+        for data in hass.data[DOMAIN].values():
+            data.set_program(program, programs)
+
+    async def async_handle_set_eco_timer(call) -> None:
+        duration = call.data.get("duration", 0)
+        for data in hass.data[DOMAIN].values():
+            data.set_eco_timer(int(duration))
+
+    async def async_handle_set_relay_timeout(call) -> None:
+        timeout = call.data.get("timeout", 10.0)
+        for data in hass.data[DOMAIN].values():
+            data.set_relay_timeout(float(timeout))
+
+    async def async_handle_set_eco_temperature(call) -> None:
+        temp = call.data.get("temperature", 18.0)
+        for data in hass.data[DOMAIN].values():
+            data.set_eco_temperature(float(temp))
+
+    hass.services.async_register(DOMAIN, "set_program", async_handle_set_program)
+    hass.services.async_register(DOMAIN, "set_eco_timer", async_handle_set_eco_timer)
+    hass.services.async_register(DOMAIN, "set_relay_timeout", async_handle_set_relay_timeout)
+    hass.services.async_register(DOMAIN, "set_eco_temperature", async_handle_set_eco_temperature)
+
     return True
 
 

@@ -45,3 +45,57 @@ set_hysteresis:
           max: 5.0
           step: 0.1
           unit_of_measurement: "°C"
+
+set_program:
+  name: Set heating program
+  description: Activate an hourly schedule program or deactivate scheduling.
+  fields:
+    program:
+      name: Program ID
+      description: ID of the program (e.g. P1, P2, or 'none'/'off').
+      required: false
+      selector:
+        text:
+
+set_eco_timer:
+  name: Set quick eco timer
+  description: Set temporary eco mode duration in minutes (0 to cancel).
+  fields:
+    duration:
+      name: Duration (minutes)
+      description: Duration in minutes.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1440
+          unit_of_measurement: "min"
+
+set_relay_timeout:
+  name: Set relay verification timeout
+  description: Timeout in seconds before generating a relay mismatch warning.
+  fields:
+    timeout:
+      name: Timeout (seconds)
+      description: Seconds to wait for switch state confirmation.
+      required: true
+      selector:
+        number:
+          min: 5
+          max: 60
+          unit_of_measurement: "s"
+
+set_eco_temperature:
+  name: Set eco temperature
+  description: Set target temperature for eco mode and eco schedule hours.
+  fields:
+    temperature:
+      name: Temperature
+      description: Eco target temperature.
+      required: true
+      selector:
+        number:
+          min: 5.0
+          max: 35.0
+          step: 0.1
+          unit_of_measurement: "°C"

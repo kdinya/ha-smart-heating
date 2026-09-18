@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.0.4 — 2026-09-18
+
+New 24-hour heating schedule programs, quick Eco timer, relay reverse feedback verification, performance optimizations, and UI refinements.
+
+### Added
+
+- **24-hour Heating Schedules (Button 2)**: Full-screen modal to configure hourly heating programs.
+  - Supports Target (Comfort) and Eco temperatures for all 24 hours of the day.
+  - Interactive 24-hour visual blocks with quick toggles and presets (All Target, All Eco, Day/Night).
+  - P1 default schedule + "+ Add Program" button to create unlimited custom programs (P2, P3...).
+  - Active program radio selection with immediate coordinator synchronization via `smart_heating.set_program`.
+  - Active program badge (`P1`, `P2`, `ECO`) on Button 2 and dynamic indicator pill on the main screen (hidden when inactive).
+- **Quick Eco Timer**: Temporary Eco mode for 30m, 1h, 2h, 4h, 8h, or until midnight with countdown display and automatic reversion.
+- **Relay Feedback Verification**: Tracks physical relay status against desired states. Generates warning alerts if actual state does not match desired state after configurable timeout (5–60s).
+- **Relay Verification Timeout Slider**: Configurable in settings modal and synchronized with backend via `smart_heating.set_relay_timeout`.
+- **Eco Temperature Control**: Dedicated `HeatingEcoTarget` slider number entity automatically created when the device is set up.
+- **IntersectionObserver Resource Saver**: Pauses re-renders, timers, and heavy CSS animations whenever the card is hidden or visible less than 10%, drastically cutting CPU/battery consumption on mobile and background dashboards.
+
+### Changed & Fixed
+
+- **Fixed JS Syntax Error**: Removed dangling commas from dictionary keys that caused configuration and card load failures.
+- **Realistic Blue Flame Icon**: Redesigned the top-left brand icon from a teardrop shape into an unmistakable multi-tongue flame with an inner core.
+- **Default Language**: Card and visual editor now default to English (`en`).
+- **Clean Central Panel Button**: Removed persistent bright glow/border highlight from the central button on the bottom control panel.
+- **Identical Card Mirrors**: Packaged and root card distributions strictly synchronized.
+
 ## 1.0.3 — 2026-09-16
 
 Full audit of the integration and the card: bug fixes, dead-code removal, a rebuilt visual editor and real CI.

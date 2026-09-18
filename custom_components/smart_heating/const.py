@@ -54,3 +54,27 @@ ATTR_CONTACT_2_ENABLED = "contact_2_enabled"
 ATTR_CONTACT_1_STATE = "contact_1_state"
 ATTR_CONTACT_2_STATE = "contact_2_state"
 SERVICE_SET_CONTACT = "set_contact"
+
+CONF_ECO_TEMPERATURE = "eco_temperature"
+DEFAULT_ECO_TEMPERATURE = 18.0
+MIN_ECO_TEMPERATURE = 5.0
+MAX_ECO_TEMPERATURE = 35.0
+
+CONF_RELAY_TIMEOUT = "relay_timeout"
+DEFAULT_RELAY_TIMEOUT = 10.0
+MIN_RELAY_TIMEOUT = 5.0
+MAX_RELAY_TIMEOUT = 60.0
+
+ATTR_ECO_TEMPERATURE = "eco_temperature"
+ATTR_ACTIVE_PROGRAM = "active_program"
+ATTR_SCHEDULE_MODE = "schedule_mode"
+ATTR_ECO_UNTIL = "eco_until"
+ATTR_RELAY_MISMATCH = "relay_mismatch"
+ATTR_RELAY_WARNING = "relay_warning"
+ATTR_RELAY_TIMEOUT = "relay_timeout"
+ATTR_EFFECTIVE_TARGET = "effective_target_temperature"
+
+SERVICE_SET_PROGRAM = "set_program"
+SERVICE_SET_ECO_TIMER = "set_eco_timer"
+SERVICE_SET_RELAY_TIMEOUT = "set_relay_timeout"
+SERVICE_SET_ECO_TEMPERATURE = "set_eco_temperature"

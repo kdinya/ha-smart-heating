@@ -17,12 +17,13 @@ from .coordinator import SmartHeatingData
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the target-temperature and dual hysteresis controls when the device is created."""
+    """Set up the target-temperature, dual hysteresis and eco controls when the device is created."""
     data = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([
         HeatingTarget(data, entry),
         HeatingHysteresisOn(data, entry),
         HeatingHysteresisOff(data, entry),
+        HeatingEcoTarget(data, entry),
     ])
 
 
@@ -107,4 +108,23 @@ class HeatingHysteresisOff(SmartHeatingNumber):
 
     async def async_set_native_value(self, value: float) -> None:
         self.data.set_hysteresis_off(value)
+        self.async_write_ha_state()
+
+
+class HeatingEcoTarget(SmartHeatingNumber):
+    """Eco target temperature used during eco schedule hours and eco timers."""
+
+    _attr_device_class = NumberDeviceClass.TEMPERATURE
+    _attr_native_min_value = MIN_TARGET
+    _attr_native_max_value = MAX_TARGET
+
+    def __init__(self, data: SmartHeatingData, entry) -> None:
+        super().__init__(data, entry, "eco_target", "Еко температура")
+
+    @property
+    def native_value(self) -> float:
+        return self.data.eco_temperature
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.data.set_eco_temperature(value)
         self.async_write_ha_state()

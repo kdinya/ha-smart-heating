@@ -1,3 +1,4 @@
+import time
 """Runtime state and hysteresis controller for Smart Heating."""
 from __future__ import annotations
 
@@ -21,6 +22,14 @@ from .const import (
     CONF_SWITCH_1,
     CONF_SWITCH_2,
     CONF_TARGET_TEMPERATURE,
+    CONF_ECO_TEMPERATURE,
+    CONF_RELAY_TIMEOUT,
+    DEFAULT_ECO_TEMPERATURE,
+    DEFAULT_RELAY_TIMEOUT,
+    MIN_ECO_TEMPERATURE,
+    MAX_ECO_TEMPERATURE,
+    MIN_RELAY_TIMEOUT,
+    MAX_RELAY_TIMEOUT,
     CONF_WEATHER,
     CONF_WIND,
     DEFAULT_HYSTERESIS,
@@ -82,6 +91,31 @@ class SmartHeatingData:
         self.heating = False
         self.contact_1_enabled = True
         self.contact_2_enabled = False
+        self.eco_temperature = clamp(
+            float(self.get_config_or_option(CONF_ECO_TEMPERATURE, DEFAULT_ECO_TEMPERATURE)),
+            MIN_ECO_TEMPERATURE,
+            MAX_ECO_TEMPERATURE,
+        )
+        self.relay_timeout = clamp(
+            float(self.get_config_or_option(CONF_RELAY_TIMEOUT, DEFAULT_RELAY_TIMEOUT)),
+            MIN_RELAY_TIMEOUT,
+            MAX_RELAY_TIMEOUT,
+        )
+        self.active_program: str | None = None
+        self.programs: dict[str, Any] = {
+            "P1": {
+                "name": "P1",
+                "hours": [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0],
+            }
+        }
+        self.eco_timer_until: float | None = None
+        self._switch_1_requested_state: str | None = None
+        self._switch_1_requested_time: float = 0.0
+        self._switch_2_requested_state: str | None = None
+        self._switch_2_requested_time: float = 0.0
+        self.relay_mismatch_1: bool = False
+        self.relay_mismatch_2: bool = False
+        self.relay_warning: str | None = None
         self.room_temperature: float | None = None
         self._remove_listener: Callable[[], None] | None = None
         self._listeners: list[Callable[[], None]] = []
@@ -178,14 +212,24 @@ class SmartHeatingData:
         if switch_1_id:
             desired_1 = "on" if (self.enabled and self.contact_1_enabled and self.heating) else "off"
             current_1 = self.hass.states.get(switch_1_id)
-            if current_1 and current_1.state != desired_1:
-                self.hass.async_create_task(
-                    self.hass.services.async_call(
-                        "switch",
-                        "turn_on" if desired_1 == "on" else "turn_off",
-                        {"entity_id": switch_1_id},
+            if current_1:
+                if self._switch_1_requested_state != desired_1:
+                    self._switch_1_requested_state = desired_1
+                    self._switch_1_requested_time = time.monotonic()
+                if current_1.state != desired_1:
+                    self.hass.async_create_task(
+                        self.hass.services.async_call(
+                            "switch",
+                            "turn_on" if desired_1 == "on" else "turn_off",
+                            {"entity_id": switch_1_id},
+                        )
                     )
-                )
+                    if (time.monotonic() - self._switch_1_requested_time) > self.relay_timeout:
+                        self.relay_mismatch_1 = True
+                        self.relay_warning = f"Switch 1 mismatch: expected {desired_1}, got {current_1.state}"
+                        _LOGGER.warning(self.relay_warning)
+                else:
+                    self.relay_mismatch_1 = False
 
         switch_2_id = self.get_config_or_option(CONF_SWITCH_2)
         if switch_2_id:
@@ -247,6 +291,51 @@ class SmartHeatingData:
         self.hysteresis_off = clamp(float(value), MIN_HYSTERESIS_OFF, MAX_HYSTERESIS_OFF)
         self.evaluate()
 
+
+    @property
+    def effective_target_temperature(self) -> float:
+        """Target temperature taking into account eco timer or active schedule."""
+        now_ts = time.time()
+        if self.eco_timer_until and now_ts < self.eco_timer_until:
+            return self.eco_temperature
+        if self.active_program and self.active_program in self.programs:
+            prog = self.programs[self.active_program]
+            hours = prog.get("hours", [])
+            # HA core or system local hour
+            import datetime
+            cur_hour = datetime.datetime.now().hour
+            if 0 <= cur_hour < len(hours) and hours[cur_hour] == 0:
+                return self.eco_temperature
+        return self.target_temperature
+
+    def set_eco_temperature(self, value: float) -> None:
+        """Change the eco target temperature and re-evaluate."""
+        self.eco_temperature = clamp(float(value), MIN_ECO_TEMPERATURE, MAX_ECO_TEMPERATURE)
+        self.evaluate()
+
+    def set_relay_timeout(self, value: float) -> None:
+        """Set verification timeout in seconds for relay feedback."""
+        self.relay_timeout = clamp(float(value), MIN_RELAY_TIMEOUT, MAX_RELAY_TIMEOUT)
+        self.evaluate()
+
+    def set_program(self, program_id: str | None, programs: dict[str, Any] | None = None) -> None:
+        """Activate a schedule program or deactivate (None / 'none')."""
+        if programs:
+            self.programs.update(programs)
+        if program_id in (None, "", "none", "off"):
+            self.active_program = None
+        elif program_id in self.programs:
+            self.active_program = program_id
+        self.evaluate()
+
+    def set_eco_timer(self, minutes: int) -> None:
+        """Set temporary eco mode for N minutes (0 to cancel)."""
+        if minutes <= 0:
+            self.eco_timer_until = None
+        else:
+            self.eco_timer_until = time.time() + (minutes * 60)
+        self.evaluate()
+
     # -- card-facing data --------------------------------------------------
 
     def source_value(self, key: str) -> str | None:
@@ -295,9 +384,20 @@ class SmartHeatingData:
             if w_precip is not None:
                 precip = str(w_precip)
 
+        now_ts = time.time()
+        eco_remaining = max(0, int(self.eco_timer_until - now_ts)) if self.eco_timer_until else 0
         return {
             "enabled": self.enabled,
             ATTR_HEATING: is_burning,
+            "eco_temperature": self.eco_temperature,
+            "effective_target_temperature": self.effective_target_temperature,
+            "active_program": self.active_program,
+            "programs": self.programs,
+            "eco_timer_remaining": eco_remaining,
+            "eco_timer_until": self.eco_timer_until,
+            "relay_timeout": self.relay_timeout,
+            "relay_mismatch": (self.relay_mismatch_1 or self.relay_mismatch_2),
+            "relay_warning": self.relay_warning if (self.relay_mismatch_1 or self.relay_mismatch_2) else None,
             "contact_1_enabled": self.contact_1_enabled,
             "contact_2_enabled": self.contact_2_enabled,
             "contact_1_state": is_burning,
