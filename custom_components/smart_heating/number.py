@@ -1,9 +1,13 @@
 """Number controls for Smart Heating."""
 from __future__ import annotations
 
-from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberMode,
+    RestoreNumber,
+)
 from homeassistant.const import UnitOfTemperature, UnitOfTime
-from homeassistant.helpers.restore_state import RestoreNumber
 
 from .const import (
     DOMAIN,
@@ -34,7 +38,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     ])
 
 
-class SmartHeatingNumber(RestoreNumber, NumberEntity):
+class SmartHeatingNumber(RestoreNumber):
     """Shared plumbing for the numeric controls."""
 
     _attr_has_entity_name = True
