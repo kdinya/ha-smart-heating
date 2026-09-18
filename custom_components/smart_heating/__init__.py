@@ -19,7 +19,7 @@ PLATFORMS = ["climate", "number", "switch"]
 CARD_PATH = Path(__file__).parent / "www"
 CANONICAL_CARD_URL = "/hacsfiles/ha-smart-heating/smart-heating-card.js"
 CARD_VERSION = "1.0.4"
-CARD_BUILD = "reference-dashboard-v104-1"
+CARD_BUILD = "reference-dashboard-v104-2"
 
 
 def _is_card_resource_url(url: str) -> bool:
@@ -32,6 +32,12 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     await hass.http.async_register_static_paths([
         StaticPathConfig("/hacsfiles/ha-smart-heating", str(CARD_PATH), cache_headers=False),
     ])
+    try:
+        from homeassistant.components.frontend import add_extra_js_url
+        url = f"{CANONICAL_CARD_URL}?v={CARD_VERSION}&build={CARD_BUILD}"
+        add_extra_js_url(hass, url)
+    except Exception as err:
+        _LOGGER.debug("Could not add extra js url: %s", err)
 
     async def _register_frontend(_event: Any = None) -> None:
         """Register the card only after Lovelace has initialized."""
@@ -94,14 +100,20 @@ async def async_register_lovelace_resource(hass: HomeAssistant) -> None:
         return
 
     if not resources.loaded:
-        async_call_later(
-            hass,
-            5,
-            lambda _now: hass.async_create_task(
-                async_register_lovelace_resource(hass)
-            ),
-        )
-        return
+        if hasattr(resources, "async_load"):
+            try:
+                await resources.async_load()
+            except Exception as err:
+                _LOGGER.debug("Could not eager load Lovelace resources: %s", err)
+        if not resources.loaded:
+            async_call_later(
+                hass,
+                5,
+                lambda _now: hass.async_create_task(
+                    async_register_lovelace_resource(hass)
+                ),
+            )
+            return
 
     card_resources = [
         resource for resource in resources.async_items()

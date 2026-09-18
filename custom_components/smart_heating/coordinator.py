@@ -1,6 +1,8 @@
-import time
 """Runtime state and hysteresis controller for Smart Heating."""
 from __future__ import annotations
+
+import logging
+import time
 
 import logging
 from typing import Any, Callable
