@@ -19,8 +19,6 @@ from .const import (
     CONF_SWITCH_1,
     CONF_SWITCH_2,
     CONF_TARGET_TEMPERATURE,
-    CONF_ECO_TEMPERATURE,
-    CONF_RELAY_TIMEOUT,
     CONF_WEATHER,
     CONF_WIND,
     DEFAULT_HYSTERESIS,
@@ -76,9 +74,7 @@ def _user_schema() -> vol.Schema:
         {
             vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
             vol.Required(CONF_ROOM_TEMPERATURE): _sensor_selector("temperature"),
-            vol.Required(CONF_TARGET_TEMPERATURE,
-    CONF_ECO_TEMPERATURE,
-    CONF_RELAY_TIMEOUT, default=DEFAULT_TARGET): _number_slider(
+            vol.Required(CONF_TARGET_TEMPERATURE, default=DEFAULT_TARGET): _number_slider(
                 MIN_TARGET, MAX_TARGET, 0.5
             ),
             vol.Required(CONF_HYSTERESIS_ON, default=DEFAULT_HYSTERESIS_ON): _number_slider(
@@ -119,9 +115,7 @@ class SmartHeatingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME],
                     data=user_input,
                     options={
-                        CONF_TARGET_TEMPERATURE: user_input.get(CONF_TARGET_TEMPERATURE,
-    CONF_ECO_TEMPERATURE,
-    CONF_RELAY_TIMEOUT, DEFAULT_TARGET),
+                        CONF_TARGET_TEMPERATURE: user_input.get(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET),
                         CONF_HYSTERESIS_ON: user_input.get(CONF_HYSTERESIS_ON, DEFAULT_HYSTERESIS_ON),
                         CONF_HYSTERESIS_OFF: user_input.get(CONF_HYSTERESIS_OFF, DEFAULT_HYSTERESIS_OFF),
                     },
@@ -178,9 +172,7 @@ class SmartHeatingOptionsFlow(config_entries.OptionsFlow):
             val = data.get(key)
             return val if val is not None and val != "" else default
 
-        cur_target = float(get_val(CONF_TARGET_TEMPERATURE,
-    CONF_ECO_TEMPERATURE,
-    CONF_RELAY_TIMEOUT, DEFAULT_TARGET))
+        cur_target = float(get_val(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET))
         cur_h_on = float(get_val(CONF_HYSTERESIS_ON, get_val(CONF_HYSTERESIS, DEFAULT_HYSTERESIS_ON)))
         cur_h_off = float(get_val(CONF_HYSTERESIS_OFF, DEFAULT_HYSTERESIS_OFF))
 
@@ -206,9 +198,7 @@ class SmartHeatingOptionsFlow(config_entries.OptionsFlow):
         ] = _sensor_selector("temperature")
 
         # Target temperature & hysteresis
-        schema_dict[vol.Required(CONF_TARGET_TEMPERATURE,
-    CONF_ECO_TEMPERATURE,
-    CONF_RELAY_TIMEOUT, default=cur_target)] = _number_slider(
+        schema_dict[vol.Required(CONF_TARGET_TEMPERATURE, default=cur_target)] = _number_slider(
             MIN_TARGET, MAX_TARGET, 0.5
         )
         schema_dict[vol.Required(CONF_HYSTERESIS_ON, default=cur_h_on)] = _number_slider(

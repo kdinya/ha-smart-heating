@@ -318,9 +318,9 @@ ha-card{border-radius:var(--card-radius,27px);border:2px solid #344149;backgroun
 .dial-content{z-index:2}.dial .temp{font-size:clamp(34px,7.5cqw,110px);color:#f6f8fa;text-shadow:0 2px 6px #000}.dial .target{font-size:clamp(18px,3.6cqw,52px);color:#f6f8fa}
 .scheme-title{font-size:clamp(10px,1.5cqw,22px);color:#cbd4db;letter-spacing:.5px}.scheme-card{padding:clamp(4px,.6cqw,12px) 0;background:none;border:0;box-shadow:none}.scheme-icon{width:clamp(38px,6.6cqw,100px);height:clamp(38px,6.6cqw,100px)}.scheme-card span{font-size:clamp(7px,1.2cqw,18px)}
 .control-panel{margin-top:clamp(8px,1.5cqw,24px);padding:0 clamp(5px,3cqw,46px);align-items:center;background:linear-gradient(180deg,#10191e00,#080d11aa);border-radius:0 0 clamp(16px,2.4cqw,38px) clamp(16px,2.4cqw,38px)}
-.control{font-size:clamp(8px,1.5cqw,22px);color:#b9c4cd;text-transform:uppercase}.control.active,.control.fire{color:var(--orange)}
+.control{font-size:clamp(8px,1.5cqw,22px);color:#b9c4cd;text-transform:uppercase}.control.active{color:var(--orange)}
 .button{width:clamp(42px,8.4cqw,128px);height:clamp(42px,8.4cqw,128px);margin:0 auto clamp(3px,.6cqw,9px);border:2px solid #111a20;box-shadow:0 0 0 4px #05090c,0 0 0 5px #26333a,0 9px 14px #000c,inset 0 3px 5px #ffffff30,inset 0 -10px 15px #000;background:radial-gradient(circle at 35% 22%,#53616a 0%,#26333a 25%,#0b1216 68%);transform:scale(var(--panel-button-size,1));transform-origin:center}
-.control.active .button,.control.fire .button{border-color:var(--orange);box-shadow:0 0 0 4px #05090c,0 0 0 5px #26333a,0 0 13px #ff8a0080,inset 0 3px 5px #ffffff30}.button svg{width:clamp(22px,3.7cqw,56px);height:clamp(22px,3.7cqw,56px)}
+.control.active .button{border-color:var(--orange);box-shadow:0 0 0 4px #05090c,0 0 0 5px #26333a,0 0 13px #ff8a0080,inset 0 3px 5px #ffffff30}.button svg{width:clamp(22px,3.7cqw,56px);height:clamp(22px,3.7cqw,56px)}
 .flame-effect{inset:9px;width:auto;height:auto}
 .dial .dial-label{margin-top:clamp(4px,.7cqw,10px);font-size:clamp(8px,1.45cqw,21px);letter-spacing:.2px;color:#dce4ea}.dial .target{margin-top:clamp(5px,1cqw,15px);font-size:clamp(8px,1.35cqw,20px);line-height:1.05;color:var(--orange);font-weight:500}.dial .target strong{display:block;margin-top:clamp(2px,.3cqw,5px);font-size:clamp(16px,3.2cqw,46px);color:#f6f8fa;font-weight:500}.dial .flame{font-size:clamp(18px,3.4cqw,50px);color:var(--orange)}
 .center{justify-content:center;min-height:0;overflow:visible}.dial{width:min(100%,clamp(140px,29cqw,440px));flex:0 1 auto}.adjust{flex-shrink:0;margin-top:clamp(4px,.6cqw,9px)}
@@ -338,7 +338,7 @@ ha-card{--dial-size:min(clamp(42px,29cqw,440px),calc(100cqh - 125px))}
 .group-humidity{transform:translate(calc(var(--humidity-x,0) * 1cqw),calc(var(--humidity-y,0) * 1cqh)) scale(var(--humidity-s,1))}.screen-grid>.side:last-child{grid-column:3}
 .screen-grid{position:static}
 ha-card{--ui-scale:clamp(.01,min(calc(100cqw / 600px),calc(100cqh / (600px / var(--card-ratio,1.5)))),10)}.device{width:calc(100% / var(--ui-scale));height:calc(100% / var(--ui-scale));transform:scale(var(--ui-scale));transform-origin:top left;container-type:size}
-<style data-layout-override>ha-card{aspect-ratio:var(--card-ratio,1.5);border-radius:var(--card-radius,27px);overflow:hidden}.screen{flex:1 1 0;min-height:0;aspect-ratio:auto}.screen-grid{position:relative;width:100%;height:100%;grid-template-columns:30% 40% 30%;grid-template-rows:100%;gap:0;align-items:center}</style><ha-card class="${enabled?'is-enabled':'is-disabled'}" style="--card-ratio:${cardRatio};--screen-ratio:${screenRatio};${groupVars}${itemVars}--room-letter-spacing:${roomLetterSpacing}px;--room-decimal-size:${roomDecimalSize};--room-unit-size:${roomUnitSize};--target-letter-spacing:${targetLetterSpacing}px;--target-decimal-size:${targetDecimalSize};--target-unit-size:${targetUnitSize};--target-unit-gap:${targetUnitGap}px;--adjust-icon-size:${adjustIconSize}px;--row-offset:${rowOffset};--card-radius:${cardRadius}px;--frame-width:${frameWidth};--header-inner-y:${n('header_inner_y')};--brand-group-x:${n('brand_group_x')};--brand-group-y:${n('brand_group_y')};--date-group-x:${n('date_group_x')};--date-group-y:${n('date_group_y')};--line-y:${n('line_y')};--adjust-gap:${adjustGap}px;--adjust-button-size:${buttonSize}px;--panel-h:${SH_CLAMP(this.config.panel_h,-20,40,SH_DEFAULTS.panel_h)};--effect-x:${n('effect_x')};--effect-y:${n('effect_y',-2)};--effect-s:${SH_CLAMP(n('effect_s'),.25,2.5,SH_DEFAULTS.effect_s)};--effect-opacity:${SH_CLAMP(n('effect_opacity'),.1,1,SH_DEFAULTS.effect_opacity)};--panel-gap:${SH_CLAMP(n('panel_gap'),0,20,SH_DEFAULTS.panel_gap)};--panel-button-size:${SH_CLAMP(n('panel_button_size'),.5,2,SH_DEFAULTS.panel_button_size)}"><div class="device"><section class="screen"><div class="header-shell"><div class="group-header"><div class="brand"><div class="flame brand-icon"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:#38bdf8;filter:drop-shadow(0 0 6px #0284c7)"><path d="M12 2c-.5 2.5-2 4.9-4 6.5-2 1.6-3 3.5-3 5.5a7 7 0 1 0 14 0c0-2-1-3.9-3-5.5-2-1.6-3.5-4-4-6.5zm-1 10a2.5 2.5 0 0 1 2.5 2.5c0 .8-.5 1.5-1.2 1.8-.3.1-.7.2-1.3.2-1.4 0-2.5-1.1-2.5-2.5 0-1.4.5-2 1-3 .5 0 1 .5 1.5 1z"/></svg></div><div class="brand-name"><b style="${isLabelOn('title')?'':'visibility:hidden'}">${this.safe(getLabel('title',this.config.title||'HEAT'))}</b><small style="${isLabelOn('subtitle')?'':'visibility:hidden'}">${this.safe(getLabel('subtitle','GAS BOILER'))}</small></div></div><div class="clock"><span class="date">${date}</span><strong class="clock-time">${time}</strong></div><span class="signal"><i></i><i></i><i></i><i></i></span></div><div class="line"></div></div>${(activeProgId || ecoTimerActive) ? `<div class="program-pill" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:5px;background:#0f181eb8;border:1px solid ${currentSlotIsEco ? '#10b981' : 'var(--orange)'};border-radius:12px;padding:2px 8px;font-size:10px;color:#e2e8f0;backdrop-filter:blur(6px);z-index:10;box-shadow:0 2px 6px #000a"><span style="width:6px;height:6px;border-radius:50%;background:${currentSlotIsEco ? '#10b981' : 'var(--orange)'};box-shadow:0 0 6px ${currentSlotIsEco ? '#10b981' : 'var(--orange)'}"></span><b>${ecoTimerActive ? 'ECO' : activeProgId}</b> <span style="color:#94a3b8;font-size:9px">${currentSlotIsEco ? ('ECO ' + ecoTemp + '°C') : ('TARGET ' + targetStr + '°C')}</span></div>` : ''}<div class="screen-grid"><div class="side group-weather"><div class="metric element-outdoor" style="display:${outdoorVisible?'':'none'}"><div class="metric-icon weather-icon"><svg viewBox="0 0 32 32"><path d="M14 4a3 3 0 0 1 6 0v14.6a6 6 0 1 1-6 0Z"/><path d="M17 11v9.6"/><path d="M11 9h1.5M11 13h1.5M11 17h1.5"/></svg></div><div><label style="${isLabelOn('outdoor')?'':'visibility:hidden'}">${this.safe(getLabel('outdoor',tr('outdoor')))}</label><strong>${this.safe(outdoor)} <em>°C</em></strong></div></div><div class="metric element-wind" style="display:${windVisible?'':'none'}"><div class="metric-icon weather-icon"><svg viewBox="0 0 32 32"><path d="M3 11h16c3 0 3-5 0-5-1.4 0-2.4.7-3 1.8M3 16h22c4 0 4 6 0 6-1.7 0-2.8-.8-3.5-2M3 21h10"/></svg></div><div><label style="${isLabelOn('wind')?'':'visibility:hidden'}">${this.safe(getLabel('wind',tr('wind')))}</label><strong>${this.safe(wind)}</strong></div></div><div class="metric element-rain" style="display:${rainVisible?'':'none'}"><div class="metric-icon weather-icon"><svg viewBox="0 0 32 32">${rainIcon}</svg></div><div><label style="${isLabelOn('rain')?'':'visibility:hidden'}">${this.safe(getLabel('rain',tr('rain')))}</label><strong>${this.safe(rain)}</strong></div></div></div><div class="center group-climate"><div class="dial ${heating&&effectEnabled?'is-heating':''}"><div class="flame-effect ${heating&&effectEnabled?'is-active':''}"><div class="flame-layer"><svg viewBox="0 0 200 200" preserveAspectRatio="none" aria-hidden="true"><defs><radialGradient id="sh-blue-glow" cx="50%" cy="85%" r="70%"><stop offset="0%" stop-color="#00e5ff" stop-opacity="0.6"/><stop offset="30%" stop-color="#0066ff" stop-opacity="0.4"/><stop offset="70%" stop-color="#001a66" stop-opacity="0.15"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient><linearGradient id="sh-flame-outer" x1="50%" y1="100%" x2="50%" y2="0%"><stop offset="0%" stop-color="#002b80" stop-opacity="0.95"/><stop offset="25%" stop-color="#0055ff" stop-opacity="0.88"/><stop offset="65%" stop-color="#00bfff" stop-opacity="0.8"/><stop offset="100%" stop-color="#80e5ff" stop-opacity="0"/></linearGradient><linearGradient id="sh-flame-mid" x1="50%" y1="100%" x2="50%" y2="0%"><stop offset="0%" stop-color="#0066ff" stop-opacity="0.95"/><stop offset="35%" stop-color="#00d5ff" stop-opacity="0.9"/><stop offset="80%" stop-color="#80f2ff" stop-opacity="0.85"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/></linearGradient><linearGradient id="sh-flame-inner" x1="50%" y1="100%" x2="50%" y2="0%"><stop offset="0%" stop-color="#00f0ff" stop-opacity="1"/><stop offset="45%" stop-color="#a6f8ff" stop-opacity="0.95"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0.85"/></linearGradient></defs><rect width="200" height="200" fill="url(#sh-blue-glow)"/><path class="flame-outer" fill="url(#sh-flame-outer)" d="M100 200C45 200 15 160 25 120c8-25 32-45 45-72 15-28 14-48 30-48s15 20 30 48c13 27 37 47 45 72 10 40-20 80-75 80Z"/><path class="flame-mid" fill="url(#sh-flame-mid)" d="M100 195c-35 0-55-30-48-60 6-22 26-38 36-60 8-18 4-33 12-33s4 15 12 33c10 22 30 38 36 60 7 30-13 60-48 60Z"/><path class="flame-inner" fill="url(#sh-flame-inner)" d="M100 190c-20 0-32-18-28-36 4-14 18-24 24-38 5-10 1-18 4-18s-1 8 4 18c6 14 20 24 24 38 4 18-8 36-28 36Z"/></svg></div></div><div class="dial-content"><div class="temp"><span class="temp-int" style="display:${this.config.room_int_visible!==false?'':'none'}">${this.safe(roomInt)}</span><span class="temp-dec" style="display:${this.config.room_dec_visible!==false?'':'none'}">${roomDec?'.'+this.safe(roomDec):''}</span><sup class="temp-unit" style="display:${this.config.room_unit_visible!==false?'':'none'}">°C</sup></div><div class="target"><strong><span class="target-int">${this.safe(targetInt)}</span><span class="target-dec" style="display:${this.config.target_dec_visible!==false?'':'none'}">${targetDec?'.'+this.safe(targetDec):''}</span><span class="target-unit" style="display:${this.config.target_unit_visible!==false?'':'none'}">°C</span></strong></div></div></div><div class="adjust"><button data-delta="-${currentTempStep}">−</button><button data-delta="${currentTempStep}">+</button></div></div><div class="side"><div class="metric orange element-humidity group-humidity" style="display:${humidityVisible?'':'none'}"><div class="metric-icon">♢</div><div><label style="${isLabelOn('humidity')?'':'visibility:hidden'}">${this.safe(getLabel('humidity',tr('humidity')))}</label><strong class="humidity-value"><span class="humidity-int">${this.safe(String(humidity).split('.')[0])}</span><span class="humidity-dec">${String(humidity).includes('.')?'.'+String(humidity).split('.')[1]:''}</span><em class="humidity-unit">%</em></strong></div></div>${hasAnyContact ? `<div class="scheme-title element-scheme" style="${isLabelOn('scheme')?'':'visibility:hidden'}">${this.safe(getLabel('scheme',tr('scheme')))}</div><div class="scheme element-scheme" style="${hasContact1 && hasContact2 ? '' : 'grid-template-columns:1fr;'}">${hasContact1 ? `<div class="scheme-card ${contact1On?'active':''}" data-scheme-toggle="1" role="button" tabindex="0"><div class="scheme-header"><div class="scheme-badge"><span class="scheme-num">#1</span><span class="scheme-sub">ХА</span></div><div class="scheme-led"></div></div><div class="scheme-icon"><svg viewBox="0 0 24 24" class="contact-icon-svg"><path d="M9.6 14.6V5.4a2.4 2.4 0 1 1 4.8 0v9.2a4.7 4.7 0 1 1-4.8 0Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="17.6" r="1.8" fill="currentColor"/><path d="M12 12.4v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M17.6 8a4.6 4.6 0 0 1 0 5.4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M20.4 5.6a8.4 8.4 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity="0.65"/></svg></div><span class="scheme-label" style="${isLabelOn('contact1')?'':'visibility:hidden'}">${getLabel('contact1',tr('contact1'))}</span></div>` : ''}${hasContact2 ? `<div class="scheme-card ${contact2On?'active':''}" data-scheme-toggle="2" role="button" tabindex="0"><div class="scheme-header"><div class="scheme-badge"><span class="scheme-num">#2</span><span class="scheme-sub">ТАЙМЕР</span></div><div class="scheme-led"></div></div><div class="scheme-icon"><svg viewBox="0 0 24 24" class="contact-icon-svg"><circle cx="12" cy="13" r="7.8" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="13" r="4.4" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><path d="M12 9.2V13l2.9 1.9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="13" r="1.2" fill="currentColor"/><path d="M9.4 2.6h5.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 2.6v2.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M4.9 6.3 6.6 8M19.1 6.3 17.4 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></div><span class="scheme-label" style="${isLabelOn('contact2')?'':'visibility:hidden'}">${getLabel('contact2',tr('contact2'))}</span></div>` : ''}</div>` : ''}</div></div></section><nav class="control-panel group-panel"><div class="control power ${enabled?'active':''}" data-power><span class="button"><svg viewBox="0 0 24 24"><path d="M12 3v8m-5.7-5A9 9 0 1 0 17.7 6"/></svg></span></div><div class="control program ${activeProgId || ecoTimerActive ? 'active' : ''}" data-program-btn><span class="button"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>${activeProgId || ecoTimerActive ? `<span class="badge" style="position:absolute;bottom:-3px;right:-3px;background:var(--orange);color:#0a1014;font-size:9px;font-weight:800;padding:1px 4px;border-radius:6px;line-height:1;border:1px solid #000">${ecoTimerActive ? 'ECO' : activeProgId}</span>` : ''}</span></div><div class="control fire" data-fire-btn><span class="button"><svg viewBox="0 0 24 24"><path d="M12 21c4 0 6.2-2.7 6.2-6.2 0-3.8-2.9-5.2-4.2-8.8-1.7 1.5-2.2 3-2 4.7-2.5-1.3-3.1-3.2-3-5.7C6.7 7.8 5.8 10.1 5.8 13.5 5.8 18.1 8.4 21 12 21Z"/></svg></span></div><div class="control stats-btn ${this._statsOpen ? 'active' : ''}" data-stats-btn><span class="button"><svg viewBox="0 0 24 24"><path d="M4 19v-5m5 5V9m5 10V5m5 14v-8"/></svg></span></div><div class="control settings"><span class="button"><svg viewBox="0 0 24 24"><path d="M12 2.8l1 2.1c.6.1 1.2.4 1.8.7l2.1-1 1.5 1.5-1 2.1c.3.6.6 1.2.7 1.8l2.1 1v2l-2.1 1c-.1.6-.4 1.2-.7 1.8l1 2.1-1.5 1.5-2.1-1c-.6.3-1.2.6-1.8.7l-1 2.1h-2l-1-2.1c-.6-.1-1.2-.4-1.8-.7l-2.1 1-1.5-1.5 1-2.1c-.3-.6-.6-1.2-.7-1.8l-2.1-1v-2l2.1-1c.1-.6.4-1.2.7-1.8l-1-2.1 1.5-1.5 2.1 1c.6-.3 1.2-.6 1.8-.7l1-2.1h2Z"/><circle cx="12" cy="12" r="3.2"/></svg></span></div>${relayMismatch ? `<div class="relay-warning" style="position:absolute;bottom:75px;left:10px;right:10px;background:#ef444422;border:1px solid #ef4444;border-radius:8px;padding:6px 10px;font-size:11px;color:#fca5a5;display:flex;align-items:center;gap:6px;z-index:20;backdrop-filter:blur(4px)">⚠️ <b>${tr('relay_warning')}</b></div>` : ''}</nav></div>${this._scheduleOpen ? `<div class="modal-backdrop schedule-backdrop" style="z-index:1050;padding:12px"><section class="modal" tabindex="-1" style="max-width:540px;width:100%;max-height:92vh;overflow-y:auto;background:#0d1419;border:1px solid #2d3b45;box-shadow:0 12px 36px #000e;border-radius:14px;padding:16px 18px">
+<style data-layout-override>ha-card{aspect-ratio:var(--card-ratio,1.5);border-radius:var(--card-radius,27px);overflow:hidden}.screen{flex:1 1 0;min-height:0;aspect-ratio:auto}.screen-grid{position:relative;width:100%;height:100%;grid-template-columns:30% 40% 30%;grid-template-rows:100%;gap:0;align-items:center}</style><ha-card class="${enabled?'is-enabled':'is-disabled'}" style="--card-ratio:${cardRatio};--screen-ratio:${screenRatio};${groupVars}${itemVars}--room-letter-spacing:${roomLetterSpacing}px;--room-decimal-size:${roomDecimalSize};--room-unit-size:${roomUnitSize};--target-letter-spacing:${targetLetterSpacing}px;--target-decimal-size:${targetDecimalSize};--target-unit-size:${targetUnitSize};--target-unit-gap:${targetUnitGap}px;--adjust-icon-size:${adjustIconSize}px;--row-offset:${rowOffset};--card-radius:${cardRadius}px;--frame-width:${frameWidth};--header-inner-y:${n('header_inner_y')};--brand-group-x:${n('brand_group_x')};--brand-group-y:${n('brand_group_y')};--date-group-x:${n('date_group_x')};--date-group-y:${n('date_group_y')};--line-y:${n('line_y')};--adjust-gap:${adjustGap}px;--adjust-button-size:${buttonSize}px;--panel-h:${SH_CLAMP(this.config.panel_h,-20,40,SH_DEFAULTS.panel_h)};--effect-x:${n('effect_x')};--effect-y:${n('effect_y',-2)};--effect-s:${SH_CLAMP(n('effect_s'),.25,2.5,SH_DEFAULTS.effect_s)};--effect-opacity:${SH_CLAMP(n('effect_opacity'),.1,1,SH_DEFAULTS.effect_opacity)};--panel-gap:${SH_CLAMP(n('panel_gap'),0,20,SH_DEFAULTS.panel_gap)};--panel-button-size:${SH_CLAMP(n('panel_button_size'),.5,2,SH_DEFAULTS.panel_button_size)}"><div class="device"><section class="screen"><div class="header-shell"><div class="group-header"><div class="brand"><div class="flame brand-icon"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:#38bdf8;filter:drop-shadow(0 0 6px #0284c7)"><path d="M12 2c-.5 2.5-2 4.9-4 6.5-2 1.6-3 3.5-3 5.5a7 7 0 1 0 14 0c0-2-1-3.9-3-5.5-2-1.6-3.5-4-4-6.5zm-1 10a2.5 2.5 0 0 1 2.5 2.5c0 .8-.5 1.5-1.2 1.8-.3.1-.7.2-1.3.2-1.4 0-2.5-1.1-2.5-2.5 0-1.4.5-2 1-3 .5 0 1 .5 1.5 1z"/></svg></div><div class="brand-name"><b style="${isLabelOn('title')?'':'visibility:hidden'}">${this.safe(getLabel('title',this.config.title||'HEAT'))}</b><small style="${isLabelOn('subtitle')?'':'visibility:hidden'}">${this.safe(getLabel('subtitle','GAS BOILER'))}</small></div></div><div class="clock"><span class="date">${date}</span><strong class="clock-time">${time}</strong></div><span class="signal"><i></i><i></i><i></i><i></i></span></div><div class="line"></div></div>${(activeProgId || ecoTimerActive) ? `<div class="program-pill" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:5px;background:#0f181eb8;border:1px solid ${currentSlotIsEco ? '#10b981' : 'var(--orange)'};border-radius:12px;padding:2px 8px;font-size:10px;color:#e2e8f0;backdrop-filter:blur(6px);z-index:10;box-shadow:0 2px 6px #000a"><span style="width:6px;height:6px;border-radius:50%;background:${currentSlotIsEco ? '#10b981' : 'var(--orange)'};box-shadow:0 0 6px ${currentSlotIsEco ? '#10b981' : 'var(--orange)'}"></span><b>${ecoTimerActive ? 'ECO' : activeProgId}</b> <span style="color:#94a3b8;font-size:9px">${currentSlotIsEco ? ('ECO ' + ecoTemp + '°C') : ('TARGET ' + targetStr + '°C')}</span></div>` : ''}<div class="screen-grid"><div class="side group-weather"><div class="metric element-outdoor" style="display:${outdoorVisible?'':'none'}"><div class="metric-icon weather-icon"><svg viewBox="0 0 32 32"><path d="M14 4a3 3 0 0 1 6 0v14.6a6 6 0 1 1-6 0Z"/><path d="M17 11v9.6"/><path d="M11 9h1.5M11 13h1.5M11 17h1.5"/></svg></div><div><label style="${isLabelOn('outdoor')?'':'visibility:hidden'}">${this.safe(getLabel('outdoor',tr('outdoor')))}</label><strong>${this.safe(outdoor)} <em>°C</em></strong></div></div><div class="metric element-wind" style="display:${windVisible?'':'none'}"><div class="metric-icon weather-icon"><svg viewBox="0 0 32 32"><path d="M3 11h16c3 0 3-5 0-5-1.4 0-2.4.7-3 1.8M3 16h22c4 0 4 6 0 6-1.7 0-2.8-.8-3.5-2M3 21h10"/></svg></div><div><label style="${isLabelOn('wind')?'':'visibility:hidden'}">${this.safe(getLabel('wind',tr('wind')))}</label><strong>${this.safe(wind)}</strong></div></div><div class="metric element-rain" style="display:${rainVisible?'':'none'}"><div class="metric-icon weather-icon"><svg viewBox="0 0 32 32">${rainIcon}</svg></div><div><label style="${isLabelOn('rain')?'':'visibility:hidden'}">${this.safe(getLabel('rain',tr('rain')))}</label><strong>${this.safe(rain)}</strong></div></div></div><div class="center group-climate"><div class="dial ${heating&&effectEnabled?'is-heating':''}"><div class="flame-effect ${heating&&effectEnabled?'is-active':''}"><div class="flame-layer"><svg viewBox="0 0 200 200" preserveAspectRatio="none" aria-hidden="true"><defs><radialGradient id="sh-blue-glow" cx="50%" cy="85%" r="70%"><stop offset="0%" stop-color="#00e5ff" stop-opacity="0.6"/><stop offset="30%" stop-color="#0066ff" stop-opacity="0.4"/><stop offset="70%" stop-color="#001a66" stop-opacity="0.15"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient><linearGradient id="sh-flame-outer" x1="50%" y1="100%" x2="50%" y2="0%"><stop offset="0%" stop-color="#002b80" stop-opacity="0.95"/><stop offset="25%" stop-color="#0055ff" stop-opacity="0.88"/><stop offset="65%" stop-color="#00bfff" stop-opacity="0.8"/><stop offset="100%" stop-color="#80e5ff" stop-opacity="0"/></linearGradient><linearGradient id="sh-flame-mid" x1="50%" y1="100%" x2="50%" y2="0%"><stop offset="0%" stop-color="#0066ff" stop-opacity="0.95"/><stop offset="35%" stop-color="#00d5ff" stop-opacity="0.9"/><stop offset="80%" stop-color="#80f2ff" stop-opacity="0.85"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/></linearGradient><linearGradient id="sh-flame-inner" x1="50%" y1="100%" x2="50%" y2="0%"><stop offset="0%" stop-color="#00f0ff" stop-opacity="1"/><stop offset="45%" stop-color="#a6f8ff" stop-opacity="0.95"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0.85"/></linearGradient></defs><rect width="200" height="200" fill="url(#sh-blue-glow)"/><path class="flame-outer" fill="url(#sh-flame-outer)" d="M100 200C45 200 15 160 25 120c8-25 32-45 45-72 15-28 14-48 30-48s15 20 30 48c13 27 37 47 45 72 10 40-20 80-75 80Z"/><path class="flame-mid" fill="url(#sh-flame-mid)" d="M100 195c-35 0-55-30-48-60 6-22 26-38 36-60 8-18 4-33 12-33s4 15 12 33c10 22 30 38 36 60 7 30-13 60-48 60Z"/><path class="flame-inner" fill="url(#sh-flame-inner)" d="M100 190c-20 0-32-18-28-36 4-14 18-24 24-38 5-10 1-18 4-18s-1 8 4 18c6 14 20 24 24 38 4 18-8 36-28 36Z"/></svg></div></div><div class="dial-content"><div class="temp"><span class="temp-int" style="display:${this.config.room_int_visible!==false?'':'none'}">${this.safe(roomInt)}</span><span class="temp-dec" style="display:${this.config.room_dec_visible!==false?'':'none'}">${roomDec?'.'+this.safe(roomDec):''}</span><sup class="temp-unit" style="display:${this.config.room_unit_visible!==false?'':'none'}">°C</sup></div><div class="target"><strong><span class="target-int">${this.safe(targetInt)}</span><span class="target-dec" style="display:${this.config.target_dec_visible!==false?'':'none'}">${targetDec?'.'+this.safe(targetDec):''}</span><span class="target-unit" style="display:${this.config.target_unit_visible!==false?'':'none'}">°C</span></strong></div></div></div><div class="adjust"><button data-delta="-${currentTempStep}">−</button><button data-delta="${currentTempStep}">+</button></div></div><div class="side"><div class="metric orange element-humidity group-humidity" style="display:${humidityVisible?'':'none'}"><div class="metric-icon">♢</div><div><label style="${isLabelOn('humidity')?'':'visibility:hidden'}">${this.safe(getLabel('humidity',tr('humidity')))}</label><strong class="humidity-value"><span class="humidity-int">${this.safe(String(humidity).split('.')[0])}</span><span class="humidity-dec">${String(humidity).includes('.')?'.'+String(humidity).split('.')[1]:''}</span><em class="humidity-unit">%</em></strong></div></div>${hasAnyContact ? `<div class="scheme-title element-scheme" style="${isLabelOn('scheme')?'':'visibility:hidden'}">${this.safe(getLabel('scheme',tr('scheme')))}</div><div class="scheme element-scheme" style="${hasContact1 && hasContact2 ? '' : 'grid-template-columns:1fr;'}">${hasContact1 ? `<div class="scheme-card ${contact1On?'active':''}" data-scheme-toggle="1" role="button" tabindex="0"><div class="scheme-header"><div class="scheme-badge"><span class="scheme-num">#1</span><span class="scheme-sub">ХА</span></div><div class="scheme-led"></div></div><div class="scheme-icon"><svg viewBox="0 0 24 24" class="contact-icon-svg"><path d="M9.6 14.6V5.4a2.4 2.4 0 1 1 4.8 0v9.2a4.7 4.7 0 1 1-4.8 0Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="17.6" r="1.8" fill="currentColor"/><path d="M12 12.4v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M17.6 8a4.6 4.6 0 0 1 0 5.4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M20.4 5.6a8.4 8.4 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity="0.65"/></svg></div><span class="scheme-label" style="${isLabelOn('contact1')?'':'visibility:hidden'}">${getLabel('contact1',tr('contact1'))}</span></div>` : ''}${hasContact2 ? `<div class="scheme-card ${contact2On?'active':''}" data-scheme-toggle="2" role="button" tabindex="0"><div class="scheme-header"><div class="scheme-badge"><span class="scheme-num">#2</span><span class="scheme-sub">ТАЙМЕР</span></div><div class="scheme-led"></div></div><div class="scheme-icon"><svg viewBox="0 0 24 24" class="contact-icon-svg"><circle cx="12" cy="13" r="7.8" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="13" r="4.4" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><path d="M12 9.2V13l2.9 1.9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="13" r="1.2" fill="currentColor"/><path d="M9.4 2.6h5.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 2.6v2.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M4.9 6.3 6.6 8M19.1 6.3 17.4 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></div><span class="scheme-label" style="${isLabelOn('contact2')?'':'visibility:hidden'}">${getLabel('contact2',tr('contact2'))}</span></div>` : ''}</div>` : ''}</div></div></section><nav class="control-panel group-panel"><div class="control power ${enabled?'active':''}" data-power><span class="button"><svg viewBox="0 0 24 24"><path d="M12 3v8m-5.7-5A9 9 0 1 0 17.7 6"/></svg></span></div><div class="control program ${activeProgId || ecoTimerActive ? 'active' : ''}" data-program-btn><span class="button"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>${activeProgId || ecoTimerActive ? `<span class="badge" style="position:absolute;bottom:-3px;right:-3px;background:var(--orange);color:#0a1014;font-size:9px;font-weight:800;padding:1px 4px;border-radius:6px;line-height:1;border:1px solid #000">${ecoTimerActive ? 'ECO' : activeProgId}</span>` : ''}</span></div><div class="control fire" style="pointer-events:none"><span class="button" style="pointer-events:none;opacity:0.35;border-color:#334155;color:#475569;box-shadow:none;filter:none"><svg viewBox="0 0 24 24"><path d="M12 21c4 0 6.2-2.7 6.2-6.2 0-3.8-2.9-5.2-4.2-8.8-1.7 1.5-2.2 3-2 4.7-2.5-1.3-3.1-3.2-3-5.7C6.7 7.8 5.8 10.1 5.8 13.5 5.8 18.1 8.4 21 12 21Z"/></svg></span></div><div class="control stats-btn ${this._statsOpen ? 'active' : ''}" data-stats-btn><span class="button"><svg viewBox="0 0 24 24"><path d="M4 19v-5m5 5V9m5 10V5m5 14v-8"/></svg></span></div><div class="control settings"><span class="button"><svg viewBox="0 0 24 24"><path d="M12 2.8l1 2.1c.6.1 1.2.4 1.8.7l2.1-1 1.5 1.5-1 2.1c.3.6.6 1.2.7 1.8l2.1 1v2l-2.1 1c-.1.6-.4 1.2-.7 1.8l1 2.1-1.5 1.5-2.1-1c-.6.3-1.2.6-1.8.7l-1 2.1h-2l-1-2.1c-.6-.1-1.2-.4-1.8-.7l-2.1 1-1.5-1.5 1-2.1c-.3-.6-.6-1.2-.7-1.8l-2.1-1v-2l2.1-1c.1-.6.4-1.2.7-1.8l-1-2.1 1.5-1.5 2.1 1c.6-.3 1.2-.6 1.8-.7l1-2.1h2Z"/><circle cx="12" cy="12" r="3.2"/></svg></span></div>${relayMismatch ? `<div class="relay-warning" style="position:absolute;bottom:75px;left:10px;right:10px;background:#ef444422;border:1px solid #ef4444;border-radius:8px;padding:6px 10px;font-size:11px;color:#fca5a5;display:flex;align-items:center;gap:6px;z-index:20;backdrop-filter:blur(4px)">⚠️ <b>${tr('relay_warning')}</b></div>` : ''}</nav></div>${this._scheduleOpen ? `<div class="modal-backdrop schedule-backdrop" style="z-index:1050;padding:12px"><section class="modal" tabindex="-1" style="max-width:540px;width:100%;max-height:92vh;overflow-y:auto;background:#0d1419;border:1px solid #2d3b45;box-shadow:0 12px 36px #000e;border-radius:14px;padding:16px 18px">
   <button class="modal-close schedule-close" style="top:12px;right:14px">×</button>
   <div class="modal-title" style="display:flex;align-items:center;gap:8px;font-size:16px;color:#f1f5f9;margin-bottom:14px">
     <span>📅</span><b>${tr('programs_title')}</b>
@@ -420,6 +420,53 @@ ha-card{--ui-scale:clamp(.01,min(calc(100cqw / 600px),calc(100cqh / (600px / var
     </button>
   </div>
 </section></div>` : ''}
+${this._statsOpen ? `<div class="modal-backdrop stats-backdrop" style="z-index:1050;padding:12px"><section class="modal" tabindex="-1" style="max-width:560px;width:100%;max-height:92vh;overflow-y:auto;background:#0d1419;border:1px solid #2d3b45;box-shadow:0 12px 36px #000e;border-radius:14px;padding:16px 18px">
+  <button class="modal-close stats-close" style="top:12px;right:14px">×</button>
+  <div class="modal-title" style="display:flex;align-items:center;gap:8px;font-size:16px;color:#f1f5f9;margin-bottom:14px">
+    <span>📊</span><b>${tr('history_title')}</b>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;background:#142028;border:1px solid #233440;border-radius:10px;padding:8px 12px;margin-bottom:14px">
+    <button class="stats-day-prev" style="padding:6px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;cursor:pointer;font-size:12px">◀ ${tr('prev_day')}</button>
+    <div style="display:flex;align-items:center;gap:6px">
+      <input type="date" class="stats-date-input" value="${this._getStatsDateStr()}" style="background:#091015;border:1px solid #334155;color:#e2e8f0;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer" />
+      <button class="stats-day-today" style="padding:4px 8px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:var(--orange);cursor:pointer;font-size:11px;font-weight:700">${tr('today')}</button>
+    </div>
+    <button class="stats-day-next" style="padding:6px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;cursor:pointer;font-size:12px">${tr('next_day')} ▶</button>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-bottom:14px">
+    <div style="background:#142028;border:1px solid #ff8a0033;border-radius:8px;padding:8px 10px;text-align:center">
+      <div style="color:#94a3b8;font-size:10px">${tr('contact1_runtime')}</div>
+      <div style="color:var(--orange);font-size:15px;font-weight:700;margin-top:2px">${this._calcC1Runtime(this._statsHistory)}</div>
+    </div>
+    <div style="background:#142028;border:1px solid #38bdf833;border-radius:8px;padding:8px 10px;text-align:center">
+      <div style="color:#94a3b8;font-size:10px">${tr('heating_cycles')}</div>
+      <div style="color:#38bdf8;font-size:15px;font-weight:700;margin-top:2px">${this._calcC1Cycles(this._statsHistory)}</div>
+    </div>
+    <div style="background:#142028;border:1px solid #10b98133;border-radius:8px;padding:8px 10px;text-align:center">
+      <div style="color:#94a3b8;font-size:10px">${tr('temp_range')}</div>
+      <div style="color:#10b981;font-size:15px;font-weight:700;margin-top:2px">${this._calcTempRange(this._statsHistory)}</div>
+    </div>
+  </div>
+
+  <div style="background:#091015;border:1px solid #1e293b;border-radius:10px;padding:12px 10px;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:11px;color:#94a3b8">${tr('daily_chart')}</span>
+      <div style="display:flex;gap:12px;font-size:10px">
+        <span style="display:flex;align-items:center;gap:4px;color:#ff8a00"><span style="width:10px;height:10px;background:#ff8a0044;border:1px solid #ff8a00;display:inline-block;border-radius:2px"></span> ${tr('contact1')}</span>
+        <span style="display:flex;align-items:center;gap:4px;color:#38bdf8"><span style="width:12px;height:2px;background:#38bdf8;display:inline-block"></span> ${tr('room_temp')}</span>
+      </div>
+    </div>
+    <div class="stats-chart-svg" style="width:100%;height:190px;overflow:hidden">
+      ${this._renderDailyChartSvg(this._statsHistory, target)}
+    </div>
+  </div>
+
+  <div style="font-size:10px;color:#64748b;line-height:1.4;text-align:center;padding:0 6px">
+    ℹ️ ${tr('stats_notice')}
+  </div>
+</section></div>` : ''}
 ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-index:1100"><section class="modal" tabindex="-1" style="max-width:380px"><button class="modal-close confirm-cancel">×</button><div class="modal-title" style="color:var(--orange)">${this._confirmDialog.title}</div><div style="margin:14px 0 10px;font-size:clamp(12px,1.2cqw,16px);line-height:1.45;color:#d8e2ea">${this._confirmDialog.message}</div><div style="margin:10px 0 18px;padding:9px 12px;background:#ff8a0015;border-left:3px solid var(--orange);border-radius:6px;font-size:clamp(11px,1.05cqw,14px);color:#ffaa44;line-height:1.4">${this._confirmDialog.impact}</div><div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px"><button class="confirm-cancel" style="padding:8px 16px;border-radius:8px;border:1px solid #4f5d68;background:#182228;color:#c8d2dc;cursor:pointer;font-weight:600">Скасувати</button><button class="confirm-ok" style="padding:8px 18px;border-radius:8px;border:none;background:var(--orange);color:#0a1014;cursor:pointer;font-weight:700">Підтвердити</button></div></section></div>`:''}${this._menuOpen?`<div class="modal-backdrop"><section class="modal" tabindex="-1"><button class="modal-close">×</button><div class="modal-title">${tr('settings')}</div><div class="tabs">
 <div class="menu-section ${tab==='hysteresis'?'open':''}"><button data-menu-section="hysteresis" class="menu-head"><span>∿</span><b>${tr('hysteresis')}</b><i>${tab==='hysteresis'?'▲':'▼'}</i></button>${tab==='hysteresis'?`<div class="menu-body">
 <div class="sh-hyst-group">
@@ -486,26 +533,123 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     const root=this.shadowRoot;
     const closeMenu=()=>{this._menuOpen=false;this.render()};
     
+    // Schedule modal toggle and close
     root.querySelector('[data-program-btn]')?.addEventListener('click', () => {
       this._scheduleOpen = !this._scheduleOpen;
       this.render();
     });
 
-    root.querySelector('.schedule-close-btn')?.addEventListener('click', () => {
-      this._scheduleOpen = false;
-      this.render();
+    root.querySelectorAll('.schedule-close, .schedule-backdrop').forEach(el => {
+      el.addEventListener('click', (e) => {
+        if (e.target === el || el.classList.contains('schedule-close')) {
+          this._scheduleOpen = false;
+          this.render();
+        }
+      });
     });
 
-    root.querySelector('[data-fire-btn]')?.addEventListener('click', () => {
-      this._confirmDialog = {
-        title: tr('boiler_info_title'),
-        message: tr('boiler_info_text'),
-        impact: 'Турборежим або примусовий запуск котел виконує автономно за внутрішньою автоматикою.',
-        action: () => {}
+    // Program selection
+    root.querySelectorAll('[data-select-prog]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        const pid = e.target.value;
+        this._activeProgId = pid;
+        SH_SET_STORE('smart_heating_active_prog', pid);
+        this._hass.callService('smart_heating', 'set_program', { program: pid });
+        this.render();
+      });
+    });
+
+    // Toggle hour in program
+    root.querySelectorAll('[data-hour-toggle]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const [pid, hStr] = btn.dataset.hourToggle.split(':');
+        const h = Number(hStr);
+        const pList = this._getProgramsList();
+        if (pList[pid]) {
+          pList[pid].hours[h] = pList[pid].hours[h] === 1 ? 0 : 1;
+          this._saveProgramsList(pList);
+          this._hass.callService('smart_heating', 'set_program', { programs: pList });
+          this.render();
+        }
+      });
+    });
+
+    // Fill all target / all eco
+    root.querySelectorAll('[data-fill-prog]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pid = btn.dataset.fillProg;
+        const mode = btn.dataset.fill;
+        const pList = this._getProgramsList();
+        if (pList[pid]) {
+          pList[pid].hours = Array(24).fill(mode === 'target' ? 1 : 0);
+          this._saveProgramsList(pList);
+          this._hass.callService('smart_heating', 'set_program', { programs: pList });
+          this.render();
+        }
+      });
+    });
+
+    // Add new program
+    root.querySelector('.sh-add-prog-btn')?.addEventListener('click', () => {
+      const pList = this._getProgramsList();
+      const nextNum = Object.keys(pList).length + 1;
+      const newPid = 'P' + nextNum;
+      pList[newPid] = {
+        name: 'Програма ' + nextNum,
+        hours: [0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0]
       };
+      this._saveProgramsList(pList);
+      this._hass.callService('smart_heating', 'set_program', { programs: pList });
       this.render();
     });
 
+    // Delete program
+    root.querySelectorAll('[data-del-prog]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pid = btn.dataset.delProg;
+        const pList = this._getProgramsList();
+        if (Object.keys(pList).length > 1) {
+          delete pList[pid];
+          if (this._activeProgId === pid) {
+            this._activeProgId = Object.keys(pList)[0] || '';
+            SH_SET_STORE('smart_heating_active_prog', this._activeProgId);
+            this._hass.callService('smart_heating', 'set_program', { program: this._activeProgId });
+          }
+          this._saveProgramsList(pList);
+          this._hass.callService('smart_heating', 'set_program', { programs: pList });
+          this.render();
+        }
+      });
+    });
+
+    // Deactivate program
+    root.querySelector('.sh-prog-deactivate')?.addEventListener('click', () => {
+      this._activeProgId = '';
+      SH_SET_STORE('smart_heating_active_prog', '');
+      this._hass.callService('smart_heating', 'set_program', { program: '' });
+      this.render();
+    });
+
+    // Quick eco timer buttons
+    root.querySelectorAll('[data-eco-timer]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const dur = Number(btn.dataset.ecoTimer);
+        this._hass.callService('smart_heating', 'set_eco_timer', { duration: dur });
+        this.render();
+      });
+    });
+
+    // Eco temp step
+    root.querySelectorAll('[data-eco-temp-step]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const step = Number(btn.dataset.ecoTempStep);
+        const curEco = Number(a.eco_temperature ?? 18);
+        const nextEco = Math.max(10, Math.min(30, Number((curEco + step).toFixed(1))));
+        this._hass.callService('smart_heating', 'set_eco_temperature', { temperature: nextEco });
+      });
+    });
+
+    // Stats modal toggle and navigation
     root.querySelector('[data-stats-btn]')?.addEventListener('click', () => {
       this._statsOpen = !this._statsOpen;
       if (this._statsOpen) {
@@ -514,15 +658,20 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
       this.render();
     });
 
-    root.querySelector('.stats-close-btn')?.addEventListener('click', () => {
-      this._statsOpen = false;
-      this.render();
+    root.querySelectorAll('.stats-close, .stats-backdrop').forEach(el => {
+      el.addEventListener('click', (e) => {
+        if (e.target === el || el.classList.contains('stats-close')) {
+          this._statsOpen = false;
+          this.render();
+        }
+      });
     });
 
     root.querySelector('.stats-day-prev')?.addEventListener('click', () => {
       const cur = new Date(this._getStatsDateStr());
       cur.setDate(cur.getDate() - 1);
-      this._statsDate = cur.toISOString().slice(0, 10);
+      const yr = cur.getFullYear(), mo = String(cur.getMonth()+1).padStart(2,'0'), da = String(cur.getDate()).padStart(2,'0');
+      this._statsDate = `${yr}-${mo}-${da}`;
       this._fetchHistoryForStats(this._statsDate);
       this.render();
     });
@@ -530,13 +679,16 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     root.querySelector('.stats-day-next')?.addEventListener('click', () => {
       const cur = new Date(this._getStatsDateStr());
       cur.setDate(cur.getDate() + 1);
-      this._statsDate = cur.toISOString().slice(0, 10);
+      const yr = cur.getFullYear(), mo = String(cur.getMonth()+1).padStart(2,'0'), da = String(cur.getDate()).padStart(2,'0');
+      this._statsDate = `${yr}-${mo}-${da}`;
       this._fetchHistoryForStats(this._statsDate);
       this.render();
     });
 
     root.querySelector('.stats-day-today')?.addEventListener('click', () => {
-      this._statsDate = new Date().toISOString().slice(0, 10);
+      const now = new Date();
+      const yr = now.getFullYear(), mo = String(now.getMonth()+1).padStart(2,'0'), da = String(now.getDate()).padStart(2,'0');
+      this._statsDate = `${yr}-${mo}-${da}`;
       this._fetchHistoryForStats(this._statsDate);
       this.render();
     });
@@ -722,6 +874,208 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
       if(next!==current)this._hass.callService('climate','set_temperature',{entity_id:this.config.entity,temperature:Number(next.toFixed(2))});
     }));
   }
+
+  _getStatsDateStr() {
+    if (!this._statsDate) {
+      const now = new Date();
+      const yr = now.getFullYear();
+      const mo = String(now.getMonth() + 1).padStart(2, '0');
+      const da = String(now.getDate()).padStart(2, '0');
+      this._statsDate = `${yr}-${mo}-${da}`;
+    }
+    return this._statsDate;
+  }
+
+  _getProgramsList() {
+    if (this._progsList) return this._progsList;
+    try {
+      const stored = SH_READ_STORE('smart_heating_progs');
+      if (stored) return JSON.parse(stored);
+    } catch(e) {}
+    return {
+      'P1': {
+        name: 'Програма 1',
+        hours: [0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0]
+      }
+    };
+  }
+
+  _saveProgramsList(progs) {
+    this._progsList = progs;
+    SH_SET_STORE('smart_heating_progs', JSON.stringify(progs));
+  }
+
+  async _fetchHistoryForStats(dateStr) {
+    if (!this._hass || !dateStr) return;
+    try {
+      const start = new Date(`${dateStr}T00:00:00`);
+      const end = new Date(`${dateStr}T23:59:59`);
+      const entities = [];
+      if (this.config?.entity) entities.push(this.config.entity);
+      if (this.config?.contact_1_entity) entities.push(this.config.contact_1_entity);
+      const res = await this._hass.callWS({
+        type: 'history/history_during_period',
+        start_time: start.toISOString(),
+        end_time: end.toISOString(),
+        entity_ids: entities,
+        minimal_response: true,
+        no_attributes: true
+      });
+      this._statsHistory = res;
+      this.render();
+    } catch (err) {
+      console.warn('SmartHeatingCard: history fetch failed', err);
+    }
+  }
+
+  _calcC1Runtime(history) {
+    if (!history) return '0 хв';
+    const c1Id = this.config?.contact_1_entity;
+    const states = (c1Id && history[c1Id]) ? history[c1Id] : [];
+    if (!states.length) return '0 хв';
+    let totalMs = 0;
+    let onStart = null;
+    for (const pt of states) {
+      const st = pt.s || pt.state;
+      const ts = (pt.lu || pt.last_updated_ts || 0) * 1000 || (pt.last_updated ? new Date(pt.last_updated).getTime() : 0);
+      if (st === 'on') {
+        if (!onStart) onStart = ts;
+      } else {
+        if (onStart && ts) {
+          totalMs += Math.max(0, ts - onStart);
+          onStart = null;
+        }
+      }
+    }
+    const mins = Math.round(totalMs / 60000);
+    const hrs = Math.floor(mins / 60);
+    const remMins = mins % 60;
+    return hrs > 0 ? `${hrs} год ${remMins} хв` : `${remMins} хв`;
+  }
+
+  _calcC1Cycles(history) {
+    if (!history) return '0';
+    const c1Id = this.config?.contact_1_entity;
+    const states = (c1Id && history[c1Id]) ? history[c1Id] : [];
+    let count = 0;
+    for (const pt of states) {
+      if ((pt.s || pt.state) === 'on') count++;
+    }
+    return String(count);
+  }
+
+  _calcTempRange(history) {
+    const climateId = this.config?.entity;
+    const states = (climateId && history?.[climateId]) ? history[climateId] : [];
+    const temps = [];
+    for (const pt of states) {
+      const val = parseFloat(pt.a?.current_temperature ?? pt.s ?? pt.state);
+      if (!isNaN(val)) temps.push(val);
+    }
+    if (!temps.length) {
+      const cur = this._state()?.attributes?.current_temperature;
+      return cur != null ? `${cur} °C` : '—';
+    }
+    return `${Math.min(...temps).toFixed(1)} – ${Math.max(...temps).toFixed(1)} °C`;
+  }
+
+  _renderDailyChartSvg(history, target) {
+    const W = 520, H = 180, padL = 35, padR = 15, padT = 15, padB = 25;
+    const chartW = W - padL - padR, chartH = H - padT - padB;
+    
+    let gridSvg = '';
+    const hours = [0, 6, 12, 18, 24];
+    for (const h of hours) {
+      const x = padL + (h / 24) * chartW;
+      gridSvg += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + chartH}" stroke="#1e293b" stroke-dasharray="3,3" />`;
+      gridSvg += `<text x="${x}" y="${H - 8}" fill="#64748b" font-size="10" text-anchor="${h === 0 ? 'start' : h === 24 ? 'end' : 'middle'}">${String(h).padStart(2,'0')}:00</text>`;
+    }
+
+    let c1Svg = '';
+    const c1Id = this.config?.contact_1_entity;
+    const c1States = (c1Id && history?.[c1Id]) ? history[c1Id] : [];
+    if (c1States.length) {
+      const dateStr = this._getStatsDateStr();
+      const dayStart = new Date(`${dateStr}T00:00:00`).getTime();
+      const dayEnd = new Date(`${dateStr}T23:59:59`).getTime();
+      let onStart = null;
+      for (const pt of c1States) {
+        const st = pt.s || pt.state;
+        const ts = (pt.lu || pt.last_updated_ts || 0) * 1000 || (pt.last_updated ? new Date(pt.last_updated).getTime() : 0);
+        if (st === 'on') {
+          if (!onStart) onStart = Math.max(dayStart, ts);
+        } else {
+          if (onStart && ts) {
+            const endTs = Math.min(dayEnd, ts);
+            const x1 = padL + ((onStart - dayStart) / (dayEnd - dayStart)) * chartW;
+            const x2 = padL + ((endTs - dayStart) / (dayEnd - dayStart)) * chartW;
+            const barW = Math.max(2, x2 - x1);
+            c1Svg += `<rect x="${x1}" y="${padT}" width="${barW}" height="${chartH}" fill="#ff8a00" opacity="0.35" rx="2" />`;
+            onStart = null;
+          }
+        }
+      }
+    }
+
+    let tempSvg = '';
+    const climateId = this.config?.entity;
+    const clStates = (climateId && history?.[climateId]) ? history[climateId] : [];
+    const pts = [];
+    const dateStr = this._getStatsDateStr();
+    const dayStart = new Date(`${dateStr}T00:00:00`).getTime();
+    const dayEnd = new Date(`${dateStr}T23:59:59`).getTime();
+
+    for (const pt of clStates) {
+      const val = parseFloat(pt.a?.current_temperature ?? pt.s ?? pt.state);
+      const ts = (pt.lu || pt.last_updated_ts || 0) * 1000 || (pt.last_updated ? new Date(pt.last_updated).getTime() : 0);
+      if (!isNaN(val) && ts >= dayStart && ts <= dayEnd) {
+        pts.push({ t: ts, v: val });
+      }
+    }
+
+    let minT = 18, maxT = 26;
+    if (pts.length) {
+      const vals = pts.map(p => p.v);
+      minT = Math.floor(Math.min(...vals) - 1);
+      maxT = Math.ceil(Math.max(...vals) + 1);
+    }
+    if (target != null && !isNaN(Number(target))) {
+      minT = Math.min(minT, Math.floor(Number(target) - 1));
+      maxT = Math.max(maxT, Math.ceil(Number(target) + 1));
+    }
+    if (maxT <= minT) maxT = minT + 5;
+
+    let yAxisSvg = '';
+    yAxisSvg += `<text x="${padL - 6}" y="${padT + 10}" fill="#64748b" font-size="9" text-anchor="end">${maxT}°</text>`;
+    yAxisSvg += `<text x="${padL - 6}" y="${padT + chartH}" fill="#64748b" font-size="9" text-anchor="end">${minT}°</text>`;
+
+    let targetSvg = '';
+    if (target != null && !isNaN(Number(target))) {
+      const yT = padT + (1 - (Number(target) - minT) / (maxT - minT)) * chartH;
+      targetSvg = `<line x1="${padL}" y1="${yT}" x2="${padL + chartW}" y2="${yT}" stroke="#ff8a00" stroke-width="1.2" stroke-dasharray="4,4" opacity="0.8" />
+      <text x="${padL + chartW - 4}" y="${yT - 4}" fill="#ff8a00" font-size="9" text-anchor="end">${target}°C</text>`;
+    }
+
+    if (pts.length > 1) {
+      const pathD = pts.map((p, i) => {
+        const x = padL + ((p.t - dayStart) / (dayEnd - dayStart)) * chartW;
+        const y = padT + (1 - (p.v - minT) / (maxT - minT)) * chartH;
+        return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+      }).join(' ');
+      tempSvg = `<path d="${pathD}" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />`;
+    } else {
+      tempSvg = `<text x="${W/2}" y="${H/2}" fill="#475569" font-size="12" text-anchor="middle">Дані історії завантажуються або відсутні</text>`;
+    }
+
+    return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="none">
+      ${gridSvg}
+      ${yAxisSvg}
+      ${c1Svg}
+      ${targetSvg}
+      ${tempSvg}
+    </svg>`;
+  }
+
 }
 if(!customElements.get('smart-heating-card'))customElements.define('smart-heating-card',SmartHeatingCard);
 /* Ukrainian labels are the source strings; the map below provides the English UI. */

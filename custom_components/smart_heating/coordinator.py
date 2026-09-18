@@ -215,23 +215,30 @@ class SmartHeatingData:
             desired_1 = "on" if (self.enabled and self.contact_1_enabled and self.heating) else "off"
             current_1 = self.hass.states.get(switch_1_id)
             if current_1:
-                if self._switch_1_requested_state != desired_1:
-                    self._switch_1_requested_state = desired_1
-                    self._switch_1_requested_time = time.monotonic()
-                if current_1.state != desired_1:
-                    self.hass.async_create_task(
-                        self.hass.services.async_call(
-                            "switch",
-                            "turn_on" if desired_1 == "on" else "turn_off",
-                            {"entity_id": switch_1_id},
-                        )
-                    )
-                    if (time.monotonic() - self._switch_1_requested_time) > self.relay_timeout:
-                        self.relay_mismatch_1 = True
-                        self.relay_warning = f"Switch 1 mismatch: expected {desired_1}, got {current_1.state}"
-                        _LOGGER.warning(self.relay_warning)
-                else:
+                if current_1.state in ("unavailable", "unknown"):
                     self.relay_mismatch_1 = False
+                    self.relay_warning = f"Switch 1 is {current_1.state}"
+                else:
+                    if self._switch_1_requested_state != desired_1:
+                        self._switch_1_requested_state = desired_1
+                        self._switch_1_requested_time = time.monotonic()
+                    if current_1.state != desired_1:
+                        self.hass.async_create_task(
+                            self.hass.services.async_call(
+                                "switch",
+                                "turn_on" if desired_1 == "on" else "turn_off",
+                                {"entity_id": switch_1_id},
+                            )
+                        )
+                        if (time.monotonic() - self._switch_1_requested_time) > self.relay_timeout:
+                            self.relay_mismatch_1 = True
+                            self.relay_warning = f"Switch 1 mismatch: expected {desired_1}, got {current_1.state}"
+                            if not getattr(self, "_relay_1_warned", False):
+                                _LOGGER.warning(self.relay_warning)
+                                self._relay_1_warned = True
+                    else:
+                        self.relay_mismatch_1 = False
+                        self._relay_1_warned = False
 
         switch_2_id = self.get_config_or_option(CONF_SWITCH_2)
         if switch_2_id:
