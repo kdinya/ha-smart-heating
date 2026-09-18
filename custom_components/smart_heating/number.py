@@ -2,16 +2,21 @@
 from __future__ import annotations
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import UnitOfTemperature, UnitOfTime
+from homeassistant.helpers.restore_state import RestoreNumber
 
 from .const import (
     DOMAIN,
     MAX_HYSTERESIS_OFF,
     MAX_HYSTERESIS_ON,
+    MAX_RELAY_TIMEOUT,
     MAX_TARGET,
+    MAX_TEMP_STEP,
     MIN_HYSTERESIS_OFF,
     MIN_HYSTERESIS_ON,
+    MIN_RELAY_TIMEOUT,
     MIN_TARGET,
+    MIN_TEMP_STEP,
 )
 from .coordinator import SmartHeatingData
 
@@ -24,10 +29,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
         HeatingHysteresisOn(data, entry),
         HeatingHysteresisOff(data, entry),
         HeatingEcoTarget(data, entry),
+        HeatingRelayTimeout(data, entry),
+        HeatingTempStep(data, entry),
     ])
 
 
-class SmartHeatingNumber(NumberEntity):
+class SmartHeatingNumber(RestoreNumber, NumberEntity):
     """Shared plumbing for the numeric controls."""
 
     _attr_has_entity_name = True
@@ -47,7 +54,13 @@ class SmartHeatingNumber(NumberEntity):
         self._remove_listener = None
 
     async def async_added_to_hass(self) -> None:
+        last = await self.async_get_last_number_data()
+        if last is not None and last.native_value is not None:
+            self._apply_restored(float(last.native_value))
         self._remove_listener = self.data.async_add_listener(self.async_write_ha_state)
+
+    def _apply_restored(self, value: float) -> None:
+        """Push a restored value into shared coordinator state. No-op by default."""
 
     async def async_will_remove_from_hass(self) -> None:
         if self._remove_listener:
@@ -88,6 +101,9 @@ class HeatingHysteresisOn(SmartHeatingNumber):
     def native_value(self) -> float:
         return self.data.hysteresis_on
 
+    def _apply_restored(self, value: float) -> None:
+        self.data.hysteresis_on = value
+
     async def async_set_native_value(self, value: float) -> None:
         self.data.set_hysteresis_on(value)
         self.async_write_ha_state()
@@ -105,6 +121,9 @@ class HeatingHysteresisOff(SmartHeatingNumber):
     @property
     def native_value(self) -> float:
         return self.data.hysteresis_off
+
+    def _apply_restored(self, value: float) -> None:
+        self.data.hysteresis_off = value
 
     async def async_set_native_value(self, value: float) -> None:
         self.data.set_hysteresis_off(value)
@@ -125,6 +144,55 @@ class HeatingEcoTarget(SmartHeatingNumber):
     def native_value(self) -> float:
         return self.data.eco_temperature
 
+    def _apply_restored(self, value: float) -> None:
+        self.data.eco_temperature = value
+
     async def async_set_native_value(self, value: float) -> None:
         self.data.set_eco_temperature(value)
+        self.async_write_ha_state()
+
+
+class HeatingRelayTimeout(SmartHeatingNumber):
+    """Seconds to wait for relay feedback before flagging a mismatch."""
+
+    _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_native_step = 1
+    _attr_native_min_value = MIN_RELAY_TIMEOUT
+    _attr_native_max_value = MAX_RELAY_TIMEOUT
+
+    def __init__(self, data: SmartHeatingData, entry) -> None:
+        super().__init__(data, entry, "relay_timeout", "Час перевірки реле")
+
+    @property
+    def native_value(self) -> float:
+        return self.data.relay_timeout
+
+    def _apply_restored(self, value: float) -> None:
+        self.data.relay_timeout = value
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.data.set_relay_timeout(value)
+        self.async_write_ha_state()
+
+
+class HeatingTempStep(SmartHeatingNumber):
+    """Step size used by the target-temperature +/- buttons."""
+
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_native_step = 0.1
+    _attr_native_min_value = MIN_TEMP_STEP
+    _attr_native_max_value = MAX_TEMP_STEP
+
+    def __init__(self, data: SmartHeatingData, entry) -> None:
+        super().__init__(data, entry, "temp_step", "Крок зміни цільової температури")
+
+    @property
+    def native_value(self) -> float:
+        return self.data.temp_step
+
+    def _apply_restored(self, value: float) -> None:
+        self.data.temp_step = value
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.data.set_temp_step(value)
         self.async_write_ha_state()

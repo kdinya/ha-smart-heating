@@ -228,7 +228,7 @@ class SmartHeatingCard extends HTMLElement {
     const isLabelOn=(key)=>labelsVisible[key]!==false;
     const currentHOn=c?.attributes?.hysteresis_on??c?.attributes?.hysteresis??0.5;
     const currentHOff=c?.attributes?.hysteresis_off??0.5;
-    const currentTempStep=this._tempStep()??(Number(a.target_temp_step)||0.5);
+    const currentTempStep=a.temp_step!==undefined?Number(a.temp_step):(this._tempStep()??0.5);
     const shNum=(v)=>{const num=Number(v);return Number.isFinite(num)?String(Math.round(num*10)/10):v};
     const outdoor=shNum(this.attr('outdoor_temperature',a.outdoor_temperature??'—'));
     const wind=shNum(this.attr('wind',a.wind??'—'));
@@ -856,7 +856,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     const applyTempStep=(val)=>{
       const next=Math.min(2,Math.max(.1,Number(Number(val).toFixed(1))));
       SH_WRITE_STORE(SH_TEMP_STEP_KEY,String(next));
-      this.render();
+      this._hass.callService('smart_heating','set_temp_step',{entity_id:this.config.entity,step:next});
     };
     root.querySelectorAll('[data-temp-step-slider]').forEach(sl=>{
       sl.addEventListener('pointerdown',()=>{this._activeSliderDragging=true;});

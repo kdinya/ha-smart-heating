@@ -17,7 +17,6 @@ from .const import (
     DOMAIN,
     MAX_TARGET,
     MIN_TARGET,
-    TARGET_STEP,
 )
 from .coordinator import SmartHeatingData
 
@@ -42,7 +41,9 @@ class SmartHeatingClimate(RestoreEntity, ClimateEntity):
     )
     _attr_min_temp = MIN_TARGET
     _attr_max_temp = MAX_TARGET
-    _attr_target_temperature_step = TARGET_STEP
+    @property
+    def target_temperature_step(self) -> float:
+        return self.data.temp_step
 
     def __init__(self, data: SmartHeatingData, entry) -> None:
         self.data = data

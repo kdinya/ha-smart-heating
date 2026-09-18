@@ -26,12 +26,16 @@ from .const import (
     CONF_TARGET_TEMPERATURE,
     CONF_ECO_TEMPERATURE,
     CONF_RELAY_TIMEOUT,
+    CONF_TEMP_STEP,
     DEFAULT_ECO_TEMPERATURE,
     DEFAULT_RELAY_TIMEOUT,
+    DEFAULT_TEMP_STEP,
     MIN_ECO_TEMPERATURE,
     MAX_ECO_TEMPERATURE,
     MIN_RELAY_TIMEOUT,
     MAX_RELAY_TIMEOUT,
+    MIN_TEMP_STEP,
+    MAX_TEMP_STEP,
     CONF_WEATHER,
     CONF_WIND,
     DEFAULT_HYSTERESIS,
@@ -102,6 +106,11 @@ class SmartHeatingData:
             float(self.get_config_or_option(CONF_RELAY_TIMEOUT, DEFAULT_RELAY_TIMEOUT)),
             MIN_RELAY_TIMEOUT,
             MAX_RELAY_TIMEOUT,
+        )
+        self.temp_step = clamp(
+            float(self.get_config_or_option(CONF_TEMP_STEP, DEFAULT_TEMP_STEP)),
+            MIN_TEMP_STEP,
+            MAX_TEMP_STEP,
         )
         self.active_program: str | None = None
         self.programs: dict[str, Any] = {
@@ -340,6 +349,11 @@ class SmartHeatingData:
         self.relay_timeout = clamp(float(value), MIN_RELAY_TIMEOUT, MAX_RELAY_TIMEOUT)
         self.evaluate()
 
+    def set_temp_step(self, value: float) -> None:
+        """Set the target-temperature adjustment step used by the +/- buttons."""
+        self.temp_step = clamp(float(value), MIN_TEMP_STEP, MAX_TEMP_STEP)
+        self._notify_listeners()
+
     def set_program(self, program_id: str | None, programs: dict[str, Any] | None = None) -> None:
         """Activate a schedule program or deactivate (None / 'none')."""
         if programs:
@@ -418,6 +432,7 @@ class SmartHeatingData:
             "eco_timer_remaining": eco_remaining,
             "eco_timer_until": self.eco_timer_until,
             "relay_timeout": self.relay_timeout,
+            "temp_step": self.temp_step,
             "relay_mismatch": (self.relay_mismatch_1 or self.relay_mismatch_2),
             "relay_warning": self.relay_warning if (self.relay_mismatch_1 or self.relay_mismatch_2) else None,
             "contact_1_enabled": self.contact_1_enabled,
