@@ -108,7 +108,7 @@ const texts = new Set([...editor.shadowRoot.querySelectorAll('input[type=text]')
 console.log('editor sliders:', keys.size, '| toggles:', toggles.size, '| text fields:', texts.size);
 
 // every config key the card reads must be reachable from the editor
-const exposed = new Set([...keys, ...toggles, ...texts, 'entity', 'weather', 'language', 'connection_mode']);
+const exposed = new Set([...keys, ...toggles, ...texts, 'entity', 'language', 'connection_mode']);
 const readByCard = new Set();
 for (const m of source.matchAll(/this\.config(?:\?)?\.([a-z0-9_]+)/g)) readByCard.add(m[1]);
 for (const m of source.matchAll(/[^A-Za-z0-9_]n\('([a-z0-9_]+)'/g)) readByCard.add(m[1]);
@@ -118,6 +118,9 @@ const ignore = new Set([
   // commits) -- they're YAML-only right now. Flagged to the user separately;
   // not silently treated as fine.
   'room_int_visible', 'humidity', 'outdoor_temperature', 'wind', 'precipitation',
+  // Chosen when the Smart Heating device itself is created/edited (the
+  // integration's own config/options flow), not from the card's General tab.
+  'weather',
   // Supplied by the Smart Heating device (integration attributes), not by the card editor.
   'switch_1', 'switch_2', 'contact_1_active', 'contact_2_active', 'title',
 ]);

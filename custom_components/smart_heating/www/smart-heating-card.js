@@ -1156,7 +1156,7 @@ const SH_EDITOR_EN = {
   'Налаштування блоків': 'Block settings', 'ОСНОВНЕ': 'GENERAL', 'РОЗКЛАДКА': 'LAYOUT', 'ШАПКА': 'HEADER',
   'КЛІМАТ': 'CLIMATE', 'ВОЛОГІСТЬ': 'HUMIDITY', 'ПОГОДА': 'WEATHER', 'КЕРУВАННЯ': 'CONTROL',
   'ПАНЕЛЬ': 'PANEL', 'ВІЗУАЛЬНІ ЕФЕКТИ': 'VISUAL EFFECTS',
-  'Назва пристрою': 'Device name', 'Ентіті пристрою': 'Device entity', 'Ентіті погоди': 'Weather entity', 'Мова інтерфейсу': 'Interface language',
+  'Назва пристрою': 'Device name', 'Ентіті пристрою': 'Device entity', 'Мова інтерфейсу': 'Interface language',
   'Пропорція картки (Шир/Вис)': 'Card ratio (W/H)', 'Заокруглення картки': 'Card corner radius', 'Ширина рамки екрана': 'Screen frame width',
   'Вертикальний зсув рядка': 'Content row offset',
   'Горизонталь': 'Horizontal position', 'Вертикаль': 'Vertical position', 'Розмір': 'Size',
@@ -1219,7 +1219,7 @@ class SmartHeatingCardEditor extends HTMLElement {
     if(!this._hass||!this.config)return;
     if(!this._open)this._open=this._restoreOpen();
     const c=this.config,lang=this._language();
-    const general=`<div class="field"><label>${this._ui('Ентіті пристрою')}</label><ha-entity-picker id="entity"></ha-entity-picker></div><div class="field"><label>${this._ui('Ентіті погоди')}</label><ha-entity-picker id="weather"></ha-entity-picker></div>`;
+    const general=`<div class="field"><label>${this._ui('Ентіті пристрою')}</label><ha-entity-picker id="entity"></ha-entity-picker></div>`;
     const layout=this._ctrl('Пропорція картки (Шир/Вис)','screen_aspect_ratio',{min:1.2,max:2.5,step:.05,unit:''})
       +this._ctrl('Заокруглення картки','card_radius',{min:0,max:100,step:1,unit:'px'})
       +this._ctrl('Вертикальний зсув рядка','row_offset_y',{min:-100,max:140,step:.5,unit:'%'})
@@ -1255,8 +1255,6 @@ class SmartHeatingCardEditor extends HTMLElement {
     const root=this.shadowRoot;
     const picker=root.getElementById('entity');
     if(picker){picker.hass=this._hass;picker.value=this.config.entity||'';picker.includeDomains=['climate'];picker.addEventListener('value-changed',e=>this._set('entity',e.detail.value))}
-    const weatherPicker=root.getElementById('weather');
-    if(weatherPicker){weatherPicker.hass=this._hass;weatherPicker.value=this.config.weather||'';weatherPicker.includeDomains=['weather'];weatherPicker.addEventListener('value-changed',e=>this._set('weather',e.detail.value||''))}
     root.querySelectorAll('[data-section]').forEach(b=>b.onclick=()=>this._toggleSection(b.dataset.section));
     root.querySelectorAll('input:not([type=range])').forEach(el=>el.addEventListener('change',()=>this._set(el.id,el.value)));
     root.querySelectorAll('input[type=range]').forEach(el=>{

@@ -2,6 +2,7 @@
 
 ## 1.0.5 — 2026-09-18
 
+- Removed the "Ентіті погоди" (weather entity) picker from the visual editor's "Основне" tab. That tab only selects which Smart Heating device the card points to; the weather entity is chosen when the device itself is created or edited (the integration's own config/options flow), so a second picker on the card was a confusing duplicate. The card still renders weather data supplied by the device entity's attributes as before.
 - Fixed: the integration failed to load entirely. `number.py` imported `RestoreNumber` from `homeassistant.helpers.restore_state`, but that class actually lives in `homeassistant.components.number`. The bad import crashed loading of the whole platform batch (`climate`, `number`, `switch`), so the config entry failed setup with "Error setting up entry ... for smart_heating" and no entities were created. Verified the fix against a real Home Assistant 2025.1.4 test instance: the entry now loads (`ConfigEntryState.LOADED`) with all climate/number/switch entities and services registered.
 - Read outdoor temperature, wind speed, wind units, and weather condition directly from the configured Home Assistant `weather` entity while preserving existing fallbacks.
 - Include the configured weather entity in watched state updates so weather changes refresh the card.
