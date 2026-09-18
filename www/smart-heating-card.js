@@ -156,6 +156,7 @@ class SmartHeatingCard extends HTMLElement {
      entity's own target_temp_step, then to the historical 0.5 default. */
   _tempStep(){const v=Number(SH_READ_STORE(SH_TEMP_STEP_KEY));return Number.isFinite(v)&&v>0?Math.min(2,Math.max(.1,v)):null;}
   state(id){return id&&this._hass?.states[id];}
+  _contact1EntityId(){const a=this.state(this.config?.entity)?.attributes||{};return a.switch_1||this.config?.switch_1||'';}
   attr(name,fallback='—'){const id=this.config?.[name],s=this.state(id);return s&&!SH_UNAVAILABLE.includes(s.state)?s.state:fallback;}
 
   _getPrograms() {
@@ -563,7 +564,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
       radio.addEventListener('change', (e) => {
         const pid = e.target.value;
         this._activeProgId = pid;
-        SH_SET_STORE(SH_ACTIVE_PROG_KEY, pid);
+        SH_WRITE_STORE(SH_ACTIVE_PROG_KEY, pid);
         this._hass.callService('smart_heating', 'set_program', { program: pid });
         this.render();
       });
@@ -622,7 +623,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
           delete pList[pid];
           if (this._activeProgId === pid) {
             this._activeProgId = Object.keys(pList)[0] || '';
-            SH_SET_STORE(SH_ACTIVE_PROG_KEY, this._activeProgId);
+            SH_WRITE_STORE(SH_ACTIVE_PROG_KEY, this._activeProgId);
             this._hass.callService('smart_heating', 'set_program', { program: this._activeProgId });
           }
           this._saveProgramsList(pList);
@@ -635,7 +636,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     // Deactivate program
     root.querySelector('.sh-prog-deactivate')?.addEventListener('click', () => {
       this._activeProgId = '';
-      SH_SET_STORE(SH_ACTIVE_PROG_KEY, '');
+      SH_WRITE_STORE(SH_ACTIVE_PROG_KEY, '');
       this._hass.callService('smart_heating', 'set_program', { program: '' });
       this.render();
     });
@@ -813,7 +814,17 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     };
     root.querySelectorAll('[data-temp-step-slider]').forEach(sl=>{
       sl.addEventListener('pointerdown',()=>{this._activeSliderDragging=true;});
-      sl.addEventListener('input',e=>{const d=root.querySelector('[data-temp-step-val]');if(d)d.textContent=Number(e.target.value).toFixed(1)+' °C';});
+      sl.addEventListener('input',e=>{
+        const val=Number(e.target.value);
+        const d=root.querySelector('[data-temp-step-val]');
+        if(d)d.textContent=val.toFixed(1)+' °C';
+        const next=Math.min(2,Math.max(.1,Number(val.toFixed(1))));
+        root.querySelectorAll('.adjust button[data-delta]').forEach(btn=>{
+          const sign=Number(btn.dataset.delta)<0?-1:1;
+          btn.dataset.delta=String(sign*next);
+        });
+        SH_WRITE_STORE(SH_TEMP_STEP_KEY,String(next));
+      });
       sl.addEventListener('change',e=>{this._activeSliderDragging=false;applyTempStep(e.target.value);});
       sl.addEventListener('pointerup',()=>{this._activeSliderDragging=false;});
     });
@@ -915,7 +926,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
       const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
       const entities = [];
       if (this.config?.entity) entities.push(this.config.entity);
-      if (this.config?.contact_1_entity) entities.push(this.config.contact_1_entity);
+      if (this._contact1EntityId()) entities.push(this._contact1EntityId());
       if (!entities.length) return;
       const res = await this._hass.callWS({
         type: 'history/history_during_period',
@@ -934,7 +945,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
 
   _calcC1Runtime(history) {
     if (!history) return '0 хв';
-    const c1Id = this.config?.contact_1_entity;
+    const c1Id = this._contact1EntityId();
     const states = (c1Id && history[c1Id]) ? history[c1Id] : [];
     if (!states.length) return '0 хв';
     let totalMs = 0;
@@ -959,7 +970,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
 
   _calcC1Cycles(history) {
     if (!history) return '0';
-    const c1Id = this.config?.contact_1_entity;
+    const c1Id = this._contact1EntityId();
     const states = (c1Id && history[c1Id]) ? history[c1Id] : [];
     let count = 0;
     for (const pt of states) {
@@ -1000,7 +1011,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     }
 
     let c1Svg = '';
-    const c1Id = this.config?.contact_1_entity;
+    const c1Id = this._contact1EntityId();
     const c1States = (c1Id && history?.[c1Id]) ? history[c1Id] : [];
     if (c1States.length) {
       const dateStr = this._getStatsDateStr();
