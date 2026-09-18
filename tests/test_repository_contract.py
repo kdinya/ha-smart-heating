@@ -194,6 +194,46 @@ class CardContractTests(unittest.TestCase):
         self.assertEqual(card_source().count("const SH_DEFAULTS"), 1)
 
 
+class CoordinatorContractTests(unittest.TestCase):
+    """Guards against the control loop silently ignoring schedules/eco.
+
+    A selected program (or an active eco timer) only changes the
+    displayed 'effective_target_temperature' attribute; nothing enforces
+    that the hysteresis comparison in evaluate() actually reads it
+    instead of the raw manually-set target_temperature. That gap once
+    shipped and made program selection a no-op for real heating
+    behaviour, so it is pinned here structurally.
+    """
+
+    def _evaluate_body(self) -> str:
+        source = (COMPONENT / "coordinator.py").read_text()
+        match = re.search(r"def evaluate\(self\) -> None:(.*?)\n    @callback", source, re.S)
+        self.assertIsNotNone(match, "evaluate() not found in coordinator.py")
+        return match.group(1)
+
+    def test_evaluate_reads_effective_target_temperature(self):
+        body = self._evaluate_body()
+        self.assertIn("self.effective_target_temperature", body)
+
+    def test_evaluate_does_not_compare_against_raw_target_directly(self):
+        body = self._evaluate_body()
+        self.assertNotRegex(
+            body,
+            r"room_temperature\s*(>=|<=)\s*self\.target_temperature\b",
+            "hysteresis compared against the manual target, bypassing programs/eco timer",
+        )
+
+    def test_effective_target_temperature_considers_eco_timer_and_program(self):
+        source = (COMPONENT / "coordinator.py").read_text()
+        match = re.search(
+            r"def effective_target_temperature\(self\).*?\n(    def |\n    @property)", source, re.S
+        )
+        self.assertIsNotNone(match, "effective_target_temperature not found")
+        body = match.group(0)
+        self.assertIn("self.eco_timer_until", body)
+        self.assertIn("self.active_program", body)
+
+
 class ConstantsTests(unittest.TestCase):
     """Ranges the integration enforces."""
 

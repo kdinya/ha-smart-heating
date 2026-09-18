@@ -199,9 +199,10 @@ class SmartHeatingData:
                 self.heating = False
                 self.sync_output()
                 return
-            if self.heating and self.room_temperature >= self.target_temperature + self.hysteresis_off:
+            target = self.effective_target_temperature
+            if self.heating and self.room_temperature >= target + self.hysteresis_off:
                 self.heating = False
-            elif not self.heating and self.room_temperature <= self.target_temperature - self.hysteresis_on:
+            elif not self.heating and self.room_temperature <= target - self.hysteresis_on:
                 self.heating = True
             self.sync_output()
         finally:
