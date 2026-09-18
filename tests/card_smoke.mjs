@@ -181,6 +181,40 @@ if (editor.config.panel_gap !== 3) throw new Error('slider did not write config'
   localStorage.removeItem('smart-heating-temp-step');
 }
 
+// stats chart: no "tomorrow" navigation, no contact bars, target line split
+// into eco/normal colored segments driven by effective_target_temperature.
+{
+  const statsCard = document.createElement('smart-heating-card');
+  document.body.appendChild(statsCard);
+  statsCard.setConfig({ type: 'custom:smart-heating-card', entity: 'climate.smart_heating' });
+  statsCard.hass = hass;
+  statsCard._statsOpen = true;
+  statsCard.render();
+  const statsHtml = statsCard.shadowRoot.innerHTML;
+  if (statsHtml.includes('stats-day-next')) throw new Error('the "tomorrow" stats button should be gone');
+  if (!statsHtml.includes('stats-day-prev')) throw new Error('the "yesterday" stats button should still be there');
+
+  const day = '2026-09-18';
+  const mk = (hour, current, rawTarget, effTarget) => ({
+    a: { current_temperature: current, temperature: rawTarget, effective_target_temperature: effTarget },
+    lu: new Date(`${day}T${String(hour).padStart(2, '0')}:00:00`).getTime() / 1000,
+  });
+  statsCard._statsDate = day;
+  statsCard._statsHistory = { 'climate.smart_heating': [
+    mk(1, 19.8, 22, 22),
+    mk(9, 19.0, 22, 17),  // eco window
+    mk(15, 20.9, 22, 22), // back to normal
+  ] };
+  statsCard.render();
+  const chartHtml = statsCard.shadowRoot.querySelector('.stats-chart-svg').innerHTML;
+  if (chartHtml.includes('<rect')) throw new Error('chart should no longer draw contact-1 bars');
+  const orangeSegs = (chartHtml.match(/stroke="#ff8a00"/g) || []).length;
+  const greenSegs = (chartHtml.match(/stroke="#10b981"/g) || []).length;
+  const blueSegs = (chartHtml.match(/stroke="#38bdf8"/g) || []).length;
+  if (orangeSegs < 1 || greenSegs < 1) throw new Error('target line should split into normal (orange) and eco (green) segments');
+  if (blueSegs < 1) throw new Error('room temperature line missing');
+}
+
 console.log('SMOKE OK');
 
 process.exit(0);

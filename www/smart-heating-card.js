@@ -98,10 +98,10 @@ const SH_WEATHER_TEXT = (raw, tr) => {
 
 const SH_RAIN_ICON = (state) => SH_RAIN_ICONS[String(state ?? '').trim().toLowerCase()] || SH_RAIN_ICON_RAINY;
 const SH_DICT = {
-  uk: {stats_title: 'Добова статистика роботи', prev_day: '◀ Вчора', next_day: 'Завтра ▶', today: 'Сьогодні', c1_runtime: 'Час роботи контакту #1', cycles: 'Циклів запуску', temp_range: 'Діапазон t°', no_data: 'Немає даних за цей день', boiler_info_title: 'Статус котла', boiler_info_text: 'Котел працює автономно за власною внутрішньою логікою нагріву. Контакти лише надають дозвіл на запуск опалення.',power: 'ЖИВЛЕННЯ', program: 'ПРОГРАМА', history: 'ІСТОРІЯ', settings: 'НАЛАШТУВАННЯ', outdoor: 'Температура на вулиці', wind: 'Вітер на вулиці', rain: 'Опади на вулиці', humidity: 'ВОЛОГІСТЬ В КІМНАТІ', scheme: 'СХЕМА ПІДКЛЮЧЕННЯ', contact1: 'ТЕРМОСТАТ ХА<br><small>АВТОМАТИКА</small>', contact2: 'ПРОГРАМАТОР<br><small>ТАЙМЕР</small>',
+  uk: {stats_title: 'Добова статистика роботи', prev_day: '◀ Вчора', today: 'Сьогодні', c1_runtime: 'Час роботи контакту #1', cycles: 'Циклів запуску', temp_range: 'Діапазон t°', no_data: 'Немає даних за цей день', boiler_info_title: 'Статус котла', boiler_info_text: 'Котел працює автономно за власною внутрішньою логікою нагріву. Контакти лише надають дозвіл на запуск опалення.',power: 'ЖИВЛЕННЯ', program: 'ПРОГРАМА', history: 'ІСТОРІЯ', settings: 'НАЛАШТУВАННЯ', outdoor: 'Температура на вулиці', wind: 'Вітер на вулиці', rain: 'Опади на вулиці', humidity: 'ВОЛОГІСТЬ В КІМНАТІ', scheme: 'СХЕМА ПІДКЛЮЧЕННЯ', contact1: 'ТЕРМОСТАТ ХА<br><small>АВТОМАТИКА</small>', contact2: 'ПРОГРАМАТОР<br><small>ТАЙМЕР</small>',
 boiler: 'КОТЕЛ ПРАЦЮЄ', waiting: 'КОТЕЛ',
 language: 'МОВА', locale: 'uk-UA', weather_sunny: 'Ясно', weather_clear: 'Ясно', weather_night: 'Ясно', weather_partlycloudy: 'Мінлива хмарність', weather_cloudy: 'Хмарно', weather_overcast: 'Похмуро', weather_rainy: 'Дощ', weather_pouring: 'Злива', weather_snowy: 'Сніг', weather_sleet: 'Сніг з дощем', weather_fog: 'Туман', weather_hail: 'Град', weather_thunder: 'Гроза', weather_windy: 'Вітряно', weather_dry: 'Без опадів', hysteresis: 'ШВИДКІ НАЛАШТУВАННЯ', labels: 'НАЗВИ ТА ПІДПИСИ', hysteresis_on: 'Гістерезіс увімкнення (дельта)', hysteresis_off: 'Гістерезіс вимкнення (дельта)', hyst_on_desc: 'Дельта зниження температури для вмикання котла', hyst_off_desc: 'Дельта підвищення температури для вимикання котла', temp_step: 'Крок зміни цільової температури', temp_step_desc: 'Крок кнопок +/− цільової температури під колом клімата', labels_hint: 'Введіть власний текст або залиште порожнім для стандартного. Вимикач поруч приховує або показує підпис.', reset_labels: 'Скинути всі тексти', relay_timeout: 'Час перевірки реле (сек)', relay_timeout_desc: 'Час очікування підтвердження фактичного перемикання реле', relay_warning: 'УВАГА: Стан реле не відповідає заданому!', programs_title: 'Опалювальні програми та розклад', eco_mode: 'Режим ЕКО', target_mode: 'Цільова', eco_temp: 'Еко температура', quick_eco: 'Швидкий режим ЕКО (таймер)', quick_eco_desc: 'Тимчасове зниження температури до ЕКО на вибраний час', add_program: '+ Додати програму', active_prog: 'Активна', use_prog: 'Використовувати цю програму', delete_prog: 'Видалити', all_comfort: 'Всі 24г Цільова', all_eco: 'Всі 24г Еко', day_night: 'День/Ніч', remaining: 'залишилось', off: 'Вимкнути', lbl_title: 'Заголовок картки', lbl_subtitle: 'Підзаголовок', lbl_outdoor: 'Температура на вулиці', lbl_wind: 'Вітер на вулиці', lbl_rain: 'Опади на вулиці', lbl_humidity: 'Вологість в кімнаті', lbl_scheme: 'Схема підключення', lbl_contact1: 'Контакт 1', lbl_contact2: 'Контакт 2', lbl_power: 'Кнопка «Живлення»', lbl_program: 'Кнопка «Програма»', lbl_boiler: 'Статус «Котел працює»', lbl_waiting: 'Статус «Котел» (очікування)', lbl_history: 'Кнопка «Історія»', lbl_settings: 'Кнопка «Налаштування»'},
-  en: {stats_title: 'Daily Heating Statistics', prev_day: '◀ Prev Day', next_day: 'Next Day ▶', today: 'Today', c1_runtime: 'Contact #1 Runtime', cycles: 'Heating Cycles', temp_range: 'Temp Range', no_data: 'No history recorded for this day', boiler_info_title: 'Boiler Status', boiler_info_text: 'The boiler operates autonomously according to its internal heating curve. The contacts only grant permission to heat.',power: 'POWER', program: 'PROGRAM', history: 'HISTORY', settings: 'SETTINGS', outdoor: 'Outdoor temperature', wind: 'Wind outside', rain: 'Precipitation', humidity: 'ROOM HUMIDITY', scheme: 'CONNECTION SCHEME', contact1: 'HA THERMOSTAT<br><small>SMART AUTO</small>', contact2: 'PROGRAMMER<br><small>TIMER DIAL</small>',
+  en: {stats_title: 'Daily Heating Statistics', prev_day: '◀ Prev Day', today: 'Today', c1_runtime: 'Contact #1 Runtime', cycles: 'Heating Cycles', temp_range: 'Temp Range', no_data: 'No history recorded for this day', boiler_info_title: 'Boiler Status', boiler_info_text: 'The boiler operates autonomously according to its internal heating curve. The contacts only grant permission to heat.',power: 'POWER', program: 'PROGRAM', history: 'HISTORY', settings: 'SETTINGS', outdoor: 'Outdoor temperature', wind: 'Wind outside', rain: 'Precipitation', humidity: 'ROOM HUMIDITY', scheme: 'CONNECTION SCHEME', contact1: 'HA THERMOSTAT<br><small>SMART AUTO</small>', contact2: 'PROGRAMMER<br><small>TIMER DIAL</small>',
 boiler: 'BOILER RUNNING', waiting: 'BOILER',
 language: 'LANGUAGE', locale: 'en-GB', weather_sunny: 'Sunny', weather_clear: 'Clear', weather_night: 'Clear', weather_partlycloudy: 'Partly cloudy', weather_cloudy: 'Cloudy', weather_overcast: 'Overcast', weather_rainy: 'Rain', weather_pouring: 'Heavy rain', weather_snowy: 'Snow', weather_sleet: 'Sleet', weather_fog: 'Fog', weather_hail: 'Hail', weather_thunder: 'Thunderstorm', weather_windy: 'Windy', weather_dry: 'No rain', hysteresis: 'QUICK SETTINGS', labels: 'TEXTS & LABELS', hysteresis_on: 'Turn-on hysteresis (delta)', hysteresis_off: 'Turn-off hysteresis (delta)', hyst_on_desc: 'Drop below target temperature before firing boiler', hyst_off_desc: 'Rise above target temperature before stopping boiler', temp_step: 'Target temperature step', temp_step_desc: 'Step used by the +/− buttons under the climate dial', labels_hint: 'Enter custom text or leave empty for default. The switch next to each field shows or hides that label.', reset_labels: 'Reset all labels', relay_timeout: 'Relay verification timeout (s)', relay_timeout_desc: 'Seconds to wait for physical switch confirmation before warning', relay_warning: 'WARNING: Relay state mismatch detected!', programs_title: 'Heating Schedules & Programs', eco_mode: 'Eco Mode', target_mode: 'Target', eco_temp: 'Eco temperature', quick_eco: 'Quick Eco Timer', quick_eco_desc: 'Temporary Eco mode for selected duration before returning to normal', add_program: '+ Add Program', active_prog: 'Active', use_prog: 'Use this program', delete_prog: 'Delete', all_comfort: 'All 24h Target', all_eco: 'All 24h Eco', day_night: 'Day/Night', remaining: 'remaining', off: 'Turn off', lbl_title: 'Card title', lbl_subtitle: 'Subtitle', lbl_outdoor: 'Outdoor temperature', lbl_wind: 'Wind outside', lbl_rain: 'Precipitation', lbl_humidity: 'Room humidity', lbl_scheme: 'Connection scheme', lbl_contact1: 'Contact 1', lbl_contact2: 'Contact 2', lbl_power: 'Power button', lbl_program: 'Program button', lbl_boiler: 'Status «Boiler running»', lbl_waiting: 'Status «Boiler» (standby)', lbl_history: 'History button', lbl_settings: 'Settings button'}};
 const SH_CLAMP = (value, min, max, fallback) => {
@@ -439,7 +439,6 @@ ${this._statsOpen ? `<div class="modal-backdrop stats-backdrop" style="z-index:1
       <input type="date" class="stats-date-input" value="${this._getStatsDateStr()}" style="background:#091015;border:1px solid #334155;color:#e2e8f0;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer" />
       <button class="stats-day-today" style="padding:4px 8px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:var(--orange);cursor:pointer;font-size:11px;font-weight:700">${tr('today')}</button>
     </div>
-    <button class="stats-day-next" style="padding:6px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;cursor:pointer;font-size:12px">${tr('next_day')} ▶</button>
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-bottom:14px">
@@ -461,7 +460,8 @@ ${this._statsOpen ? `<div class="modal-backdrop stats-backdrop" style="z-index:1
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <span style="font-size:11px;color:#94a3b8">${tr('daily_chart')}</span>
       <div style="display:flex;gap:12px;font-size:10px">
-        <span style="display:flex;align-items:center;gap:4px;color:#ff8a00"><span style="width:10px;height:10px;background:#ff8a0044;border:1px solid #ff8a00;display:inline-block;border-radius:2px"></span> ${tr('contact1')}</span>
+        <span style="display:flex;align-items:center;gap:4px;color:#ff8a00"><span style="width:12px;height:2px;background:#ff8a00;display:inline-block"></span> ${tr('target_mode')}</span>
+        <span style="display:flex;align-items:center;gap:4px;color:#10b981"><span style="width:12px;height:2px;background:#10b981;display:inline-block"></span> ${tr('eco_mode')}</span>
         <span style="display:flex;align-items:center;gap:4px;color:#38bdf8"><span style="width:12px;height:2px;background:#38bdf8;display:inline-block"></span> ${tr('room_temp')}</span>
       </div>
     </div>
@@ -692,15 +692,6 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     root.querySelector('.stats-day-prev')?.addEventListener('click', () => {
       const cur = new Date(this._getStatsDateStr());
       cur.setDate(cur.getDate() - 1);
-      const yr = cur.getFullYear(), mo = String(cur.getMonth()+1).padStart(2,'0'), da = String(cur.getDate()).padStart(2,'0');
-      this._statsDate = `${yr}-${mo}-${da}`;
-      this._fetchHistoryForStats(this._statsDate);
-      this.render();
-    });
-
-    root.querySelector('.stats-day-next')?.addEventListener('click', () => {
-      const cur = new Date(this._getStatsDateStr());
-      cur.setDate(cur.getDate() + 1);
       const yr = cur.getFullYear(), mo = String(cur.getMonth()+1).padStart(2,'0'), da = String(cur.getDate()).padStart(2,'0');
       this._statsDate = `${yr}-${mo}-${da}`;
       this._fetchHistoryForStats(this._statsDate);
@@ -1024,7 +1015,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
   _renderDailyChartSvg(history, target) {
     const W = 520, H = 180, padL = 35, padR = 15, padT = 15, padB = 25;
     const chartW = W - padL - padR, chartH = H - padT - padB;
-    
+
     let gridSvg = '';
     const hours = [0, 6, 12, 18, 24];
     for (const h of hours) {
@@ -1033,57 +1024,42 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
       gridSvg += `<text x="${x}" y="${H - 8}" fill="#64748b" font-size="10" text-anchor="${h === 0 ? 'start' : h === 24 ? 'end' : 'middle'}">${String(h).padStart(2,'0')}:00</text>`;
     }
 
-    let c1Svg = '';
-    const c1Id = this._contact1EntityId();
-    const c1States = (c1Id && history?.[c1Id]) ? history[c1Id] : [];
-    if (c1States.length) {
-      const dateStr = this._getStatsDateStr();
-      const dayStart = new Date(`${dateStr}T00:00:00`).getTime();
-      const dayEnd = new Date(`${dateStr}T23:59:59`).getTime();
-      let onStart = null;
-      for (const pt of c1States) {
-        const st = pt.s || pt.state;
-        const ts = (pt.lu || pt.last_updated_ts || 0) * 1000 || (pt.last_updated ? new Date(pt.last_updated).getTime() : 0);
-        if (st === 'on') {
-          if (!onStart) onStart = Math.max(dayStart, ts);
-        } else {
-          if (onStart && ts) {
-            const endTs = Math.min(dayEnd, ts);
-            const x1 = padL + ((onStart - dayStart) / (dayEnd - dayStart)) * chartW;
-            const x2 = padL + ((endTs - dayStart) / (dayEnd - dayStart)) * chartW;
-            const barW = Math.max(2, x2 - x1);
-            c1Svg += `<rect x="${x1}" y="${padT}" width="${barW}" height="${chartH}" fill="#ff8a00" opacity="0.35" rx="2" />`;
-            onStart = null;
-          }
-        }
-      }
-    }
-
-    let tempSvg = '';
     const climateId = this.config?.entity;
     const clStates = (climateId && history?.[climateId]) ? history[climateId] : [];
-    const pts = [];
     const dateStr = this._getStatsDateStr();
     const dayStart = new Date(`${dateStr}T00:00:00`).getTime();
     const dayEnd = new Date(`${dateStr}T23:59:59`).getTime();
 
+    /* Room (current) temperature, and the target actually applied at that
+       moment -- effective_target_temperature already accounts for the eco
+       timer/schedule, falling back to the raw setpoint on older history
+       points that predate that attribute. A point is "eco" whenever the
+       applied target sits below the raw one. */
+    const pts = [];
+    const targetPts = [];
     for (const pt of clStates) {
-      const val = parseFloat(pt.a?.current_temperature ?? pt.s ?? pt.state);
+      const a = pt.a || {};
       const ts = (pt.lu || pt.last_updated_ts || 0) * 1000 || (pt.last_updated ? new Date(pt.last_updated).getTime() : 0);
-      if (!isNaN(val) && ts >= dayStart && ts <= dayEnd) {
-        pts.push({ t: ts, v: val });
+      if (ts < dayStart || ts > dayEnd) continue;
+      const val = parseFloat(a.current_temperature ?? pt.s ?? pt.state);
+      if (!isNaN(val)) pts.push({ t: ts, v: val });
+      const rawTarget = parseFloat(a.temperature);
+      const effTarget = parseFloat(a.effective_target_temperature);
+      const tv = !isNaN(effTarget) ? effTarget : rawTarget;
+      if (!isNaN(tv)) {
+        const eco = !isNaN(rawTarget) && !isNaN(effTarget) && effTarget < rawTarget - 0.05;
+        targetPts.push({ t: ts, v: tv, eco });
       }
     }
 
     let minT = 18, maxT = 26;
-    if (pts.length) {
-      const vals = pts.map(p => p.v);
-      minT = Math.floor(Math.min(...vals) - 1);
-      maxT = Math.ceil(Math.max(...vals) + 1);
-    }
-    if (target != null && !isNaN(Number(target))) {
-      minT = Math.min(minT, Math.floor(Number(target) - 1));
-      maxT = Math.max(maxT, Math.ceil(Number(target) + 1));
+    const allVals = pts.map(p => p.v).concat(targetPts.map(p => p.v));
+    if (allVals.length) {
+      minT = Math.floor(Math.min(...allVals) - 1);
+      maxT = Math.ceil(Math.max(...allVals) + 1);
+    } else if (target != null && !isNaN(Number(target))) {
+      minT = Math.floor(Number(target) - 1);
+      maxT = Math.ceil(Number(target) + 1);
     }
     if (maxT <= minT) maxT = minT + 5;
 
@@ -1091,19 +1067,40 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     yAxisSvg += `<text x="${padL - 6}" y="${padT + 10}" fill="#64748b" font-size="9" text-anchor="end">${maxT}°</text>`;
     yAxisSvg += `<text x="${padL - 6}" y="${padT + chartH}" fill="#64748b" font-size="9" text-anchor="end">${minT}°</text>`;
 
+    const xOf = (t) => padL + ((t - dayStart) / (dayEnd - dayStart)) * chartW;
+    const yOf = (v) => padT + (1 - (v - minT) / (maxT - minT)) * chartH;
+
+    /* One <path> per contiguous eco/normal run, sharing the boundary point
+       with its neighbour so the line stays visually unbroken. */
     let targetSvg = '';
-    if (target != null && !isNaN(Number(target))) {
-      const yT = padT + (1 - (Number(target) - minT) / (maxT - minT)) * chartH;
-      targetSvg = `<line x1="${padL}" y1="${yT}" x2="${padL + chartW}" y2="${yT}" stroke="#ff8a00" stroke-width="1.2" stroke-dasharray="4,4" opacity="0.8" />
-      <text x="${padL + chartW - 4}" y="${yT - 4}" fill="#ff8a00" font-size="9" text-anchor="end">${target}°C</text>`;
+    if (targetPts.length > 1) {
+      let run = [targetPts[0]];
+      const flushRun = (nextPoint) => {
+        if (nextPoint) run.push(nextPoint);
+        if (run.length > 1) {
+          const d = run.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xOf(p.t).toFixed(1)} ${yOf(p.v).toFixed(1)}`).join(' ');
+          const color = run[0].eco ? '#10b981' : '#ff8a00';
+          targetSvg += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />`;
+        }
+      };
+      for (let i = 1; i < targetPts.length; i++) {
+        const p = targetPts[i];
+        if (p.eco === run[run.length - 1].eco) {
+          run.push(p);
+        } else {
+          flushRun(p);
+          run = [p];
+        }
+      }
+      flushRun(null);
+    } else if (target != null && !isNaN(Number(target))) {
+      const yT = yOf(Number(target));
+      targetSvg = `<line x1="${padL}" y1="${yT}" x2="${padL + chartW}" y2="${yT}" stroke="#ff8a00" stroke-width="1.2" stroke-dasharray="4,4" opacity="0.8" />`;
     }
 
+    let tempSvg = '';
     if (pts.length > 1) {
-      const pathD = pts.map((p, i) => {
-        const x = padL + ((p.t - dayStart) / (dayEnd - dayStart)) * chartW;
-        const y = padT + (1 - (p.v - minT) / (maxT - minT)) * chartH;
-        return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
-      }).join(' ');
+      const pathD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xOf(p.t).toFixed(1)} ${yOf(p.v).toFixed(1)}`).join(' ');
       tempSvg = `<path d="${pathD}" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />`;
     } else {
       tempSvg = `<text x="${W/2}" y="${H/2}" fill="#475569" font-size="12" text-anchor="middle">Дані історії завантажуються або відсутні</text>`;
@@ -1112,7 +1109,6 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="none">
       ${gridSvg}
       ${yAxisSvg}
-      ${c1Svg}
       ${targetSvg}
       ${tempSvg}
     </svg>`;
