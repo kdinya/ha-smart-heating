@@ -180,6 +180,10 @@ class SmartHeatingData:
                         self.active_program = stored.get("active_program")
                     if "programs" in stored and isinstance(stored.get("programs"), dict):
                         self.programs.update(stored["programs"])
+                    if "contact_1_enabled" in stored:
+                        self.contact_1_enabled = bool(stored.get("contact_1_enabled"))
+                    if "contact_2_enabled" in stored:
+                        self.contact_2_enabled = bool(stored.get("contact_2_enabled"))
             except Exception as err:
                 _LOGGER.warning("Could not load stored programs: %s", err)
         if "P1" not in self.programs:
@@ -206,6 +210,16 @@ class SmartHeatingData:
 
     @callback
     def _state_changed(self, event: Any) -> None:
+        # Bidirectional sync for Contact 2 (switch_2):
+        # If toggled on the physical device or externally in HA, update contact_2_enabled & persist
+        switch_2_id = self.get_config_or_option(CONF_SWITCH_2)
+        if switch_2_id and getattr(event, "data", {}).get("entity_id") == switch_2_id:
+            new_state = getattr(event, "data", {}).get("new_state")
+            if new_state and new_state.state in ("on", "off"):
+                phys_on = (new_state.state == "on")
+                if self.contact_2_enabled != phys_on:
+                    self.contact_2_enabled = phys_on
+                    self._async_save_store()
         self.evaluate()
 
     # -- control loop ------------------------------------------------------
@@ -290,14 +304,28 @@ class SmartHeatingData:
         if switch_2_id:
             desired_2 = "on" if (self.enabled and self.contact_2_enabled) else "off"
             current_2 = self.hass.states.get(switch_2_id)
-            if current_2 and current_2.state != desired_2:
-                self.hass.async_create_task(
-                    self.hass.services.async_call(
-                        "switch",
-                        "turn_on" if desired_2 == "on" else "turn_off",
-                        {"entity_id": switch_2_id},
-                    )
-                )
+            if current_2:
+                if current_2.state in ("unavailable", "unknown"):
+                    self.relay_mismatch_2 = False
+                    self.relay_warning_2 = f"Switch 2 is {current_2.state}"
+                else:
+                    if self._switch_2_requested_state != desired_2:
+                        self._switch_2_requested_state = desired_2
+                        self._switch_2_requested_time = time.monotonic()
+                    if current_2.state != desired_2:
+                        self.hass.async_create_task(
+                            self.hass.services.async_call(
+                                "switch",
+                                "turn_on" if desired_2 == "on" else "turn_off",
+                                {"entity_id": switch_2_id},
+                            )
+                        )
+                        if (time.monotonic() - self._switch_2_requested_time) > self.relay_timeout:
+                            self.relay_mismatch_2 = True
+                            self.relay_warning_2 = f"Switch 2 mismatch: expected {desired_2}, got {current_2.state}"
+                    else:
+                        self.relay_mismatch_2 = False
+                        self.relay_warning_2 = None
 
     # -- setters used by the entities -------------------------------------
 
@@ -312,15 +340,30 @@ class SmartHeatingData:
         self.evaluate()
 
     def set_contact_1(self, enabled: bool) -> None:
-        """Enable or disable contact 1 smart thermostat control."""
+        """Enable or disable contact 1 smart thermostat control.
+        
+        LOGIC NOTE:
+        Block 1 toggles automatic heating regulation (target / eco temp + hysteresis).
+        - When Block 1 is ON: Thermostat algorithm controls Contact 1 relay.
+        - When Block 1 is OFF: Contact 1 relay remains OFF / released; thermostat operates purely as visual card.
+        """
         self.contact_1_enabled = bool(enabled)
         self.evaluate()
+        self._async_save_store()
 
     def set_contact_2(self, enabled: bool) -> None:
-        """Enable or disable contact 2 programmer bypass."""
+        """Enable or disable contact 2 programmer bypass.
+        
+        LOGIC NOTE:
+        Block 2 represents an external programmer line or secondary boiler control.
+        - Synchronized bidirectionally with physical switch 2.
+        - Toggled ONLY manually (card button or physical device switch).
+        - State is persistently remembered across restarts.
+        """
         self.contact_2_enabled = bool(enabled)
         self.sync_output()
         self._notify_listeners()
+        self._async_save_store()
 
     def set_target(self, value: float) -> None:
         """Change the target temperature and re-evaluate."""
@@ -411,13 +454,7 @@ class SmartHeatingData:
         elif program_id in self.programs:
             self.active_program = program_id
 
-        if self._store and self.hass:
-            self.hass.async_create_task(
-                self._store.async_save({
-                    "active_program": self.active_program,
-                    "programs": self.programs,
-                })
-            )
+        self._async_save_store()
         self.evaluate()
 
     def set_eco_timer(self, minutes: int) -> None:
@@ -499,6 +536,8 @@ class SmartHeatingData:
             "contact_2_enabled": self.contact_2_enabled,
             "contact_1_state": is_burning,
             "contact_2_state": (self.source_value(CONF_SWITCH_2) == "on") if self.enabled else False,
+            "contact_1_alert": self._compute_contact_alert(1),
+            "contact_2_alert": self._compute_contact_alert(2),
             "room_temperature": self.room_temperature,
             "target_temperature": self.target_temperature,
             "min_target_temperature": self.min_target_temperature,
