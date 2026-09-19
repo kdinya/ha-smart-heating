@@ -318,6 +318,8 @@ class SmartHeatingCard extends HTMLElement {
     const currentMinTarget = a.min_target_temperature !== undefined ? Number(a.min_target_temperature) : 16,
       currentMaxTarget = a.max_target_temperature !== undefined ? Number(a.max_target_temperature) : 30;
     const relayMismatch = Boolean(a.relay_mismatch);
+    const alert1 = a.contact_1_alert || null;
+    const alert2 = a.contact_2_alert || null;
 
     const enabled=c?.state!=='off'&&c?.state!=='unavailable';const effectEnabled=this.config.effect_enabled!==false;
     const hasContact1 = Boolean(a.switch_1 || this.config.switch_1);

@@ -485,6 +485,21 @@ class SmartHeatingData:
             return state.state
         return state.attributes.get(attr_name)
 
+    def _compute_contact_alert(self, contact_num: int) -> str | None:
+        """Compute alert message if contact entity is unavailable or has relay mismatch."""
+        conf_key = CONF_SWITCH_1 if contact_num == 1 else CONF_SWITCH_2
+        entity_id = self.get_config_or_option(conf_key)
+        if not entity_id:
+            return None
+        st = self.source_value(conf_key)
+        if st is None or st in UNAVAILABLE_STATES:
+            state_label = "не знайдено" if st is None else st
+            return f"Сутність контакту #{contact_num} ({entity_id}) має статус '{state_label}'. Перевірте живлення реле або мережу."
+        mismatch = self.relay_mismatch_1 if contact_num == 1 else self.relay_mismatch_2
+        if mismatch:
+            return f"Немає зворотного зв'язку від {entity_id} після команди перемикання (таймаут {self.relay_timeout}с). Стан не відповідає бажаному."
+        return None
+
     @property
     def attributes(self) -> dict[str, Any]:
         """Extra attributes consumed by the Lovelace card."""
