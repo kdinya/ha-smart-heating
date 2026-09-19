@@ -838,6 +838,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
       const chosen=b.dataset.popupLang;
       SH_WRITE_STORE(SH_LANG_KEY,chosen);
       this.config={...this.config,language:chosen};
+      this.dispatchEvent(new CustomEvent('config-changed',{detail:{config:this.config},bubbles:true,composed:true}));
       window.dispatchEvent(new CustomEvent('sh-language-changed',{detail:{language:chosen}}));
       this.render();
     }));

@@ -19,7 +19,7 @@ PLATFORMS = ["climate", "number", "switch"]
 CARD_PATH = Path(__file__).parent / "www"
 CANONICAL_CARD_URL = "/hacsfiles/ha-smart-heating/smart-heating-card.js"
 CARD_VERSION = "1.0.5"
-CARD_BUILD = "reference-dashboard-v105-2"
+CARD_BUILD = "reference-dashboard-v105-3"
 
 
 def _is_card_resource_url(url: str) -> bool:
