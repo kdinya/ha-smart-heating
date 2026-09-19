@@ -9,6 +9,7 @@ from urllib.parse import urlsplit
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, CoreState, HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
@@ -19,7 +20,8 @@ PLATFORMS = ["climate", "number", "switch"]
 CARD_PATH = Path(__file__).parent / "www"
 CANONICAL_CARD_URL = "/hacsfiles/ha-smart-heating/smart-heating-card.js"
 CARD_VERSION = "1.0.5"
-CARD_BUILD = "reference-dashboard-v105-5"
+CARD_BUILD = "reference-dashboard-v105-6"
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 def _is_card_resource_url(url: str) -> bool:

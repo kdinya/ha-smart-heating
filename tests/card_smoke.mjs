@@ -29,7 +29,7 @@ const hass = {
       },
     },
     'sensor.outdoor': { state: '-3.2', attributes: {} },
-    'sensor.wind': { state: '4 m/s', attributes: {} },
+    'sensor.wind': { state: '4', attributes: { unit_of_measurement: 'm/s' } },
     'sensor.rain': { state: '0 mm', attributes: {} },
     'weather.home_assistant': { state: 'sunny', attributes: { temperature: 17.2, wind_speed: 2.11, wind_speed_unit: 'm/s' } },
   },
@@ -64,7 +64,9 @@ const must = ['scheme-card active', 'flame-effect', 'is-active', '21', '22', 'co
 for (const needle of must) {
   if (!html.includes(needle)) throw new Error(`card markup missing: ${needle}`);
 }
-if (!html.includes('17.2') || !html.includes('2.1 m/s')) throw new Error('weather entity attributes were not rendered');
+// dedicated sensors win over the weather entity attributes
+if (!html.includes('-3.2')) throw new Error('outdoor sensor value was not preferred over the weather entity');
+if (!html.includes('4.0 m/s')) throw new Error('wind sensor value/unit was not preferred over the weather entity');
 if (html.includes('undefined') || html.includes('NaN')) throw new Error('card markup contains undefined/NaN');
 const schemeCards = [...card.shadowRoot.querySelectorAll('.scheme-card')];
 // Validates contact switch cards render properly

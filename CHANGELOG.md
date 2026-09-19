@@ -2,6 +2,11 @@
 
 ## 1.0.5 — 2026-09-18
 
+- Dedicated sensors now take priority over the `weather` entity for outdoor temperature, wind and precipitation; the weather entity is used only as a fallback. Wind also reuses the sensor's own `unit_of_measurement`.
+- Precipitation text and precipitation icon now derive from the same source, so they can no longer disagree.
+- Room humidity no longer falls back to the weather entity's outdoor humidity (it was shown under the "room humidity" label).
+- Contact alert messages, the alert button tooltip, the contact badges ("HA"/"TIMER") and the default wind unit are localised instead of hardcoded Ukrainian; the coordinator now also exposes machine-readable alert data (`contact_N_alert_code/entity/state`).
+
 - Room humidity now rounds to a whole number (no decimal part shown).
 - Replaced the humidity icon (a plain "♢" glyph) with a proper droplet icon matching the other weather icons' style.
 - Right-aligned the "Вологість в кімнаті" label and its value.

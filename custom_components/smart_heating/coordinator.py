@@ -502,6 +502,20 @@ class SmartHeatingData:
             return state.state
         return state.attributes.get(attr_name)
 
+    def _contact_alert_info(self, contact_num: int) -> dict[str, Any] | None:
+        """Machine-readable alert data for a contact, localised by the card."""
+        conf_key = CONF_SWITCH_1 if contact_num == 1 else CONF_SWITCH_2
+        entity_id = self.get_config_or_option(conf_key)
+        if not entity_id:
+            return None
+        st = self.source_value(conf_key)
+        if st is None or st in UNAVAILABLE_STATES:
+            return {"code": "unavailable", "entity_id": entity_id, "state": st}
+        mismatch = self.relay_mismatch_1 if contact_num == 1 else self.relay_mismatch_2
+        if mismatch:
+            return {"code": "mismatch", "entity_id": entity_id, "state": st}
+        return None
+
     def _compute_contact_alert(self, contact_num: int) -> str | None:
         """Compute alert message if contact entity is unavailable or has relay mismatch."""
         conf_key = CONF_SWITCH_1 if contact_num == 1 else CONF_SWITCH_2
@@ -531,11 +545,9 @@ class SmartHeatingData:
             if w_temp is not None:
                 outdoor = str(w_temp)
 
+        # Room humidity has no weather fallback on purpose: the weather entity
+        # reports outdoor humidity and the card labels this value "room humidity".
         hum = self.source_value(CONF_HUMIDITY)
-        if hum is None:
-            w_hum = self.weather_attr("humidity")
-            if w_hum is not None:
-                hum = str(w_hum)
 
         wind = self.source_value(CONF_WIND)
         if wind is None:
@@ -550,6 +562,8 @@ class SmartHeatingData:
                 precip = str(w_precip)
 
         now_ts = time.time()
+        alert_1 = self._contact_alert_info(1)
+        alert_2 = self._contact_alert_info(2)
         eco_remaining = max(0, int(self.eco_timer_until - now_ts)) if self.eco_timer_until else 0
         return {
             "enabled": self.enabled,
@@ -570,6 +584,12 @@ class SmartHeatingData:
             "contact_2_state": (self.source_value(CONF_SWITCH_2) == "on") if self.enabled else False,
             "contact_1_alert": self._compute_contact_alert(1),
             "contact_2_alert": self._compute_contact_alert(2),
+            "contact_1_alert_code": (alert_1 or {}).get("code"),
+            "contact_1_alert_entity": (alert_1 or {}).get("entity_id"),
+            "contact_1_alert_state": (alert_1 or {}).get("state"),
+            "contact_2_alert_code": (alert_2 or {}).get("code"),
+            "contact_2_alert_entity": (alert_2 or {}).get("entity_id"),
+            "contact_2_alert_state": (alert_2 or {}).get("state"),
             "room_temperature": self.room_temperature,
             "target_temperature": self.target_temperature,
             "min_target_temperature": self.min_target_temperature,
