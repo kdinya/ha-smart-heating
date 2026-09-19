@@ -263,7 +263,7 @@ class SmartHeatingCard extends HTMLElement {
   safe(x){return String(x).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
   render(){
     if(!this.shadowRoot||!this._hass||!this.config?.entity)return;
-    if(this._isLowVisibility){this._pendingRender=true;return;}
+    if(this._isLowVisibility&&this._hasRenderedOnce){this._pendingRender=true;return;}
     if(this._activeSliderDragging)return;
     const _prevTabs=this.shadowRoot.querySelector('.tabs');
     const _prevModal=this.shadowRoot.querySelector('.modal');
@@ -320,6 +320,7 @@ class SmartHeatingCard extends HTMLElement {
     const relayMismatch = Boolean(a.relay_mismatch);
     const alert1 = a.contact_1_alert || null;
     const alert2 = a.contact_2_alert || null;
+    const signalInfo = this._getSignalInfo(c, a);
 
     const enabled=c?.state!=='off'&&c?.state!=='unavailable';const effectEnabled=this.config.effect_enabled!==false;
     const hasContact1 = Boolean(a.switch_1 || this.config.switch_1);
@@ -1097,6 +1098,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
       const next=Math.min(max,Math.max(min,current+Math.sign(Number(b.dataset.delta))*step));
       if(next!==current)this._hass.callService('climate','set_temperature',{entity_id:this.config.entity,temperature:Number(next.toFixed(2))});
     }));
+    this._hasRenderedOnce = true;
   }
 
   _getStatsDateStr() {
