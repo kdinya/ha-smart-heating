@@ -202,6 +202,19 @@ class SmartHeatingData:
             )
         self.evaluate()
 
+    @callback
+    def _async_save_store(self) -> None:
+        """Persist programs and contact state to Home Assistant storage."""
+        if not self._store or not self.hass:
+            return
+        data = {
+            "active_program": self.active_program,
+            "programs": self.programs,
+            "contact_1_enabled": self.contact_1_enabled,
+            "contact_2_enabled": self.contact_2_enabled,
+        }
+        self.hass.async_create_task(self._store.async_save(data))
+
     async def async_stop(self) -> None:
         """Stop watching source entities."""
         if self._remove_listener:
