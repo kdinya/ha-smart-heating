@@ -24,6 +24,10 @@ from .const import (
     CONF_SWITCH_1,
     CONF_SWITCH_2,
     CONF_TARGET_TEMPERATURE,
+    CONF_MIN_TARGET_TEMPERATURE,
+    CONF_MAX_TARGET_TEMPERATURE,
+    DEFAULT_MIN_TARGET_TEMPERATURE,
+    DEFAULT_MAX_TARGET_TEMPERATURE,
     CONF_ECO_TEMPERATURE,
     CONF_RELAY_TIMEOUT,
     CONF_TEMP_STEP,
@@ -78,10 +82,25 @@ class SmartHeatingData:
         self.hass = hass
         self.entry = entry
         self.name = entry.data.get(CONF_NAME, DEFAULT_NAME)
-        self.target_temperature = clamp(
-            float(self.get_config_or_option(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET)),
+        self.min_target_temperature = clamp(
+            float(self.get_config_or_option(CONF_MIN_TARGET_TEMPERATURE, DEFAULT_MIN_TARGET_TEMPERATURE)),
             MIN_TARGET,
             MAX_TARGET,
+        )
+        self.max_target_temperature = clamp(
+            float(self.get_config_or_option(CONF_MAX_TARGET_TEMPERATURE, DEFAULT_MAX_TARGET_TEMPERATURE)),
+            MIN_TARGET,
+            MAX_TARGET,
+        )
+        if self.min_target_temperature > self.max_target_temperature:
+            self.min_target_temperature, self.max_target_temperature = (
+                self.max_target_temperature,
+                self.min_target_temperature,
+            )
+        self.target_temperature = clamp(
+            float(self.get_config_or_option(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET)),
+            self.min_target_temperature,
+            self.max_target_temperature,
         )
         self.hysteresis_on = clamp(
             float(self.get_config_or_option(CONF_HYSTERESIS_ON, self.get_config_or_option(CONF_HYSTERESIS, DEFAULT_HYSTERESIS_ON))),
@@ -288,7 +307,23 @@ class SmartHeatingData:
 
     def set_target(self, value: float) -> None:
         """Change the target temperature and re-evaluate."""
-        self.target_temperature = clamp(float(value), MIN_TARGET, MAX_TARGET)
+        self.target_temperature = clamp(float(value), self.min_target_temperature, self.max_target_temperature)
+        self.evaluate()
+
+    def set_min_target_temperature(self, value: float) -> None:
+        """Change the minimum allowed target temperature and re-evaluate."""
+        self.min_target_temperature = clamp(float(value), MIN_TARGET, MAX_TARGET)
+        if self.min_target_temperature > self.max_target_temperature:
+            self.max_target_temperature = self.min_target_temperature
+        self.target_temperature = clamp(self.target_temperature, self.min_target_temperature, self.max_target_temperature)
+        self.evaluate()
+
+    def set_max_target_temperature(self, value: float) -> None:
+        """Change the maximum allowed target temperature and re-evaluate."""
+        self.max_target_temperature = clamp(float(value), MIN_TARGET, MAX_TARGET)
+        if self.max_target_temperature < self.min_target_temperature:
+            self.min_target_temperature = self.max_target_temperature
+        self.target_temperature = clamp(self.target_temperature, self.min_target_temperature, self.max_target_temperature)
         self.evaluate()
 
     @property
@@ -396,6 +431,10 @@ class SmartHeatingData:
     def attributes(self) -> dict[str, Any]:
         """Extra attributes consumed by the Lovelace card."""
         is_burning = self.heating if (self.enabled and self.contact_1_enabled) else False
+        switch_1_id = self.get_config_or_option(CONF_SWITCH_1)
+        switch_1_state = self.hass.states.get(switch_1_id) if switch_1_id else None
+        if switch_1_state is not None and switch_1_state.state not in UNAVAILABLE_STATES:
+            is_burning = switch_1_state.state == "on"
         outdoor = self.source_value(CONF_OUTDOOR_TEMPERATURE)
         if outdoor is None:
             w_temp = self.weather_attr("temperature")
@@ -441,6 +480,8 @@ class SmartHeatingData:
             "contact_2_state": (self.source_value(CONF_SWITCH_2) == "on") if self.enabled else False,
             "room_temperature": self.room_temperature,
             "target_temperature": self.target_temperature,
+            "min_target_temperature": self.min_target_temperature,
+            "max_target_temperature": self.max_target_temperature,
             "hysteresis": self.hysteresis,
             "hysteresis_on": self.hysteresis_on,
             "hysteresis_off": self.hysteresis_off,

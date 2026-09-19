@@ -1,50 +1,54 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "title": "Smart Heating setup",
-        "description": "Pick the required room temperature sensor plus any optional sensors and switches.",
-        "data": {
-          "name": "Device name",
-          "room_temperature": "Room temperature",
-          "switch_1": "Switch 1 (driven by hysteresis)",
-          "switch_2": "Switch 2 (status only)",
-          "humidity": "Room humidity",
-          "outdoor_temperature": "Outdoor temperature",
-          "wind": "Wind",
-          "precipitation": "Precipitation",
-          "target_temperature": "Target temperature",
-          "hysteresis_on": "Turn-on delta (hysteresis on)",
-          "hysteresis_off": "Turn-off delta (hysteresis off)",
-          "weather": "Weather (Open-Meteo)"
-        }
-      }
-    },
-    "error": {
-      "duplicate_entity": "The same entity cannot be used for two different fields."
-    },
-    "abort": {
-      "already_configured": "A Smart Heating device with this name already exists."
+ "config": {
+  "step": {
+   "user": {
+    "title": "Smart Heating setup",
+    "description": "Pick the required room temperature sensor plus any optional sensors and switches.",
+    "data": {
+     "name": "Device name",
+     "room_temperature": "Room temperature",
+     "switch_1": "Switch 1 (driven by hysteresis)",
+     "switch_2": "Switch 2 (status only)",
+     "humidity": "Room humidity",
+     "outdoor_temperature": "Outdoor temperature",
+     "wind": "Wind",
+     "precipitation": "Precipitation",
+     "target_temperature": "Target temperature",
+     "min_target_temperature": "Minimum target temperature",
+     "max_target_temperature": "Maximum target temperature",
+     "hysteresis_on": "Turn-on delta (hysteresis on)",
+     "hysteresis_off": "Turn-off delta (hysteresis off)",
+     "weather": "Weather (Open-Meteo)"
     }
+   }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Heating parameters",
-        "data": {
-          "target_temperature": "Target temperature",
-          "hysteresis_on": "Turn-on delta (hysteresis on)",
-          "hysteresis_off": "Turn-off delta (hysteresis off)",
-          "switch_1": "Switch 1 (driven by hysteresis)",
-          "switch_2": "Switch 2 (status only)",
-          "room_temperature": "Room temperature",
-          "weather": "Weather (Open-Meteo)",
-          "outdoor_temperature": "Outdoor temperature",
-          "humidity": "Room humidity",
-          "wind": "Wind",
-          "precipitation": "Precipitation"
-        }
-      }
-    }
+  "error": {
+   "duplicate_entity": "The same entity cannot be used for two different fields."
+  },
+  "abort": {
+   "already_configured": "A Smart Heating device with this name already exists."
   }
+ },
+ "options": {
+  "step": {
+   "init": {
+    "title": "Heating parameters",
+    "data": {
+     "target_temperature": "Target temperature",
+     "min_target_temperature": "Minimum target temperature",
+     "max_target_temperature": "Maximum target temperature",
+     "hysteresis_on": "Turn-on delta (hysteresis on)",
+     "hysteresis_off": "Turn-off delta (hysteresis off)",
+     "switch_1": "Switch 1 (driven by hysteresis)",
+     "switch_2": "Switch 2 (status only)",
+     "room_temperature": "Room temperature",
+     "weather": "Weather (Open-Meteo)",
+     "outdoor_temperature": "Outdoor temperature",
+     "humidity": "Room humidity",
+     "wind": "Wind",
+     "precipitation": "Precipitation"
+    }
+   }
+  }
+ }
 }

@@ -15,8 +15,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     CONF_HYSTERESIS,
     DOMAIN,
-    MAX_TARGET,
-    MIN_TARGET,
 )
 from .coordinator import SmartHeatingData
 
@@ -39,8 +37,14 @@ class SmartHeatingClimate(RestoreEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
     )
-    _attr_min_temp = MIN_TARGET
-    _attr_max_temp = MAX_TARGET
+    @property
+    def min_temp(self) -> float:
+        return self.data.min_target_temperature
+
+    @property
+    def max_temp(self) -> float:
+        return self.data.max_target_temperature
+
     @property
     def target_temperature_step(self) -> float:
         return self.data.temp_step

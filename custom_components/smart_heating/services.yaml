@@ -114,3 +114,33 @@ set_eco_temperature:
           max: 35.0
           step: 0.1
           unit_of_measurement: "°C"
+
+set_min_target_temperature:
+  name: Set minimum target temperature
+  description: Set the lower limit for adjusting the target temperature.
+  fields:
+    temperature:
+      name: Temperature
+      description: Minimum allowed target temperature.
+      required: true
+      selector:
+        number:
+          min: 5.0
+          max: 35.0
+          step: 0.5
+          unit_of_measurement: "°C"
+
+set_max_target_temperature:
+  name: Set maximum target temperature
+  description: Set the upper limit for adjusting the target temperature.
+  fields:
+    temperature:
+      name: Temperature
+      description: Maximum allowed target temperature.
+      required: true
+      selector:
+        number:
+          min: 5.0
+          max: 35.0
+          step: 0.5
+          unit_of_measurement: "°C"

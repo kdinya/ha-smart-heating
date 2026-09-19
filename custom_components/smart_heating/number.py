@@ -76,11 +76,17 @@ class HeatingTarget(SmartHeatingNumber):
     """Target room temperature."""
 
     _attr_device_class = NumberDeviceClass.TEMPERATURE
-    _attr_native_min_value = MIN_TARGET
-    _attr_native_max_value = MAX_TARGET
 
     def __init__(self, data: SmartHeatingData, entry) -> None:
         super().__init__(data, entry, "target", "Цільова температура")
+
+    @property
+    def native_min_value(self) -> float:
+        return self.data.min_target_temperature
+
+    @property
+    def native_max_value(self) -> float:
+        return self.data.max_target_temperature
 
     @property
     def native_value(self) -> float:

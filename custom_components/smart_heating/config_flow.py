@@ -19,6 +19,10 @@ from .const import (
     CONF_SWITCH_1,
     CONF_SWITCH_2,
     CONF_TARGET_TEMPERATURE,
+    CONF_MIN_TARGET_TEMPERATURE,
+    CONF_MAX_TARGET_TEMPERATURE,
+    DEFAULT_MIN_TARGET_TEMPERATURE,
+    DEFAULT_MAX_TARGET_TEMPERATURE,
     CONF_WEATHER,
     CONF_WIND,
     DEFAULT_HYSTERESIS,
@@ -77,6 +81,12 @@ def _user_schema() -> vol.Schema:
             vol.Required(CONF_TARGET_TEMPERATURE, default=DEFAULT_TARGET): _number_slider(
                 MIN_TARGET, MAX_TARGET, 0.5
             ),
+            vol.Required(CONF_MIN_TARGET_TEMPERATURE, default=DEFAULT_MIN_TARGET_TEMPERATURE): _number_slider(
+                MIN_TARGET, MAX_TARGET, 0.5
+            ),
+            vol.Required(CONF_MAX_TARGET_TEMPERATURE, default=DEFAULT_MAX_TARGET_TEMPERATURE): _number_slider(
+                MIN_TARGET, MAX_TARGET, 0.5
+            ),
             vol.Required(CONF_HYSTERESIS_ON, default=DEFAULT_HYSTERESIS_ON): _number_slider(
                 MIN_HYSTERESIS_ON, MAX_HYSTERESIS_ON, 0.1
             ),
@@ -116,6 +126,8 @@ class SmartHeatingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=user_input,
                     options={
                         CONF_TARGET_TEMPERATURE: user_input.get(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET),
+                        CONF_MIN_TARGET_TEMPERATURE: user_input.get(CONF_MIN_TARGET_TEMPERATURE, DEFAULT_MIN_TARGET_TEMPERATURE),
+                        CONF_MAX_TARGET_TEMPERATURE: user_input.get(CONF_MAX_TARGET_TEMPERATURE, DEFAULT_MAX_TARGET_TEMPERATURE),
                         CONF_HYSTERESIS_ON: user_input.get(CONF_HYSTERESIS_ON, DEFAULT_HYSTERESIS_ON),
                         CONF_HYSTERESIS_OFF: user_input.get(CONF_HYSTERESIS_OFF, DEFAULT_HYSTERESIS_OFF),
                     },
@@ -160,6 +172,10 @@ class SmartHeatingOptionsFlow(config_entries.OptionsFlow):
             if coord is not None:
                 if getattr(coord, "target_temperature", None) is not None:
                     options[CONF_TARGET_TEMPERATURE] = coord.target_temperature
+                if getattr(coord, "min_target_temperature", None) is not None:
+                    options[CONF_MIN_TARGET_TEMPERATURE] = coord.min_target_temperature
+                if getattr(coord, "max_target_temperature", None) is not None:
+                    options[CONF_MAX_TARGET_TEMPERATURE] = coord.max_target_temperature
                 if getattr(coord, "hysteresis_on", None) is not None:
                     options[CONF_HYSTERESIS_ON] = coord.hysteresis_on
                 if getattr(coord, "hysteresis_off", None) is not None:
@@ -173,6 +189,8 @@ class SmartHeatingOptionsFlow(config_entries.OptionsFlow):
             return val if val is not None and val != "" else default
 
         cur_target = float(get_val(CONF_TARGET_TEMPERATURE, DEFAULT_TARGET))
+        cur_min_target = float(get_val(CONF_MIN_TARGET_TEMPERATURE, DEFAULT_MIN_TARGET_TEMPERATURE))
+        cur_max_target = float(get_val(CONF_MAX_TARGET_TEMPERATURE, DEFAULT_MAX_TARGET_TEMPERATURE))
         cur_h_on = float(get_val(CONF_HYSTERESIS_ON, get_val(CONF_HYSTERESIS, DEFAULT_HYSTERESIS_ON)))
         cur_h_off = float(get_val(CONF_HYSTERESIS_OFF, DEFAULT_HYSTERESIS_OFF))
 
@@ -199,6 +217,12 @@ class SmartHeatingOptionsFlow(config_entries.OptionsFlow):
 
         # Target temperature & hysteresis
         schema_dict[vol.Required(CONF_TARGET_TEMPERATURE, default=cur_target)] = _number_slider(
+            MIN_TARGET, MAX_TARGET, 0.5
+        )
+        schema_dict[vol.Required(CONF_MIN_TARGET_TEMPERATURE, default=cur_min_target)] = _number_slider(
+            MIN_TARGET, MAX_TARGET, 0.5
+        )
+        schema_dict[vol.Required(CONF_MAX_TARGET_TEMPERATURE, default=cur_max_target)] = _number_slider(
             MIN_TARGET, MAX_TARGET, 0.5
         )
         schema_dict[vol.Required(CONF_HYSTERESIS_ON, default=cur_h_on)] = _number_slider(

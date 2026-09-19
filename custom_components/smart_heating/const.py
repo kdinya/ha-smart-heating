@@ -14,6 +14,10 @@ CONF_PRECIPITATION = "precipitation"
 CONF_WEATHER = "weather"
 
 CONF_TARGET_TEMPERATURE = "target_temperature"
+CONF_MIN_TARGET_TEMPERATURE = "min_target_temperature"
+CONF_MAX_TARGET_TEMPERATURE = "max_target_temperature"
+DEFAULT_MIN_TARGET_TEMPERATURE = 16.0
+DEFAULT_MAX_TARGET_TEMPERATURE = 30.0
 CONF_HYSTERESIS = "hysteresis"
 CONF_HYSTERESIS_ON = "hysteresis_on"
 CONF_HYSTERESIS_OFF = "hysteresis_off"
@@ -85,3 +89,5 @@ SERVICE_SET_ECO_TIMER = "set_eco_timer"
 SERVICE_SET_RELAY_TIMEOUT = "set_relay_timeout"
 SERVICE_SET_TEMP_STEP = "set_temp_step"
 SERVICE_SET_ECO_TEMPERATURE = "set_eco_temperature"
+SERVICE_SET_MIN_TARGET_TEMPERATURE = "set_min_target_temperature"
+SERVICE_SET_MAX_TARGET_TEMPERATURE = "set_max_target_temperature"

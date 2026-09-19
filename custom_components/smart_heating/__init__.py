@@ -19,7 +19,7 @@ PLATFORMS = ["climate", "number", "switch"]
 CARD_PATH = Path(__file__).parent / "www"
 CANONICAL_CARD_URL = "/hacsfiles/ha-smart-heating/smart-heating-card.js"
 CARD_VERSION = "1.0.5"
-CARD_BUILD = "reference-dashboard-v105-1"
+CARD_BUILD = "reference-dashboard-v105-2"
 
 
 def _is_card_resource_url(url: str) -> bool:
@@ -163,11 +163,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for data in hass.data[DOMAIN].values():
             data.set_eco_temperature(float(temp))
 
+    async def async_handle_set_min_target_temperature(call) -> None:
+        temp = call.data.get("temperature", 16.0)
+        for data in hass.data[DOMAIN].values():
+            data.set_min_target_temperature(float(temp))
+
+    async def async_handle_set_max_target_temperature(call) -> None:
+        temp = call.data.get("temperature", 30.0)
+        for data in hass.data[DOMAIN].values():
+            data.set_max_target_temperature(float(temp))
+
     hass.services.async_register(DOMAIN, "set_program", async_handle_set_program)
     hass.services.async_register(DOMAIN, "set_eco_timer", async_handle_set_eco_timer)
     hass.services.async_register(DOMAIN, "set_relay_timeout", async_handle_set_relay_timeout)
     hass.services.async_register(DOMAIN, "set_temp_step", async_handle_set_temp_step)
     hass.services.async_register(DOMAIN, "set_eco_temperature", async_handle_set_eco_temperature)
+    hass.services.async_register(DOMAIN, "set_min_target_temperature", async_handle_set_min_target_temperature)
+    hass.services.async_register(DOMAIN, "set_max_target_temperature", async_handle_set_max_target_temperature)
 
     return True
 

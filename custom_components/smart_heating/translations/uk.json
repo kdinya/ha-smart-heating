@@ -1,50 +1,54 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "title": "Налаштування Smart Heating",
-        "description": "Оберіть обов'язковий сенсор температури кімнати та додаткові сенсори й перемикачі.",
-        "data": {
-          "name": "Назва пристрою",
-          "room_temperature": "Температура в кімнаті",
-          "switch_1": "Перемикач 1 (керується гістерезісом)",
-          "switch_2": "Перемикач 2 (лише стан)",
-          "humidity": "Вологість у кімнаті",
-          "outdoor_temperature": "Температура на вулиці",
-          "wind": "Вітер",
-          "precipitation": "Опади",
-          "target_temperature": "Цільова температура",
-          "hysteresis_on": "Гістерезіс увімкнення (дельта)",
-          "hysteresis_off": "Гістерезіс вимкнення (дельта)",
-          "weather": "Погода (Open-Meteo)"
-        }
-      }
-    },
-    "error": {
-      "duplicate_entity": "Одну й ту саму ентіті не можна обрати для двох різних полів."
-    },
-    "abort": {
-      "already_configured": "Пристрій Smart Heating з такою назвою вже існує."
+ "config": {
+  "step": {
+   "user": {
+    "title": "Налаштування Smart Heating",
+    "description": "Оберіть обов'язковий сенсор температури кімнати та додаткові сенсори й перемикачі.",
+    "data": {
+     "name": "Назва пристрою",
+     "room_temperature": "Температура в кімнаті",
+     "switch_1": "Перемикач 1 (керується гістерезісом)",
+     "switch_2": "Перемикач 2 (лише стан)",
+     "humidity": "Вологість у кімнаті",
+     "outdoor_temperature": "Температура на вулиці",
+     "wind": "Вітер",
+     "precipitation": "Опади",
+     "target_temperature": "Цільова температура",
+     "min_target_temperature": "Мінімальна цільова температура",
+     "max_target_temperature": "Максимальна цільова температура",
+     "hysteresis_on": "Гістерезіс увімкнення (дельта)",
+     "hysteresis_off": "Гістерезіс вимкнення (дельта)",
+     "weather": "Погода (Open-Meteo)"
     }
+   }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Параметри опалення",
-        "data": {
-          "target_temperature": "Цільова температура",
-          "hysteresis_on": "Гістерезіс увімкнення (дельта)",
-          "hysteresis_off": "Гістерезіс вимкнення (дельта)",
-          "switch_1": "Перемикач 1 (керується гістерезісом)",
-          "switch_2": "Перемикач 2 (лише стан)",
-          "room_temperature": "Температура в кімнаті",
-          "weather": "Погода (Open-Meteo)",
-          "outdoor_temperature": "Температура на вулиці",
-          "humidity": "Вологість у кімнаті",
-          "wind": "Вітер",
-          "precipitation": "Опади"
-        }
-      }
-    }
+  "error": {
+   "duplicate_entity": "Одну й ту саму ентіті не можна обрати для двох різних полів."
+  },
+  "abort": {
+   "already_configured": "Пристрій Smart Heating з такою назвою вже існує."
   }
+ },
+ "options": {
+  "step": {
+   "init": {
+    "title": "Параметри опалення",
+    "data": {
+     "target_temperature": "Цільова температура",
+     "min_target_temperature": "Мінімальна цільова температура",
+     "max_target_temperature": "Максимальна цільова температура",
+     "hysteresis_on": "Гістерезіс увімкнення (дельта)",
+     "hysteresis_off": "Гістерезіс вимкнення (дельта)",
+     "switch_1": "Перемикач 1 (керується гістерезісом)",
+     "switch_2": "Перемикач 2 (лише стан)",
+     "room_temperature": "Температура в кімнаті",
+     "weather": "Погода (Open-Meteo)",
+     "outdoor_temperature": "Температура на вулиці",
+     "humidity": "Вологість у кімнаті",
+     "wind": "Вітер",
+     "precipitation": "Опади"
+    }
+   }
+  }
+ }
 }
