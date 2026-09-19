@@ -453,19 +453,23 @@ class SmartHeatingData:
         self.temp_step = clamp(float(value), MIN_TEMP_STEP, MAX_TEMP_STEP)
         self._notify_listeners()
 
-    def set_program(self, program_id: str | None, programs: dict[str, Any] | None = None) -> None:
-        """Activate a schedule program or deactivate (None / 'none')."""
-        if programs:
-            self.programs.update(programs)
-        if "P1" not in self.programs:
-            self.programs["P1"] = {
-                "name": "P1",
-                "hours": [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0],
-            }
-        if program_id in (None, "", "none", "off"):
-            self.active_program = None
-        elif program_id in self.programs:
-            self.active_program = program_id
+    def set_program(self, program_id: Any = ..., programs: dict[str, Any] | None = None) -> None:
+        """Activate a schedule program or deactivate (None / 'none'), or update programs list."""
+        if programs is not None:
+            self.programs = {k: v for k, v in programs.items() if isinstance(v, dict)}
+            if "P1" not in self.programs:
+                self.programs["P1"] = {
+                    "name": "P1",
+                    "hours": [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0],
+                }
+            if self.active_program and self.active_program not in self.programs:
+                self.active_program = None
+
+        if program_id is not ...:
+            if program_id in (None, "", "none", "off"):
+                self.active_program = None
+            elif str(program_id) in self.programs:
+                self.active_program = str(program_id)
 
         self._async_save_store()
         self.evaluate()

@@ -19,7 +19,7 @@ PLATFORMS = ["climate", "number", "switch"]
 CARD_PATH = Path(__file__).parent / "www"
 CANONICAL_CARD_URL = "/hacsfiles/ha-smart-heating/smart-heating-card.js"
 CARD_VERSION = "1.0.5"
-CARD_BUILD = "reference-dashboard-v105-4"
+CARD_BUILD = "reference-dashboard-v105-5"
 
 
 def _is_card_resource_url(url: str) -> bool:
@@ -138,10 +138,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     
     async def async_handle_set_program(call) -> None:
         entity_id = call.data.get("entity_id")
-        program = call.data.get("program")
-        programs = call.data.get("programs")
+        has_prog = "program" in call.data
+        prog = call.data.get("program")
+        has_progs = "programs" in call.data
+        progs = call.data.get("programs")
         for data in hass.data[DOMAIN].values():
-            data.set_program(program, programs)
+            if has_prog and has_progs:
+                data.set_program(prog, progs)
+            elif has_prog:
+                data.set_program(prog)
+            elif has_progs:
+                data.set_program(programs=progs)
 
     async def async_handle_set_eco_timer(call) -> None:
         duration = call.data.get("duration", 0)

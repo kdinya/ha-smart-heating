@@ -122,7 +122,7 @@ const ignore = new Set([
   // integration's own config/options flow), not from the card's General tab.
   'weather',
   // Supplied by the Smart Heating device (integration attributes), not by the card editor.
-  'switch_1', 'switch_2', 'contact_1_active', 'contact_2_active', 'title',
+  'switch_1', 'switch_2', 'contact_1_active', 'contact_2_active', 'title', 'signal_entity',
 ]);
 const missing = [...readByCard].filter(k => !exposed.has(k) && !ignore.has(k));
 // group/item triplets are generated, check them explicitly
@@ -299,7 +299,7 @@ if (editor.config.panel_gap !== 3) throw new Error('slider did not write config'
   progCard.hass = progHass({ eco_temperature: 21.8 }, (domain, svc, data) => { if (svc === 'set_eco_temperature') setEco = data.temperature; });
   progCard._scheduleOpen = true;
   progCard.render();
-  progCard.shadowRoot.querySelector('[data-eco-temp-step="0.5"]').click();
+  progCard.shadowRoot.querySelector('[data-eco-temp-step="0.1"]').click();
   if (setEco !== 21.5) throw new Error('eco should clamp to target-0.5 (21.5), got ' + setEco);
 
   // a freshly added program starts fully on the comfort (target) setpoint

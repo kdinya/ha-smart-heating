@@ -152,7 +152,7 @@ class SmartHeatingCard extends HTMLElement {
   _watchedEntities(){return [this.config?.entity,this.config?.switch_1,this._hass?.states?.[this.config?.entity]?.attributes?.switch_1,this.config?.switch_2,this._hass?.states?.[this.config?.entity]?.attributes?.switch_2,this.config?.weather,this.config?.humidity,this.config?.outdoor_temperature,this.config?.wind,this.config?.precipitation].filter(Boolean);}
   _shouldRender(previous,next){if(!previous||!next||!this.config)return true;return this._watchedEntities().some(id=>previous.states?.[id]!==next.states?.[id]);}
   _tickClock(){if(!this.shadowRoot)return;const lang=this._language(),locale=SH_DICT[lang]?.locale||'uk-UA',now=new Date();const date=this.shadowRoot.querySelector('.clock .date'),time=this.shadowRoot.querySelector('.clock-time');if(date)date.textContent=now.toLocaleDateString(locale,{weekday:'short',day:'2-digit',month:'long',year:'numeric'}).toUpperCase();if(time)time.textContent=now.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'});}
-  _language(){return SH_READ_STORE(SH_LANG_KEY)||this.config?.language||'uk';}
+  _language(){return SH_READ_STORE(SH_LANG_KEY)||this.config?.language||'en';}
   /* User-chosen step for the dial's +/- buttons; falls back to the climate
      entity's own target_temp_step, then to the historical 0.5 default. */
   _tempStep(){const v=Number(SH_READ_STORE(SH_TEMP_STEP_KEY));return Number.isFinite(v)&&v>0?Math.min(2,Math.max(.1,v)):null;}
@@ -221,12 +221,20 @@ class SmartHeatingCard extends HTMLElement {
   }
 
   _getPrograms() {
-    const attrProgs = this.state(this.config?.entity)?.attributes?.programs;
     let p = null;
-    if (attrProgs && typeof attrProgs === 'object' && Object.keys(attrProgs).length > 0) {
-      p = { ...attrProgs };
+    if (this._progsList && typeof this._progsList === 'object' && Object.keys(this._progsList).length > 0) {
+      p = { ...this._progsList };
     } else {
-      p = this._progsList || SH_GET_STORE_JSON(SH_PROG_KEY);
+      const attrProgs = this.state(this.config?.entity)?.attributes?.programs;
+      if (attrProgs && typeof attrProgs === 'object' && Object.keys(attrProgs).length > 0) {
+        p = { ...attrProgs };
+        this._progsList = p;
+      } else {
+        p = SH_GET_STORE_JSON(SH_PROG_KEY);
+        if (p && typeof p === 'object' && Object.keys(p).length > 0) {
+          this._progsList = { ...p };
+        }
+      }
     }
     if (!p || typeof p !== 'object') p = {};
     if (!p.P1) {
@@ -488,7 +496,7 @@ ha-card{--ui-scale:clamp(.01,min(calc(100cqw / 600px),calc(100cqh / (600px / var
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
             <input type="radio" name="active_prog" value="${pid}" ${isProgActive ? 'checked' : ''} data-select-prog="${pid}" style="accent-color:var(--orange);width:16px;height:16px;cursor:pointer"/>
-            <b style="color:${isProgActive ? 'var(--orange)' : '#e2e8f0'};font-size:14px">${this.safe(p.name || pid)}</b>${isProgActive ? `<span style="background:var(--orange);color:#000;font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;margin-left:4px">${tr('active_prog')}</span>` : ''}
+            <b style="color:${isProgActive ? 'var(--orange)' : '#e2e8f0'};font-size:14px">${this.safe(p.name || pid)}</b>
           </label>
           <div style="display:flex;gap:6px">
             <button class="sh-prog-fill" data-fill-prog="${pid}" data-fill="target" style="padding:3px 8px;border-radius:4px;border:1px solid #ff8a0055;background:#ff8a0015;color:var(--orange);font-size:10px;cursor:pointer">${tr('all_comfort')}</button>
@@ -725,7 +733,10 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     // Add new program
     root.querySelector('.sh-add-prog-btn')?.addEventListener('click', () => {
       const pList = this._getProgramsList();
-      const nextNum = Object.keys(pList).length + 1;
+      let nextNum = 1;
+      while (pList['P' + nextNum]) {
+        nextNum++;
+      }
       const newPid = 'P' + nextNum;
       pList[newPid] = {
         name: 'Програма ' + nextNum,
@@ -738,18 +749,21 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
 
     // Delete program
     root.querySelectorAll('[data-del-prog]').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
         const pid = btn.dataset.delProg;
         const pList = this._getProgramsList();
         if (Object.keys(pList).length > 1 && pid !== 'P1') {
           delete pList[pid];
           if (this._activeProgId === pid) {
-            this._activeProgId = Object.keys(pList)[0] || '';
-            SH_WRITE_STORE(SH_ACTIVE_PROG_KEY, this._activeProgId);
-            this._hass.callService('smart_heating', 'set_program', { program: this._activeProgId });
+            this._activeProgId = '';
+            SH_WRITE_STORE(SH_ACTIVE_PROG_KEY, '');
+            this._hass.callService('smart_heating', 'set_program', { program: '', programs: pList });
+          } else {
+            this._hass.callService('smart_heating', 'set_program', { programs: pList });
           }
           this._saveProgramsList(pList);
-          this._hass.callService('smart_heating', 'set_program', { programs: pList });
           this.render();
         }
       });
@@ -1350,7 +1364,7 @@ class SmartHeatingCardEditor extends HTMLElement {
   disconnectedCallback(){if(!this._onLangChange)return;window.removeEventListener('sh-language-changed',this._onLangChange);this._onLangChange=null;}
   /* The settings-window preference is authoritative; config.language is only a
      migration fallback for cards that have no saved local preference yet. */
-  _language(){return SH_READ_STORE(SH_LANG_KEY)||this.config?.language||'uk';}
+  _language(){return SH_READ_STORE(SH_LANG_KEY)||this.config?.language||'en';}
   _ui(value){return this._language()==='en'?(SH_EDITOR_EN[value]||value):value}
   _default(key,fallback){return Object.prototype.hasOwnProperty.call(SH_DEFAULTS,key)?SH_DEFAULTS[key]:fallback}
   _field(label,id,value,placeholder=''){return `<div class="field"><label>${this._ui(label)}</label><input id="${id}" type="text" value="${value??''}" placeholder="${placeholder}"></div>`}
