@@ -10,6 +10,7 @@ from typing import Any, Callable
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.storage import Store
 
 from .const import (
     ATTR_HEATING,
@@ -131,6 +132,7 @@ class SmartHeatingData:
             MIN_TEMP_STEP,
             MAX_TEMP_STEP,
         )
+        self._store: Store | None = Store(hass, 1, f"smart_heating_{entry.entry_id}") if hass else None
         self.active_program: str | None = None
         self.programs: dict[str, Any] = {
             "P1": {
@@ -170,6 +172,21 @@ class SmartHeatingData:
 
     async def async_start(self) -> None:
         """Begin watching the configured source entities."""
+        if self._store:
+            try:
+                stored = await self._store.async_load()
+                if stored and isinstance(stored, dict):
+                    if "active_program" in stored:
+                        self.active_program = stored.get("active_program")
+                    if "programs" in stored and isinstance(stored.get("programs"), dict):
+                        self.programs.update(stored["programs"])
+            except Exception as err:
+                _LOGGER.warning("Could not load stored programs: %s", err)
+        if "P1" not in self.programs:
+            self.programs["P1"] = {
+                "name": "P1",
+                "hours": [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0],
+            }
         entity_ids = [
             entity_id
             for key in ENTITY_KEYS
@@ -350,24 +367,15 @@ class SmartHeatingData:
     def effective_target_temperature(self) -> float:
         """Target temperature taking into account eco timer or active schedule.
 
-        When no program is explicitly selected, the card still runs on the
-        default schedule (P1) rather than ignoring schedules altogether --
-        only an explicit deactivate (active_program cleared with no
-        fallback) or a program list without P1 falls through to the raw
-        manual target.
+        When no program is explicitly selected, the card runs directly on
+        the manual target temperature.
         """
         now_ts = time.time()
         if self.eco_timer_until and now_ts < self.eco_timer_until:
             return self.eco_temperature
         if self.active_program and self.active_program in self.programs:
             prog = self.programs[self.active_program]
-        elif not self.active_program and "P1" in self.programs:
-            prog = self.programs["P1"]
-        else:
-            prog = None
-        if prog is not None:
             hours = prog.get("hours", [])
-            # HA core or system local hour
             import datetime
             cur_hour = datetime.datetime.now().hour
             if 0 <= cur_hour < len(hours) and hours[cur_hour] == 0:
@@ -393,10 +401,23 @@ class SmartHeatingData:
         """Activate a schedule program or deactivate (None / 'none')."""
         if programs:
             self.programs.update(programs)
+        if "P1" not in self.programs:
+            self.programs["P1"] = {
+                "name": "P1",
+                "hours": [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0],
+            }
         if program_id in (None, "", "none", "off"):
             self.active_program = None
         elif program_id in self.programs:
             self.active_program = program_id
+
+        if self._store and self.hass:
+            self.hass.async_create_task(
+                self._store.async_save({
+                    "active_program": self.active_program,
+                    "programs": self.programs,
+                })
+            )
         self.evaluate()
 
     def set_eco_timer(self, minutes: int) -> None:

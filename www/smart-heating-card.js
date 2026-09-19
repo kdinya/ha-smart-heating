@@ -163,28 +163,30 @@ class SmartHeatingCard extends HTMLElement {
 
   _getPrograms() {
     const attrProgs = this.state(this.config?.entity)?.attributes?.programs;
+    let p = null;
     if (attrProgs && typeof attrProgs === 'object' && Object.keys(attrProgs).length > 0) {
-      return attrProgs;
+      p = { ...attrProgs };
+    } else {
+      p = this._progsList || SH_GET_STORE_JSON(SH_PROG_KEY);
     }
-    let p = this._progsList || SH_GET_STORE_JSON(SH_PROG_KEY);
-    if (!p || typeof p !== 'object' || Object.keys(p).length === 0) {
-      p = {
-        P1: {
-          id: 'P1',
-          name: 'P1 - Daily',
-          hours: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0]
-        }
+    if (!p || typeof p !== 'object') p = {};
+    if (!p.P1) {
+      p.P1 = {
+        name: 'P1',
+        hours: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0]
       };
-      SH_SET_STORE_JSON(SH_PROG_KEY, p);
     }
     return p;
   }
   _getActiveProgram() {
     const attrs = this.state(this.config?.entity)?.attributes;
     if (attrs && 'active_program' in attrs) {
-      return attrs.active_program ? String(attrs.active_program) : '';
+      const ap = attrs.active_program;
+      if (!ap || ap === 'none' || ap === 'off' || ap === 'None') return '';
+      return String(ap);
     }
-    return SH_READ_STORE(SH_ACTIVE_PROG_KEY) || '';
+    const s = SH_READ_STORE(SH_ACTIVE_PROG_KEY);
+    return (!s || s === 'none' || s === 'off' || s === 'None') ? '' : s;
   }
   _getEcoTemp() {
     const v = parseFloat(SH_READ_STORE(SH_ECO_TEMP_KEY));
@@ -407,7 +409,7 @@ ha-card{--ui-scale:clamp(.01,min(calc(100cqw / 600px),calc(100cqh / (600px / var
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
             <input type="radio" name="active_prog" value="${pid}" ${isProgActive ? 'checked' : ''} data-select-prog="${pid}" style="accent-color:var(--orange);width:16px;height:16px;cursor:pointer"/>
-            <b style="color:${isProgActive ? 'var(--orange)' : '#e2e8f0'};font-size:14px">${this.safe(p.name || pid)}</b>
+            <b style="color:${isProgActive ? 'var(--orange)' : '#e2e8f0'};font-size:14px">${this.safe(p.name || pid)}</b>${isProgActive ? `<span style="background:var(--orange);color:#000;font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;margin-left:4px">${tr('active_prog')}</span>` : ''}
           </label>
           <div style="display:flex;gap:6px">
             <button class="sh-prog-fill" data-fill-prog="${pid}" data-fill="target" style="padding:3px 8px;border-radius:4px;border:1px solid #ff8a0055;background:#ff8a0015;color:var(--orange);font-size:10px;cursor:pointer">${tr('all_comfort')}</button>

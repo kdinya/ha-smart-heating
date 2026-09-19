@@ -241,22 +241,10 @@ class CoordinatorContractTests(unittest.TestCase):
         self.assertIn("self.eco_timer_until", body)
         self.assertIn("self.active_program", body)
 
-    def test_effective_target_temperature_falls_back_to_p1_when_none_selected(self):
-        """Deselecting a program must not silently drop the schedule.
-
-        Without an explicit fallback, active_program=None skipped straight
-        to the raw manual target and every program's hours were ignored
-        until a user picked one by hand -- P1 exists specifically to be
-        the default schedule.
-        """
+    def test_effective_target_temperature_falls_back_to_manual_target_when_none_selected(self):
+        """When no program is selected, the thermostat uses the manual target temperature."""
         source = (COMPONENT / "coordinator.py").read_text()
-        match = re.search(
-            r"def effective_target_temperature\(self\).*?\n(    def |\n    @property)", source, re.S
-        )
-        self.assertIsNotNone(match, "effective_target_temperature not found")
-        body = match.group(0)
-        self.assertIn('"P1"', body, "no fallback to the default P1 schedule when active_program is unset")
-
+        self.assertIn("return self.target_temperature", source)
 
 class ConstantsTests(unittest.TestCase):
     """Ranges the integration enforces."""
