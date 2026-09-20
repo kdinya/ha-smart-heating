@@ -510,8 +510,12 @@ class SmartHeatingData:
         if self.active_program and self.active_program in self.programs:
             prog = self.programs[self.active_program]
             hours = prog.get("hours", [])
-            import datetime
-            cur_hour = datetime.datetime.now().hour
+            try:
+                from homeassistant.util import dt as dt_util
+                cur_hour = dt_util.now().hour
+            except Exception:
+                import datetime
+                cur_hour = datetime.datetime.now().hour
             if 0 <= cur_hour < len(hours) and hours[cur_hour] == 0:
                 return self.eco_temperature
         return self.target_temperature

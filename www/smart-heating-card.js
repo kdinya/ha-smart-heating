@@ -40,7 +40,7 @@ const SH_DEFAULTS = {
   humidity_unit_x: 0.5,
   scheme_x: 2, scheme_y: -16, scheme_s: 0.9,
   connection_x: 0, connection_y: 18.5, connection_s: 1,
-  connection_mode: 'direct', contact_1_active: false,
+  contact_1_active: false,
   panel_x: 0, panel_y: 0, panel_s: 1.32, panel_h: 2, panel_gap: 11.25,
   panel_button_size: 0.9, 'panel-buttons_x': 6, 'panel-buttons_y': 8.5,
   'panel-buttons_s': 0.84, panel_buttons_s: 0.7, panel_buttons_y: 65.5,
@@ -352,7 +352,6 @@ class SmartHeatingCard extends HTMLElement {
     const contact2On = a.contact_2_enabled !== undefined ? Boolean(a.contact_2_enabled) : (this._visualContact2 !== undefined ? this._visualContact2 : Boolean(this.config.contact_2_active));
     /* Prefer the integration's own `heating` flag, then hvac_action, then the raw mode. */
     const s1EntityId=a.switch_1||this.config?.switch_1;const s1Entity=s1EntityId?this.state(s1EntityId):null;let contact1Closed=false;if(s1Entity&&s1Entity.state!=='unavailable'&&s1Entity.state!=='unknown'){contact1Closed=(s1Entity.state==='on');}else if(a.contact_1_state!==undefined){contact1Closed=Boolean(a.contact_1_state);}else if(a.heating!==undefined){contact1Closed=Boolean(a.heating);}else{contact1Closed=Boolean(a.hvac_action==='heating'||c?.state==='heat');}const heating=enabled&&contact1Closed;
-    const schemeMode=['direct','old','parallel'].includes(this.config.connection_mode)?this.config.connection_mode:'direct';
     const now=new Date();const date=now.toLocaleDateString(locale,{weekday:'short',day:'2-digit',month:'long',year:'numeric'}).toUpperCase(),time=now.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'});
     this.shadowRoot.innerHTML=`<style>
       @font-face{font-family:'7segment';src:url('/hacsfiles/ha-smart-heating/fonts/7segment.woff') format('woff');font-display:swap}
@@ -1107,12 +1106,17 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     const tabsContainer=root.querySelector('.tabs');
     if(tabsContainer){
       let isDown=false,startY=0,scrollTop=0;
-      tabsContainer.addEventListener('mousedown',e=>{
+      tabsContainer.addEventListener('pointerdown',e=>{
         if(e.target.closest('input,button,.sh-toggle-btn,.menu-head,.popup-choice'))return;
         isDown=true;startY=e.pageY-tabsContainer.offsetTop;scrollTop=tabsContainer.scrollTop;
+        tabsContainer.setPointerCapture?.(e.pointerId);
       });
-      window.addEventListener('mouseup',()=>{isDown=false;});
-      tabsContainer.addEventListener('mousemove',e=>{
+      tabsContainer.addEventListener('pointerup',e=>{
+        isDown=false;
+        try{tabsContainer.releasePointerCapture?.(e.pointerId);}catch(_e){}
+      });
+      tabsContainer.addEventListener('pointercancel',()=>isDown=false);
+      tabsContainer.addEventListener('pointermove',e=>{
         if(!isDown)return;
         e.preventDefault();
         const y=e.pageY-tabsContainer.offsetTop;
