@@ -129,6 +129,15 @@ class SmartHeatingCard extends HTMLElement {
   get hass(){return this._hass;}
   connectedCallback(){
     this._clockTimer=setInterval(()=>this._tickClock(),10000);
+    this._onVisibilityChange=()=>{
+      if(typeof document!=='undefined'&&!document.hidden&&this._pendingRender){
+        this._pendingRender=false;
+        this.render();
+      }
+    };
+    if(typeof document!=='undefined'){
+      document.addEventListener('visibilitychange',this._onVisibilityChange);
+    }
     try{
       this._observer=new IntersectionObserver((entries)=>{
         for(const entry of entries){
@@ -145,13 +154,17 @@ class SmartHeatingCard extends HTMLElement {
   disconnectedCallback(){
     clearInterval(this._clockTimer);
     this._clockTimer=null;
+    if(this._onVisibilityChange&&typeof document!=='undefined'){
+      document.removeEventListener('visibilitychange',this._onVisibilityChange);
+      this._onVisibilityChange=null;
+    }
     if(this._observer){this._observer.disconnect();this._observer=null;}
   }
   getCardSize(){return 9;}
   /* Re-render only when a watched entity actually changed: `hass` is replaced on every state update in HA. */
   _watchedEntities(){return [this.config?.entity,this.config?.switch_1,this._hass?.states?.[this.config?.entity]?.attributes?.switch_1,this.config?.switch_2,this._hass?.states?.[this.config?.entity]?.attributes?.switch_2,this.config?.weather,this.config?.humidity,this.config?.outdoor_temperature,this.config?.wind,this.config?.precipitation].filter(Boolean);}
   _shouldRender(previous,next){if(!previous||!next||!this.config)return true;return this._watchedEntities().some(id=>previous.states?.[id]!==next.states?.[id]);}
-  _tickClock(){if(!this.shadowRoot)return;const lang=this._language(),locale=SH_DICT[lang]?.locale||'uk-UA',now=new Date();const date=this.shadowRoot.querySelector('.clock .date'),time=this.shadowRoot.querySelector('.clock-time');if(date)date.textContent=now.toLocaleDateString(locale,{weekday:'short',day:'2-digit',month:'long',year:'numeric'}).toUpperCase();if(time)time.textContent=now.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'});}
+  _tickClock(){if(!this.shadowRoot||(typeof document!=='undefined'&&document.hidden))return;const lang=this._language(),locale=SH_DICT[lang]?.locale||'uk-UA',now=new Date();const date=this.shadowRoot.querySelector('.clock .date'),time=this.shadowRoot.querySelector('.clock-time');if(date)date.textContent=now.toLocaleDateString(locale,{weekday:'short',day:'2-digit',month:'long',year:'numeric'}).toUpperCase();if(time)time.textContent=now.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'});}
   _language(){return SH_READ_STORE(SH_LANG_KEY)||this.config?.language||'en';}
   /* User-chosen step for the dial's +/- buttons; falls back to the climate
      entity's own target_temp_step, then to the historical 0.5 default. */
@@ -280,7 +293,8 @@ class SmartHeatingCard extends HTMLElement {
   safe(x){return String(x).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
   render(){
     if(!this.shadowRoot||!this._hass||!this.config?.entity)return;
-    if(this._isLowVisibility&&this._hasRenderedOnce){this._pendingRender=true;return;}
+    const isDocHidden=typeof document!=='undefined'&&document.hidden;
+    if((isDocHidden||this._isLowVisibility)&&this._hasRenderedOnce){this._pendingRender=true;return;}
     if(this._activeSliderDragging)return;
     const _prevTabs=this.shadowRoot.querySelector('.tabs');
     const _prevModal=this.shadowRoot.querySelector('.modal');
