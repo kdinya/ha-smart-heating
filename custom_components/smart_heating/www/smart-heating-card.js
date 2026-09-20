@@ -223,18 +223,19 @@ class SmartHeatingCard extends HTMLElement {
 
   _getPrograms() {
     let p = null;
-    if (this._progsList && typeof this._progsList === 'object' && Object.keys(this._progsList).length > 0) {
+    const attrProgs = this.state(this.config?.entity)?.attributes?.programs;
+    if (!this._scheduleOpen && attrProgs && typeof attrProgs === 'object' && Object.keys(attrProgs).length > 0) {
+      p = { ...attrProgs };
+      this._progsList = p;
+    } else if (this._progsList && typeof this._progsList === 'object' && Object.keys(this._progsList).length > 0) {
       p = { ...this._progsList };
+    } else if (attrProgs && typeof attrProgs === 'object' && Object.keys(attrProgs).length > 0) {
+      p = { ...attrProgs };
+      this._progsList = p;
     } else {
-      const attrProgs = this.state(this.config?.entity)?.attributes?.programs;
-      if (attrProgs && typeof attrProgs === 'object' && Object.keys(attrProgs).length > 0) {
-        p = { ...attrProgs };
-        this._progsList = p;
-      } else {
-        p = SH_GET_STORE_JSON(SH_PROG_KEY);
-        if (p && typeof p === 'object' && Object.keys(p).length > 0) {
-          this._progsList = { ...p };
-        }
+      p = SH_GET_STORE_JSON(SH_PROG_KEY);
+      if (p && typeof p === 'object' && Object.keys(p).length > 0) {
+        this._progsList = { ...p };
       }
     }
     if (!p || typeof p !== 'object') p = {};
@@ -244,6 +245,13 @@ class SmartHeatingCard extends HTMLElement {
         hours: [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0]
       };
     }
+    Object.keys(p).forEach(k => {
+      if (k.startsWith('P') && p[k] && typeof p[k] === 'object') {
+        if (!p[k].name) {
+          p[k].name = k;
+        }
+      }
+    });
     return p;
   }
   _getActiveProgram() {
@@ -745,7 +753,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
       }
       const newPid = 'P' + nextNum;
       pList[newPid] = {
-        name: 'Програма ' + nextNum,
+        name: newPid,
         hours: Array(24).fill(1)
       };
       this._saveProgramsList(pList);
