@@ -49,6 +49,9 @@ set_hysteresis:
 set_program:
   name: Set heating program
   description: Activate an hourly schedule program or deactivate scheduling.
+  target:
+    entity:
+      integration: smart_heating
   fields:
     program:
       name: Program ID
@@ -60,6 +63,9 @@ set_program:
 set_eco_timer:
   name: Set quick eco timer
   description: Set temporary eco mode duration in minutes (0 to cancel).
+  target:
+    entity:
+      integration: smart_heating
   fields:
     duration:
       name: Duration (minutes)
@@ -74,6 +80,9 @@ set_eco_timer:
 set_relay_timeout:
   name: Set relay verification timeout
   description: Timeout in seconds before generating a relay mismatch warning.
+  target:
+    entity:
+      integration: smart_heating
   fields:
     timeout:
       name: Timeout (seconds)
@@ -88,6 +97,9 @@ set_relay_timeout:
 set_temp_step:
   name: Set target temperature step
   description: Step size used by the target-temperature +/- buttons.
+  target:
+    entity:
+      integration: smart_heating
   fields:
     step:
       name: Step (°C)
@@ -103,6 +115,9 @@ set_temp_step:
 set_eco_temperature:
   name: Set eco temperature
   description: Set target temperature for eco mode and eco schedule hours.
+  target:
+    entity:
+      integration: smart_heating
   fields:
     temperature:
       name: Temperature
@@ -118,6 +133,9 @@ set_eco_temperature:
 set_min_target_temperature:
   name: Set minimum target temperature
   description: Set the lower limit for adjusting the target temperature.
+  target:
+    entity:
+      integration: smart_heating
   fields:
     temperature:
       name: Temperature
@@ -133,6 +151,9 @@ set_min_target_temperature:
 set_max_target_temperature:
   name: Set maximum target temperature
   description: Set the upper limit for adjusting the target temperature.
+  target:
+    entity:
+      integration: smart_heating
   fields:
     temperature:
       name: Temperature

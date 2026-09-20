@@ -68,6 +68,9 @@ class SmartHeatingClimate(RestoreEntity, ClimateEntity):
         `unavailable` state (e.g. after a crash) must not be treated as `heat`.
         """
         await super().async_added_to_hass()
+        self.data.climate_entity_id = self.entity_id
+        if hasattr(self.data, 'entity_ids'):
+            self.data.entity_ids.add(self.entity_id)
         last_state = await self.async_get_last_state()
         if last_state:
             self.data.enabled = last_state.state == HVACMode.HEAT
@@ -101,6 +104,10 @@ class SmartHeatingClimate(RestoreEntity, ClimateEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Drop the state listener."""
+        if getattr(self.data, 'climate_entity_id', None) == self.entity_id:
+            self.data.climate_entity_id = None
+        if hasattr(self.data, 'entity_ids'):
+            self.data.entity_ids.discard(self.entity_id)
         if self._remove_listener:
             self._remove_listener()
             self._remove_listener = None

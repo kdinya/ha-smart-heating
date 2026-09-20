@@ -1,6 +1,7 @@
 """Runtime state and hysteresis controller for Smart Heating."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 
@@ -144,6 +145,12 @@ class SmartHeatingData:
         self._switch_1_requested_time: float = 0.0
         self._switch_2_requested_state: str | None = None
         self._switch_2_requested_time: float = 0.0
+        self.climate_entity_id: str | None = None
+        self.entity_ids: set[str] = set()
+        self._store_save_task: asyncio.Task | None = None
+        self._store_save_pending: bool = False
+        self._switch_1_last_sent_time: float = 0.0
+        self._switch_2_last_sent_time: float = 0.0
         self.relay_mismatch_1: bool = False
         self.relay_mismatch_2: bool = False
         self.relay_warning: str | None = None
@@ -178,7 +185,10 @@ class SmartHeatingData:
                     if "active_program" in stored:
                         self.active_program = stored.get("active_program")
                     if "programs" in stored and isinstance(stored.get("programs"), dict):
-                        self.programs.update(stored["programs"])
+                        for pid, pdata in stored["programs"].items():
+                            valid_p = self._validate_program_dict(str(pid), pdata)
+                            if valid_p is not None:
+                                self.programs[str(pid)] = valid_p
                     if "contact_1_enabled" in stored:
                         self.contact_1_enabled = bool(stored.get("contact_1_enabled"))
                     if "contact_2_enabled" in stored:
@@ -201,24 +211,71 @@ class SmartHeatingData:
             )
         self.evaluate()
 
+    def _validate_program_dict(self, prog_id: str, pdata: Any) -> dict[str, Any] | None:
+        """Validate program structure and ensure hours has exactly 24 elements (0 or 1)."""
+        if not isinstance(pdata, dict):
+            _LOGGER.warning("%s: program %s ignored, expected dict", self.name, prog_id)
+            return None
+        raw_hours = pdata.get("hours")
+        if not isinstance(raw_hours, (list, tuple)) or len(raw_hours) != 24:
+            _LOGGER.warning("%s: program %s ignored, hours must have exactly 24 elements", self.name, prog_id)
+            return None
+        valid_hours: list[int] = []
+        for h in raw_hours:
+            if h in (0, "0", False):
+                valid_hours.append(0)
+            elif h in (1, "1", True):
+                valid_hours.append(1)
+            else:
+                _LOGGER.warning("%s: program %s ignored, invalid hour value: %r", self.name, prog_id, h)
+                return None
+        name = pdata.get("name")
+        if not isinstance(name, str) or not name.strip():
+            name = str(prog_id)
+        return {"name": name.strip(), "hours": valid_hours}
+
     @callback
     def _async_save_store(self) -> None:
-        """Persist programs and contact state to Home Assistant storage."""
+        """Persist programs and contact state to Home Assistant storage sequentially."""
         if not self._store or not self.hass:
             return
-        data = {
-            "active_program": self.active_program,
-            "programs": self.programs,
-            "contact_1_enabled": self.contact_1_enabled,
-            "contact_2_enabled": self.contact_2_enabled,
-        }
-        self.hass.async_create_task(self._store.async_save(data))
+
+        if self._store_save_task and not self._store_save_task.done():
+            self._store_save_pending = True
+            return
+
+        self._store_save_pending = False
+
+        async def _do_save() -> None:
+            while True:
+                data = {
+                    "active_program": self.active_program,
+                    "programs": self.programs,
+                    "contact_1_enabled": self.contact_1_enabled,
+                    "contact_2_enabled": self.contact_2_enabled,
+                }
+                try:
+                    await self._store.async_save(data)
+                except Exception as err:
+                    _LOGGER.warning("Could not persist Smart Heating state: %s", err)
+
+                if self._store_save_pending:
+                    self._store_save_pending = False
+                else:
+                    break
+
+        self._store_save_task = self.hass.async_create_task(_do_save())
 
     async def async_stop(self) -> None:
-        """Stop watching source entities."""
+        """Stop watching source entities and flush any pending store save."""
         if self._remove_listener:
             self._remove_listener()
             self._remove_listener = None
+        if self._store_save_task and not self._store_save_task.done():
+            try:
+                await self._store_save_task
+            except Exception:
+                pass
 
     @callback
     def _state_changed(self, event: Any) -> None:
@@ -282,6 +339,9 @@ class SmartHeatingData:
     @callback
     def sync_output(self) -> None:
         """Push the desired state to both output switches, if configured."""
+        now = time.monotonic()
+        cooldown = 2.0
+
         switch_1_id = self.get_config_or_option(CONF_SWITCH_1)
         if switch_1_id:
             desired_1 = "on" if (self.enabled and self.contact_1_enabled and self.heating) else "off"
@@ -291,19 +351,24 @@ class SmartHeatingData:
                     self.relay_mismatch_1 = False
                     self.relay_warning = f"Switch 1 is {current_1.state}"
                     self._relay_1_warned = False
+                    self._switch_1_last_sent_time = 0.0
                 else:
                     if self._switch_1_requested_state != desired_1:
                         self._switch_1_requested_state = desired_1
-                        self._switch_1_requested_time = time.monotonic()
+                        self._switch_1_requested_time = now
+                        self._switch_1_last_sent_time = 0.0
+
                     if current_1.state != desired_1:
-                        self.hass.async_create_task(
-                            self.hass.services.async_call(
-                                "switch",
-                                "turn_on" if desired_1 == "on" else "turn_off",
-                                {"entity_id": switch_1_id},
+                        if (now - self._switch_1_last_sent_time) >= cooldown:
+                            self._switch_1_last_sent_time = now
+                            self.hass.async_create_task(
+                                self.hass.services.async_call(
+                                    "switch",
+                                    "turn_on" if desired_1 == "on" else "turn_off",
+                                    {"entity_id": switch_1_id},
+                                )
                             )
-                        )
-                        if (time.monotonic() - self._switch_1_requested_time) > self.relay_timeout:
+                        if (now - self._switch_1_requested_time) > self.relay_timeout:
                             self.relay_mismatch_1 = True
                             self.relay_warning = f"Switch 1 mismatch: expected {desired_1}, got {current_1.state}"
                             if not getattr(self, "_relay_1_warned", False):
@@ -313,6 +378,7 @@ class SmartHeatingData:
                         self.relay_mismatch_1 = False
                         self.relay_warning = None
                         self._relay_1_warned = False
+                        self._switch_1_last_sent_time = 0.0
 
         switch_2_id = self.get_config_or_option(CONF_SWITCH_2)
         if switch_2_id:
@@ -323,19 +389,24 @@ class SmartHeatingData:
                     self.relay_mismatch_2 = False
                     self.relay_warning_2 = f"Switch 2 is {current_2.state}"
                     self._relay_2_warned = False
+                    self._switch_2_last_sent_time = 0.0
                 else:
                     if self._switch_2_requested_state != desired_2:
                         self._switch_2_requested_state = desired_2
-                        self._switch_2_requested_time = time.monotonic()
+                        self._switch_2_requested_time = now
+                        self._switch_2_last_sent_time = 0.0
+
                     if current_2.state != desired_2:
-                        self.hass.async_create_task(
-                            self.hass.services.async_call(
-                                "switch",
-                                "turn_on" if desired_2 == "on" else "turn_off",
-                                {"entity_id": switch_2_id},
+                        if (now - self._switch_2_last_sent_time) >= cooldown:
+                            self._switch_2_last_sent_time = now
+                            self.hass.async_create_task(
+                                self.hass.services.async_call(
+                                    "switch",
+                                    "turn_on" if desired_2 == "on" else "turn_off",
+                                    {"entity_id": switch_2_id},
+                                )
                             )
-                        )
-                        if (time.monotonic() - self._switch_2_requested_time) > self.relay_timeout:
+                        if (now - self._switch_2_requested_time) > self.relay_timeout:
                             self.relay_mismatch_2 = True
                             self.relay_warning_2 = f"Switch 2 mismatch: expected {desired_2}, got {current_2.state}"
                             if not getattr(self, "_relay_2_warned", False):
@@ -345,6 +416,7 @@ class SmartHeatingData:
                         self.relay_mismatch_2 = False
                         self.relay_warning_2 = None
                         self._relay_2_warned = False
+                        self._switch_2_last_sent_time = 0.0
 
     # -- setters used by the entities -------------------------------------
 
@@ -462,7 +534,17 @@ class SmartHeatingData:
     def set_program(self, program_id: Any = ..., programs: dict[str, Any] | None = None) -> None:
         """Activate a schedule program or deactivate (None / 'none'), or update programs list."""
         if programs is not None:
-            self.programs = {k: v for k, v in programs.items() if isinstance(v, dict)}
+            if isinstance(programs, dict):
+                cleaned: dict[str, Any] = {}
+                for pid, pdata in programs.items():
+                    validated = self._validate_program_dict(str(pid), pdata)
+                    if validated is not None:
+                        cleaned[str(pid)] = validated
+                if cleaned:
+                    self.programs = cleaned
+            else:
+                _LOGGER.warning("%s: invalid programs dictionary: %r", self.name, programs)
+
             if "P1" not in self.programs:
                 self.programs["P1"] = {
                     "name": "P1",
@@ -472,10 +554,12 @@ class SmartHeatingData:
                 self.active_program = None
 
         if program_id is not ...:
-            if program_id in (None, "", "none", "off"):
+            if program_id in (None, "", "none", "off", "null"):
                 self.active_program = None
             elif str(program_id) in self.programs:
                 self.active_program = str(program_id)
+            else:
+                _LOGGER.warning("%s: attempted to activate unknown program %r", self.name, program_id)
 
         self._async_save_store()
         self.evaluate()

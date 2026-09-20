@@ -44,9 +44,13 @@ class BoilerSwitch(SwitchEntity):
         self._remove_listener = None
 
     async def async_added_to_hass(self) -> None:
+        if hasattr(self.data, 'entity_ids'):
+            self.data.entity_ids.add(self.entity_id)
         self._remove_listener = self.data.async_add_listener(self.async_write_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
+        if hasattr(self.data, 'entity_ids'):
+            self.data.entity_ids.discard(self.entity_id)
         if self._remove_listener:
             self._remove_listener()
             self._remove_listener = None

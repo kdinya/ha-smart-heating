@@ -61,12 +61,16 @@ class SmartHeatingNumber(RestoreNumber):
         last = await self.async_get_last_number_data()
         if last is not None and last.native_value is not None:
             self._apply_restored(float(last.native_value))
+        if hasattr(self.data, 'entity_ids'):
+            self.data.entity_ids.add(self.entity_id)
         self._remove_listener = self.data.async_add_listener(self.async_write_ha_state)
 
     def _apply_restored(self, value: float) -> None:
         """Push a restored value into shared coordinator state. No-op by default."""
 
     async def async_will_remove_from_hass(self) -> None:
+        if hasattr(self.data, 'entity_ids'):
+            self.data.entity_ids.discard(self.entity_id)
         if self._remove_listener:
             self._remove_listener()
             self._remove_listener = None

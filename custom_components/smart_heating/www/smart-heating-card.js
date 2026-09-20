@@ -701,7 +701,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
         const pid = e.target.value;
         this._activeProgId = pid;
         SH_WRITE_STORE(SH_ACTIVE_PROG_KEY, pid);
-        this._hass.callService('smart_heating', 'set_program', { program: pid });
+        this._hass.callService('smart_heating', 'set_program', { entity_id: this.config.entity, program: pid });
         this.render();
       });
     });
@@ -715,7 +715,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
         if (pList[pid]) {
           pList[pid].hours[h] = pList[pid].hours[h] === 1 ? 0 : 1;
           this._saveProgramsList(pList);
-          this._hass.callService('smart_heating', 'set_program', { programs: pList });
+          this._hass.callService('smart_heating', 'set_program', { entity_id: this.config.entity, programs: pList });
           this.render();
         }
       });
@@ -730,7 +730,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
         if (pList[pid]) {
           pList[pid].hours = Array(24).fill(mode === 'target' ? 1 : 0);
           this._saveProgramsList(pList);
-          this._hass.callService('smart_heating', 'set_program', { programs: pList });
+          this._hass.callService('smart_heating', 'set_program', { entity_id: this.config.entity, programs: pList });
           this.render();
         }
       });
@@ -749,7 +749,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
         hours: Array(24).fill(1)
       };
       this._saveProgramsList(pList);
-      this._hass.callService('smart_heating', 'set_program', { programs: pList });
+      this._hass.callService('smart_heating', 'set_program', { entity_id: this.config.entity, programs: pList });
       this.render();
     });
 
@@ -765,9 +765,9 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
           if (this._activeProgId === pid) {
             this._activeProgId = '';
             SH_WRITE_STORE(SH_ACTIVE_PROG_KEY, '');
-            this._hass.callService('smart_heating', 'set_program', { program: '', programs: pList });
+            this._hass.callService('smart_heating', 'set_program', { entity_id: this.config.entity, program: '', programs: pList });
           } else {
-            this._hass.callService('smart_heating', 'set_program', { programs: pList });
+            this._hass.callService('smart_heating', 'set_program', { entity_id: this.config.entity, programs: pList });
           }
           this._saveProgramsList(pList);
           this.render();
@@ -779,7 +779,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     root.querySelector('.sh-prog-deactivate')?.addEventListener('click', () => {
       this._activeProgId = '';
       SH_WRITE_STORE(SH_ACTIVE_PROG_KEY, '');
-      this._hass.callService('smart_heating', 'set_program', { program: '' });
+      this._hass.callService('smart_heating', 'set_program', { entity_id: this.config.entity, program: '' });
       this.render();
     });
 
@@ -788,7 +788,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
       btn.addEventListener('click', () => {
         const dur = Number(btn.dataset.ecoTimer);
         SH_WRITE_STORE(SH_ECO_TIMER_KEY, String(dur > 0 ? Date.now() + dur * 60000 : 0));
-        this._hass.callService('smart_heating', 'set_eco_timer', { duration: dur });
+        this._hass.callService('smart_heating', 'set_eco_timer', { entity_id: this.config.entity, duration: dur });
         this.render();
       });
     });
@@ -808,7 +808,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
         // target no longer leaves room for it.
         const curEco = Number(a.eco_temperature ?? this._getEcoTemp());
         if (Number.isFinite(curEco) && curEco > nextTarget - 0.5) {
-          this._hass.callService('smart_heating', 'set_eco_temperature', { temperature: Number((nextTarget - 0.5).toFixed(1)) });
+          this._hass.callService('smart_heating', 'set_eco_temperature', { entity_id: this.config.entity, temperature: Number((nextTarget - 0.5).toFixed(1)) });
         }
         this.render();
       });
@@ -822,7 +822,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
         const curTarget = Number(a.temperature ?? target);
         const ecoCeiling = Number.isFinite(curTarget) ? curTarget - 0.5 : 30;
         const nextEco = Math.max(10, Math.min(30, Math.min(ecoCeiling, Number((curEco + step).toFixed(1)))));
-        this._hass.callService('smart_heating', 'set_eco_temperature', { temperature: nextEco });
+        this._hass.callService('smart_heating', 'set_eco_temperature', { entity_id: this.config.entity, temperature: nextEco });
         this.render();
       });
     });
