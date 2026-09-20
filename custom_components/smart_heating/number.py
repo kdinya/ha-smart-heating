@@ -92,9 +92,6 @@ class HeatingTarget(SmartHeatingNumber):
     def native_value(self) -> float:
         return self.data.target_temperature
 
-    def _apply_restored(self, value: float) -> None:
-        self.data.set_target(value)
-
     async def async_set_native_value(self, value: float) -> None:
         self.data.set_target(value)
         self.async_write_ha_state()
