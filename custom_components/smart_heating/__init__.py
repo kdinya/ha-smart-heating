@@ -75,11 +75,14 @@ def _get_target_datas(hass: HomeAssistant, call: Any) -> list[SmartHeatingData]:
             known_eids.add(sw2)
         if known_eids & target_set:
             matched.append(data)
-        elif any(data.entry.entry_id in eid for eid in target_set):
+        elif data.entry.entry_id in target_set:
             matched.append(data)
 
-    if not matched and len(entries) == 1:
-        return list(entries.values())
+    if not matched:
+        _LOGGER.warning(
+            "Smart Heating service called with entity_id %s, but no matching Smart Heating device was found",
+            raw_entity_id,
+        )
 
     return matched
 
