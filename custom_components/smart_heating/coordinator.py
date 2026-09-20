@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 import time
 
-import logging
 from typing import Any, Callable
 
 from homeassistant.config_entries import ConfigEntry
@@ -291,6 +290,7 @@ class SmartHeatingData:
                 if current_1.state in ("unavailable", "unknown"):
                     self.relay_mismatch_1 = False
                     self.relay_warning = f"Switch 1 is {current_1.state}"
+                    self._relay_1_warned = False
                 else:
                     if self._switch_1_requested_state != desired_1:
                         self._switch_1_requested_state = desired_1
@@ -311,6 +311,7 @@ class SmartHeatingData:
                                 self._relay_1_warned = True
                     else:
                         self.relay_mismatch_1 = False
+                        self.relay_warning = None
                         self._relay_1_warned = False
 
         switch_2_id = self.get_config_or_option(CONF_SWITCH_2)
@@ -321,6 +322,7 @@ class SmartHeatingData:
                 if current_2.state in ("unavailable", "unknown"):
                     self.relay_mismatch_2 = False
                     self.relay_warning_2 = f"Switch 2 is {current_2.state}"
+                    self._relay_2_warned = False
                 else:
                     if self._switch_2_requested_state != desired_2:
                         self._switch_2_requested_state = desired_2
@@ -336,9 +338,13 @@ class SmartHeatingData:
                         if (time.monotonic() - self._switch_2_requested_time) > self.relay_timeout:
                             self.relay_mismatch_2 = True
                             self.relay_warning_2 = f"Switch 2 mismatch: expected {desired_2}, got {current_2.state}"
+                            if not getattr(self, "_relay_2_warned", False):
+                                _LOGGER.warning(self.relay_warning_2)
+                                self._relay_2_warned = True
                     else:
                         self.relay_mismatch_2 = False
                         self.relay_warning_2 = None
+                        self._relay_2_warned = False
 
     # -- setters used by the entities -------------------------------------
 
@@ -577,7 +583,7 @@ class SmartHeatingData:
             "relay_timeout": self.relay_timeout,
             "temp_step": self.temp_step,
             "relay_mismatch": (self.relay_mismatch_1 or self.relay_mismatch_2),
-            "relay_warning": self.relay_warning if (self.relay_mismatch_1 or self.relay_mismatch_2) else None,
+            "relay_warning": ("; ".join([w for w in (self.relay_warning if self.relay_mismatch_1 else None, self.relay_warning_2 if self.relay_mismatch_2 else None) if w]) or None),
             "contact_1_enabled": self.contact_1_enabled,
             "contact_2_enabled": self.contact_2_enabled,
             "contact_1_state": is_burning,

@@ -92,6 +92,9 @@ class HeatingTarget(SmartHeatingNumber):
     def native_value(self) -> float:
         return self.data.target_temperature
 
+    def _apply_restored(self, value: float) -> None:
+        self.data.set_target(value)
+
     async def async_set_native_value(self, value: float) -> None:
         self.data.set_target(value)
         self.async_write_ha_state()
@@ -112,7 +115,7 @@ class HeatingHysteresisOn(SmartHeatingNumber):
         return self.data.hysteresis_on
 
     def _apply_restored(self, value: float) -> None:
-        self.data.hysteresis_on = value
+        self.data.set_hysteresis_on(value)
 
     async def async_set_native_value(self, value: float) -> None:
         self.data.set_hysteresis_on(value)
@@ -133,7 +136,7 @@ class HeatingHysteresisOff(SmartHeatingNumber):
         return self.data.hysteresis_off
 
     def _apply_restored(self, value: float) -> None:
-        self.data.hysteresis_off = value
+        self.data.set_hysteresis_off(value)
 
     async def async_set_native_value(self, value: float) -> None:
         self.data.set_hysteresis_off(value)
@@ -155,7 +158,7 @@ class HeatingEcoTarget(SmartHeatingNumber):
         return self.data.eco_temperature
 
     def _apply_restored(self, value: float) -> None:
-        self.data.eco_temperature = value
+        self.data.set_eco_temperature(value)
 
     async def async_set_native_value(self, value: float) -> None:
         self.data.set_eco_temperature(value)
@@ -178,7 +181,7 @@ class HeatingRelayTimeout(SmartHeatingNumber):
         return self.data.relay_timeout
 
     def _apply_restored(self, value: float) -> None:
-        self.data.relay_timeout = value
+        self.data.set_relay_timeout(value)
 
     async def async_set_native_value(self, value: float) -> None:
         self.data.set_relay_timeout(value)
@@ -201,7 +204,7 @@ class HeatingTempStep(SmartHeatingNumber):
         return self.data.temp_step
 
     def _apply_restored(self, value: float) -> None:
-        self.data.temp_step = value
+        self.data.set_temp_step(value)
 
     async def async_set_native_value(self, value: float) -> None:
         self.data.set_temp_step(value)
