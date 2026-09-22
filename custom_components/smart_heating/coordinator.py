@@ -337,6 +337,12 @@ class SmartHeatingData:
         if self._shutdown_executed:
             return
         self._shutdown_executed = True
+        if self._remove_listener:
+            try:
+                self._remove_listener()
+            except Exception:
+                pass
+            self._remove_listener = None
         sw1 = self.get_config_or_option(CONF_SWITCH_1)
         if self.shutdown_contact_1 == "turn_off" and sw1:
             domain1 = sw1.split(".")[0] if "." in sw1 else "homeassistant"
@@ -408,6 +414,8 @@ class SmartHeatingData:
 
     @callback
     def evaluate(self) -> None:
+        if self._shutdown_executed:
+            return
         """Re-read the room sensor, apply hysteresis and drive the output switch.
 
         If the room sensor is unavailable, heating is forced off rather than
@@ -448,6 +456,8 @@ class SmartHeatingData:
     @callback
     def sync_output(self) -> None:
         """Push the desired state to both output switches, if configured."""
+        if self._shutdown_executed:
+            return
         now = time.monotonic()
         cooldown = 2.0
 

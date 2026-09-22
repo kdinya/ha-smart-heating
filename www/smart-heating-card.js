@@ -127,7 +127,7 @@ class SmartHeatingCard extends HTMLElement {
   static getConfigElement(){return document.createElement('smart-heating-card-editor');}
   static getStubConfig(hass){const entity=Object.keys(hass?.states||{}).find(id=>id.startsWith('climate.'))||'';return {type:'custom:smart-heating-card',entity};}
   setConfig(config){if(!config||!config.entity)throw new Error('Smart Heating: вкажіть climate-ентіті / define a climate entity');this.config={...config};this._menuOpen=Boolean(this._menuOpen);this._visualContact1=this._visualContact1??Boolean(SH_READ_STORE('visual_contact_1',true));this._visualContact2=this._visualContact2??Boolean(SH_READ_STORE('visual_contact_2',false));this._menuTab=this._menuTab||'';if(!this.shadowRoot)this.attachShadow({mode:'open'});this.render();}
-  set hass(value){const previous=this._hass;this._hass=value;if(this._shouldRender(previous,value))this.render();}
+  set hass(value){const previous=this._hass;this._hass=value;if(this._shouldRender(previous,value)){if(this._rafRender)return;this._rafRender=requestAnimationFrame(()=>{this._rafRender=null;this.render();});}}
   get hass(){return this._hass;}
   connectedCallback(){
     this._clockTimer=setInterval(()=>this._tickClock(),10000);
@@ -1405,7 +1405,7 @@ const SH_EDITOR_EN = {
   'Прозорість ефекту': 'Effect opacity', 'Увімкнено': 'Enabled', 'Вимкнено': 'Disabled'};
 class SmartHeatingCardEditor extends HTMLElement {
   setConfig(config){this.config={...config};if(this._dragging)return;if(!this._open)this._open=this._restoreOpen();this.render()}
-  set hass(hass){this._hass=hass;if(this._dragging)return;this.render()}
+  set hass(hass){const prev=this._hass;this._hass=hass;if(this._dragging)return;const ent=this.config?.entity;if(!prev||!ent||prev.states?.[ent]!==hass?.states?.[ent])this.render()}
   _restoreOpen(){const fallback={general:true,layout:false,header:false,climate:false,humidity:false,weather:false,connection:false,panel:false,effects:false};try{return {...fallback,...JSON.parse(SH_READ_STORE(SH_OPEN_KEY)||'{}')}}catch(error){return fallback}}
   _emit(){this.dispatchEvent(new CustomEvent('config-changed',{detail:{config:{...this.config}},bubbles:true,composed:true}))}
   _set(k,v){const value=typeof v==='number'?(Number.isFinite(v)?v:(this.config[k]??0)):v;this.config={...this.config,[k]:value};this._emit()}
@@ -1503,8 +1503,8 @@ class SmartHeatingCardEditor extends HTMLElement {
     root.querySelectorAll('[data-reset]').forEach(b=>b.onclick=()=>{const el=root.getElementById(b.dataset.reset);if(!el)return;el.value=el.dataset.default??el.defaultValue;el.dispatchEvent(new Event('input',{bubbles:true}))});
     root.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{const el=root.getElementById(b.dataset.step);if(!el)return;const min=Number(el.min),max=Number(el.max),delta=Number(b.dataset.delta)||0,raw=Number(el.value);const current=Number.isFinite(raw)?raw:min;el.value=String(Number(Math.max(min,Math.min(max,current+delta)).toFixed(6)));el.dispatchEvent(new Event('input',{bubbles:true}))});
     root.querySelectorAll('[data-visibility-toggle]').forEach(b=>b.addEventListener('click',()=>this._set(b.dataset.visibilityToggle,!(this.config[b.dataset.visibilityToggle]!==false))));
-    root.querySelectorAll('[data-shutdown-1]').forEach(b=>b.addEventListener('click',()=>{const val=b.getAttribute('data-shutdown-1');if(!val)return;this._set('shutdown_contact_1',val);document.querySelectorAll('[data-shutdown-1]').forEach(x=>x.classList.toggle('active',x.getAttribute('data-shutdown-1')===val));if(this.config.entity){this._hass.callService('smart_heating','set_contact_shutdown',{entity_id:this.config.entity,contact:1,action:val});}}));
-    root.querySelectorAll('[data-shutdown-2]').forEach(b=>b.addEventListener('click',()=>{const val=b.getAttribute('data-shutdown-2');if(!val)return;this._set('shutdown_contact_2',val);document.querySelectorAll('[data-shutdown-2]').forEach(x=>x.classList.toggle('active',x.getAttribute('data-shutdown-2')===val));if(this.config.entity){this._hass.callService('smart_heating','set_contact_shutdown',{entity_id:this.config.entity,contact:2,action:val});}}));
+    root.querySelectorAll('[data-shutdown-1]').forEach(b=>b.addEventListener('click',()=>{const val=b.getAttribute('data-shutdown-1');if(!val)return;this._set('shutdown_contact_1',val);root.querySelectorAll('[data-shutdown-1]').forEach(x=>x.classList.toggle('active',x.getAttribute('data-shutdown-1')===val));if(this.config.entity){this._hass.callService('smart_heating','set_contact_shutdown',{entity_id:this.config.entity,contact:1,action:val});}}));
+    root.querySelectorAll('[data-shutdown-2]').forEach(b=>b.addEventListener('click',()=>{const val=b.getAttribute('data-shutdown-2');if(!val)return;this._set('shutdown_contact_2',val);root.querySelectorAll('[data-shutdown-2]').forEach(x=>x.classList.toggle('active',x.getAttribute('data-shutdown-2')===val));if(this.config.entity){this._hass.callService('smart_heating','set_contact_shutdown',{entity_id:this.config.entity,contact:2,action:val});}}));
   }
   /* Live-update the numeric readout while dragging, without re-rendering the whole editor. */
   _update(el){const out=this.shadowRoot.getElementById(el.id+'-value');if(out)out.textContent=Number(el.value).toFixed(Number(el.dataset.digits)||0)+(el.dataset.unit||'')}
