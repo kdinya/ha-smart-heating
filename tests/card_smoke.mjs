@@ -125,6 +125,7 @@ const ignore = new Set([
   'weather',
   // Supplied by the Smart Heating device (integration attributes), not by the card editor.
   'switch_1', 'switch_2', 'contact_1_active', 'contact_2_active', 'title', 'signal_entity',
+  'custom_labels', 'labels_visible', 'shutdown_contact_1', 'shutdown_contact_2',
 ]);
 const missing = [...readByCard].filter(k => !exposed.has(k) && !ignore.has(k));
 // group/item triplets are generated, check them explicitly

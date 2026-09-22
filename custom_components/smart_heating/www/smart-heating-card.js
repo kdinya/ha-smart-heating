@@ -1437,6 +1437,7 @@ class SmartHeatingCardEditor extends HTMLElement {
     if(!this._hass||!this.config)return;
     if(!this._open)this._open=this._restoreOpen();
     const c=this.config,lang=this._language();
+    const stateObj=this._hass?.states?.[this.config?.entity], a=stateObj?.attributes||{};
     const general=`<div class="field"><label>${this._ui('Ентіті пристрою')}</label><ha-entity-picker id="entity"></ha-entity-picker></div>`;
     const layout=this._ctrl('Пропорція картки (Шир/Вис)','screen_aspect_ratio',{min:1.2,max:2.5,step:.05,unit:''})
       +this._ctrl('Заокруглення картки','card_radius',{min:0,max:100,step:1,unit:'px'})
