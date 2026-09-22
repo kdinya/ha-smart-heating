@@ -20,7 +20,7 @@ PLATFORMS = ["climate", "number", "switch"]
 CARD_PATH = Path(__file__).parent / "www"
 CANONICAL_CARD_URL = "/hacsfiles/ha-smart-heating/smart-heating-card.js"
 CARD_VERSION = "1.0.6"
-CARD_BUILD = "reference-dashboard-v106-1"
+CARD_BUILD = "reference-dashboard-v106-3"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
@@ -160,7 +160,14 @@ def _register_domain_services(hass: HomeAssistant) -> None:
     hass.services.async_register(DOMAIN, "set_temp_step", async_handle_set_temp_step)
     hass.services.async_register(DOMAIN, "set_eco_temperature", async_handle_set_eco_temperature)
     hass.services.async_register(DOMAIN, "set_min_target_temperature", async_handle_set_min_target_temperature)
+    async def async_handle_set_contact_shutdown(call: Any) -> None:
+        contact = int(call.data.get("contact", 1))
+        action = str(call.data.get("action", "turn_off"))
+        for data in _get_target_datas(hass, call):
+            data.set_contact_shutdown(contact, action)
+
     hass.services.async_register(DOMAIN, "set_max_target_temperature", async_handle_set_max_target_temperature)
+    hass.services.async_register(DOMAIN, "set_contact_shutdown", async_handle_set_contact_shutdown)
 
 
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
@@ -236,22 +243,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await data.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-        async def async_set_contact_shutdown(call) -> None:
-        entity_id = call.data.get("entity_id")
-        contact = int(call.data.get("contact", 1))
-        action = str(call.data.get("action", "turn_off"))
-        data = _find_data_by_entity(hass, entity_id)
-        if data:
-            data.set_contact_shutdown(contact, action)
 
-    hass.services.async_register(
-        DOMAIN, "set_contact_shutdown", async_set_contact_shutdown,
-        schema=vol.Schema({
-            vol.Required("entity_id"): cv.entity_id,
-            vol.Required("contact"): vol.In([1, 2]),
-            vol.Required("action"): vol.In(["turn_off", "keep"]),
-        }),
-    )
 
     return True
 

@@ -156,6 +156,9 @@ class SmartHeatingData:
         self.relay_mismatch_2: bool = False
         self.relay_warning: str | None = None
         self.room_temperature: float | None = None
+        self.shutdown_contact_1: str = "turn_off"
+        self.shutdown_contact_2: str = "turn_off"
+        self._shutdown_executed: bool = False
         self._remove_listener: Callable[[], None] | None = None
         self._listeners: list[Callable[[], None]] = []
 
@@ -201,7 +204,7 @@ class SmartHeatingData:
                             )
                         except (TypeError, ValueError):
                             pass
-                                        if "shutdown_contact_1" in stored:
+                    if "shutdown_contact_1" in stored:
                         self.shutdown_contact_1 = str(stored.get("shutdown_contact_1", "turn_off"))
                     if "shutdown_contact_2" in stored:
                         self.shutdown_contact_2 = str(stored.get("shutdown_contact_2", "turn_off"))
@@ -244,9 +247,12 @@ class SmartHeatingData:
             for key in ENTITY_KEYS
             if (entity_id := self.get_config_or_option(key))
         ]
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP,
+            lambda _: self.hass.async_create_task(self._async_execute_shutdown_failsafe()),
+        )
         if entity_ids:
-            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, lambda _: self.hass.async_create_task(self._async_execute_shutdown_failsafe()))
-        self._remove_listener = async_track_state_change_event(
+            self._remove_listener = async_track_state_change_event(
                 self.hass, entity_ids, self._state_changed
             )
         self.evaluate()
@@ -312,12 +318,12 @@ class SmartHeatingData:
 
         self._store_save_task = self.hass.async_create_task(_do_save())
 
-        def set_contact_shutdown(self, contact: int, action: str) -> None:
+    def set_contact_shutdown(self, contact: int, action: str) -> None:
         """Configure contact behavior when Home Assistant shuts down."""
-        valid = "turn_off" if action == "turn_off" else "keep"
-        if contact == 1:
+        valid = "turn_off" if str(action) == "turn_off" else "keep"
+        if int(contact) == 1:
             self.shutdown_contact_1 = valid
-        elif contact == 2:
+        elif int(contact) == 2:
             self.shutdown_contact_2 = valid
         self._async_save_store()
         self.evaluate()
@@ -327,26 +333,28 @@ class SmartHeatingData:
         if self._shutdown_executed:
             return
         self._shutdown_executed = True
-        if self.shutdown_contact_1 == "turn_off" and self.switch_1_entity:
+        sw1 = self.get_config_or_option(CONF_SWITCH_1)
+        if self.shutdown_contact_1 == "turn_off" and sw1:
             try:
                 await self.hass.services.async_call(
                     "homeassistant",
                     "turn_off",
-                    {"entity_id": self.switch_1_entity},
+                    {"entity_id": sw1},
                     blocking=True,
                 )
-                _LOGGER.info("Smart Heating: turned off contact 1 (%s) on HA shutdown", self.switch_1_entity)
+                _LOGGER.info("Smart Heating: turned off contact 1 (%s) on HA shutdown", sw1)
             except Exception as err:
                 _LOGGER.warning("Could not turn off contact 1 on shutdown: %s", err)
-        if self.shutdown_contact_2 == "turn_off" and self.switch_2_entity:
+        sw2 = self.get_config_or_option(CONF_SWITCH_2)
+        if self.shutdown_contact_2 == "turn_off" and sw2:
             try:
                 await self.hass.services.async_call(
                     "homeassistant",
                     "turn_off",
-                    {"entity_id": self.switch_2_entity},
+                    {"entity_id": sw2},
                     blocking=True,
                 )
-                _LOGGER.info("Smart Heating: turned off contact 2 (%s) on HA shutdown", self.switch_2_entity)
+                _LOGGER.info("Smart Heating: turned off contact 2 (%s) on HA shutdown", sw2)
             except Exception as err:
                 _LOGGER.warning("Could not turn off contact 2 on shutdown: %s", err)
 
@@ -805,9 +813,8 @@ class SmartHeatingData:
             "target_temperature": self.target_temperature,
             "min_target_temperature": self.min_target_temperature,
             "max_target_temperature": self.max_target_temperature,
-                    "shutdown_contact_1": self.shutdown_contact_1,
-                    "shutdown_contact_2": self.shutdown_contact_2,
-
+            "shutdown_contact_1": self.shutdown_contact_1,
+            "shutdown_contact_2": self.shutdown_contact_2,
             "hysteresis": self.hysteresis,
             "hysteresis_on": self.hysteresis_on,
             "hysteresis_off": self.hysteresis_off,
