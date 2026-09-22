@@ -1,5 +1,5 @@
 /* Smart Heating Card 1.0.5 — reference-matched 3D boiler controller */
-const SH_VERSION = '1.0.5';
+const SH_VERSION = '1.0.6';
 const SH_LANG_KEY = 'smart-heating-language';
 const SH_TEMP_STEP_KEY = 'smart-heating-temp-step';
 const SH_OPEN_KEY = 'smart-heating-open-sections';
@@ -323,8 +323,8 @@ class SmartHeatingCard extends HTMLElement {
     const tab=this._menuTab||'';
     const lang=this._language(),locale=SH_DICT[lang]?.locale||'uk-UA';
     const tr=(key)=>SH_DICT[lang]?.[key]??SH_DICT.uk[key];
-    const customLabels=SH_GET_STORE_JSON('smart_heating_labels');
-    const labelsVisible=SH_GET_STORE_JSON('smart_heating_labels_visible');
+    const customLabels=this.config?.custom_labels||SH_GET_STORE_JSON('smart_heating_labels');
+    const labelsVisible=this.config?.labels_visible||SH_GET_STORE_JSON('smart_heating_labels_visible');
     const getLabel=(key,defaultText)=>{
       const custom=customLabels[key];
       return (custom!==undefined&&custom!==null&&String(custom).trim()!=='')?String(custom).trim():defaultText;
@@ -1457,7 +1457,24 @@ class SmartHeatingCardEditor extends HTMLElement {
       +this._block('Температура на вулиці',this._toggle('Показувати температуру на вулиці','outdoor_visible')+this._place('outdoor'))
       +this._block('Вітер',this._toggle('Показувати вітер','wind_visible')+this._place('wind'))
       +this._block('Опади',this._toggle('Показувати опади','rain_visible')+this._place('rain'));
-    const connection = this._element('Підключення','scheme');
+    let connection = '';
+    const hasContact1 = Boolean(a.switch_1 || this.config?.switch_1);
+    const hasContact2 = Boolean(a.switch_2 || this.config?.switch_2);
+    if (!hasContact1 && !hasContact2) {
+      connection = `<div class="field"><p style="color:#8898a8;font-size:11px;margin:0;">${this._ui('Жоден контакт не підключено в налаштуваннях пристрою Smart Heating.')}</p></div>`;
+    } else {
+      if (hasContact1) {
+        const s1Val = this.config.shutdown_contact_1 || a.shutdown_contact_1 || 'turn_off';
+        connection += `<div class="element"><b>${this._ui('Контакт 1 (Термостат) при вимкненні HA')}</b>`
+          + `<div class="choices"><button type="button" data-shutdown-1="turn_off" class="${s1Val==='turn_off'?'active':''}">${this._ui('Вимкнути')}</button><button type="button" data-shutdown-1="keep" class="${s1Val==='keep'?'active':''}">${this._ui('Залишити як є')}</button></div></div>`;
+      }
+      if (hasContact2) {
+        const s2Val = this.config.shutdown_contact_2 || a.shutdown_contact_2 || 'turn_off';
+        connection += `<div class="element"><b>${this._ui('Контакт 2 (Програматор) при вимкненні HA')}</b>`
+          + `<div class="choices"><button type="button" data-shutdown-2="turn_off" class="${s2Val==='turn_off'?'active':''}">${this._ui('Вимкнути')}</button><button type="button" data-shutdown-2="keep" class="${s2Val==='keep'?'active':''}">${this._ui('Залишити як є')}</button></div></div>`;
+      }
+      connection += this._element('Підключення','scheme');
+    }
     const panel=this._element('Група нижньої панелі','panel')
       +this._ctrl('Розмір кнопок','panel_button_size',{min:.5,max:2,step:.05,unit:'',fallback:1})
       +this._ctrl('Висота панелі','panel_h',{min:-20,max:40,step:1,unit:'%'})
@@ -1485,6 +1502,8 @@ class SmartHeatingCardEditor extends HTMLElement {
     root.querySelectorAll('[data-reset]').forEach(b=>b.onclick=()=>{const el=root.getElementById(b.dataset.reset);if(!el)return;el.value=el.dataset.default??el.defaultValue;el.dispatchEvent(new Event('input',{bubbles:true}))});
     root.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{const el=root.getElementById(b.dataset.step);if(!el)return;const min=Number(el.min),max=Number(el.max),delta=Number(b.dataset.delta)||0,raw=Number(el.value);const current=Number.isFinite(raw)?raw:min;el.value=String(Number(Math.max(min,Math.min(max,current+delta)).toFixed(6)));el.dispatchEvent(new Event('input',{bubbles:true}))});
     root.querySelectorAll('[data-visibility-toggle]').forEach(b=>b.addEventListener('click',()=>this._set(b.dataset.visibilityToggle,!(this.config[b.dataset.visibilityToggle]!==false))));
+    root.querySelectorAll('[data-shutdown-1]').forEach(b=>b.addEventListener('click',()=>{const val=b.dataset.shutdown1;this._set('shutdown_contact_1',val);if(this.config.entity){this._hass.callService('smart_heating','set_contact_shutdown',{entity_id:this.config.entity,contact:1,action:val});}}));
+    root.querySelectorAll('[data-shutdown-2]').forEach(b=>b.addEventListener('click',()=>{const val=b.dataset.shutdown2;this._set('shutdown_contact_2',val);if(this.config.entity){this._hass.callService('smart_heating','set_contact_shutdown',{entity_id:this.config.entity,contact:2,action:val});}}));
   }
   /* Live-update the numeric readout while dragging, without re-rendering the whole editor. */
   _update(el){const out=this.shadowRoot.getElementById(el.id+'-value');if(out)out.textContent=Number(el.value).toFixed(Number(el.dataset.digits)||0)+(el.dataset.unit||'')}
