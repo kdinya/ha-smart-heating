@@ -387,17 +387,34 @@ class SmartHeatingData:
 
     @callback
     def _state_changed(self, event: Any) -> None:
+        data = getattr(event, "data", {})
+        entity_id = data.get("entity_id")
+        old_state = data.get("old_state")
+        new_state = data.get("new_state")
+
+        # Ignore identical state updates to prevent unnecessary evaluations
+        if old_state and new_state and old_state.state == new_state.state:
+            return
+
         # Bidirectional sync for Contact 2 (switch_2):
-        # If toggled on the physical device or externally in HA, update contact_2_enabled & persist
         switch_2_id = self.get_config_or_option(CONF_SWITCH_2)
-        if switch_2_id and getattr(event, "data", {}).get("entity_id") == switch_2_id:
-            new_state = getattr(event, "data", {}).get("new_state")
+        if switch_2_id and entity_id == switch_2_id:
             if new_state and new_state.state in ("on", "off"):
                 phys_on = (new_state.state == "on")
                 if self.contact_2_enabled != phys_on:
                     self.contact_2_enabled = phys_on
                     self._async_save_store()
-        self.evaluate()
+
+        core_entities = {
+            self.get_config_or_option(CONF_ROOM_TEMPERATURE),
+            self.get_config_or_option(CONF_SWITCH_1),
+            self.get_config_or_option(CONF_SWITCH_2),
+        }
+        if entity_id in core_entities:
+            self.evaluate()
+        else:
+            # Weather, humidity, outdoor temp etc: update UI attributes without heavy hysteresis re-evaluation
+            self._notify_listeners()
 
     # -- control loop ------------------------------------------------------
 

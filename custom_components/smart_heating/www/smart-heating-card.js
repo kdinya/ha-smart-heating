@@ -1,5 +1,5 @@
 /* Smart Heating Card 1.0.5 — reference-matched 3D boiler controller */
-const SH_VERSION = '1.0.6';
+const SH_VERSION = '1.0.7';
 const SH_LANG_KEY = 'smart-heating-language';
 const SH_TEMP_STEP_KEY = 'smart-heating-temp-step';
 const SH_OPEN_KEY = 'smart-heating-open-sections';
@@ -127,14 +127,32 @@ class SmartHeatingCard extends HTMLElement {
   static getConfigElement(){return document.createElement('smart-heating-card-editor');}
   static getStubConfig(hass){const entity=Object.keys(hass?.states||{}).find(id=>id.startsWith('climate.'))||'';return {type:'custom:smart-heating-card',entity};}
   setConfig(config){if(!config||!config.entity)throw new Error('Smart Heating: вкажіть climate-ентіті / define a climate entity');this.config={...config};this._menuOpen=Boolean(this._menuOpen);this._visualContact1=this._visualContact1??Boolean(SH_READ_STORE('visual_contact_1',true));this._visualContact2=this._visualContact2??Boolean(SH_READ_STORE('visual_contact_2',false));this._menuTab=this._menuTab||'';if(!this.shadowRoot)this.attachShadow({mode:'open'});this.render();}
-  set hass(value){const previous=this._hass;this._hass=value;if(this._shouldRender(previous,value)){if(this._rafRender)return;this._rafRender=requestAnimationFrame(()=>{this._rafRender=null;this.render();});}}
+  set hass(value){const previous=this._hass;this._hass=value;if(this._shouldRender(previous,value)){this.render();}}
   get hass(){return this._hass;}
-  connectedCallback(){
+  _startClock(){
+    if(this._clockTimer)return;
+    this._tickClock();
     this._clockTimer=setInterval(()=>this._tickClock(),10000);
+  }
+  _stopClock(){
+    if(this._clockTimer){
+      clearInterval(this._clockTimer);
+      this._clockTimer=null;
+    }
+  }
+  connectedCallback(){
+    if(typeof document==='undefined'||!document.hidden){
+      this._startClock();
+    }
     this._onVisibilityChange=()=>{
-      if(typeof document!=='undefined'&&!document.hidden&&this._pendingRender){
-        this._pendingRender=false;
-        this.render();
+      if(typeof document!=='undefined'&&!document.hidden){
+        this._startClock();
+        if(this._pendingRender){
+          this._pendingRender=false;
+          this.render();
+        }
+      } else {
+        this._stopClock();
       }
     };
     if(typeof document!=='undefined'){
@@ -144,9 +162,14 @@ class SmartHeatingCard extends HTMLElement {
       this._observer=new IntersectionObserver((entries)=>{
         for(const entry of entries){
           this._isLowVisibility=entry.intersectionRatio<0.1;
-          if(!this._isLowVisibility&&this._pendingRender){
-            this._pendingRender=false;
-            this.render();
+          if(!this._isLowVisibility){
+            this._startClock();
+            if(this._pendingRender){
+              this._pendingRender=false;
+              this.render();
+            }
+          } else {
+            this._stopClock();
           }
         }
       },{threshold:[0,0.1,1.0]});
@@ -154,8 +177,7 @@ class SmartHeatingCard extends HTMLElement {
     }catch(e){}
   }
   disconnectedCallback(){
-    clearInterval(this._clockTimer);
-    this._clockTimer=null;
+    this._stopClock();
     if(this._onVisibilityChange&&typeof document!=='undefined'){
       document.removeEventListener('visibilitychange',this._onVisibilityChange);
       this._onVisibilityChange=null;

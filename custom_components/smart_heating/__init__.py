@@ -19,8 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["climate", "number", "switch"]
 CARD_PATH = Path(__file__).parent / "www"
 CANONICAL_CARD_URL = "/hacsfiles/ha-smart-heating/smart-heating-card.js"
-CARD_VERSION = "1.0.6"
-CARD_BUILD = "reference-dashboard-v106-8"
+CARD_VERSION = "1.0.7"
+CARD_BUILD = "reference-dashboard-v106-9"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
