@@ -328,6 +328,13 @@ class SmartHeatingData:
                 self.sync_output()
                 return
             target = self.effective_target_temperature
+            switch_1_id = self.get_config_or_option(CONF_SWITCH_1)
+            s1_state = self.hass.states.get(switch_1_id) if switch_1_id else None
+            is_phys_on = (s1_state.state == "on") if s1_state else False
+
+            if is_phys_on and not self.heating and self.room_temperature < target + self.hysteresis_off:
+                self.heating = True
+
             if self.heating and self.room_temperature >= target + self.hysteresis_off:
                 self.heating = False
             elif not self.heating and self.room_temperature <= target - self.hysteresis_on:
@@ -344,45 +351,72 @@ class SmartHeatingData:
 
         switch_1_id = self.get_config_or_option(CONF_SWITCH_1)
         if switch_1_id:
-            desired_1 = "on" if (self.enabled and self.contact_1_enabled and self.heating) else "off"
-            current_1 = self.hass.states.get(switch_1_id)
-            if current_1:
-                if current_1.state in ("unavailable", "unknown"):
-                    self.relay_mismatch_1 = False
-                    self.relay_warning = f"Switch 1 is {current_1.state}"
-                    self._relay_1_warned = False
-                    self._switch_1_last_sent_time = 0.0
-                else:
+            if not self.contact_1_enabled:
+                self.relay_mismatch_1 = False
+                self.relay_warning = None
+                self._relay_1_warned = False
+                self._switch_1_requested_state = None
+                self._switch_1_last_sent_time = 0.0
+            elif not self.enabled:
+                desired_1 = "off"
+                current_1 = self.hass.states.get(switch_1_id)
+                if current_1 and current_1.state not in ("unavailable", "unknown"):
                     if self._switch_1_requested_state != desired_1:
                         self._switch_1_requested_state = desired_1
                         self._switch_1_requested_time = now
                         self._switch_1_last_sent_time = 0.0
-
-                    if current_1.state != desired_1:
-                        if (now - self._switch_1_last_sent_time) >= cooldown:
+                        if current_1.state != desired_1:
                             self._switch_1_last_sent_time = now
                             self.hass.async_create_task(
                                 self.hass.services.async_call(
                                     "switch",
-                                    "turn_on" if desired_1 == "on" else "turn_off",
+                                    "turn_off",
                                     {"entity_id": switch_1_id},
                                 )
                             )
-                        if (now - self._switch_1_requested_time) > self.relay_timeout:
-                            self.relay_mismatch_1 = True
-                            self.relay_warning = f"Switch 1 mismatch: expected {desired_1}, got {current_1.state}"
-                            if not getattr(self, "_relay_1_warned", False):
-                                _LOGGER.warning(self.relay_warning)
-                                self._relay_1_warned = True
-                    else:
+                self.relay_mismatch_1 = False
+                self.relay_warning = None
+                self._relay_1_warned = False
+            else:
+                desired_1 = "on" if self.heating else "off"
+                current_1 = self.hass.states.get(switch_1_id)
+                if current_1:
+                    if current_1.state in ("unavailable", "unknown"):
                         self.relay_mismatch_1 = False
-                        self.relay_warning = None
+                        self.relay_warning = f"Switch 1 is {current_1.state}"
                         self._relay_1_warned = False
                         self._switch_1_last_sent_time = 0.0
+                    else:
+                        if self._switch_1_requested_state != desired_1:
+                            self._switch_1_requested_state = desired_1
+                            self._switch_1_requested_time = now
+                            self._switch_1_last_sent_time = 0.0
+
+                        if current_1.state != desired_1:
+                            if (now - self._switch_1_last_sent_time) >= cooldown:
+                                self._switch_1_last_sent_time = now
+                                self.hass.async_create_task(
+                                    self.hass.services.async_call(
+                                        "switch",
+                                        "turn_on" if desired_1 == "on" else "turn_off",
+                                        {"entity_id": switch_1_id},
+                                    )
+                                )
+                            if (now - self._switch_1_requested_time) > self.relay_timeout:
+                                self.relay_mismatch_1 = True
+                                self.relay_warning = f"Switch 1 mismatch: expected {desired_1}, got {current_1.state}"
+                                if not getattr(self, "_relay_1_warned", False):
+                                    _LOGGER.warning(self.relay_warning)
+                                    self._relay_1_warned = True
+                        else:
+                            self.relay_mismatch_1 = False
+                            self.relay_warning = None
+                            self._relay_1_warned = False
+                            self._switch_1_last_sent_time = 0.0
 
         switch_2_id = self.get_config_or_option(CONF_SWITCH_2)
         if switch_2_id:
-            desired_2 = "on" if (self.enabled and self.contact_2_enabled) else "off"
+            desired_2 = "on" if self.contact_2_enabled else "off"
             current_2 = self.hass.states.get(switch_2_id)
             if current_2:
                 if current_2.state in ("unavailable", "unknown"):
@@ -422,12 +456,24 @@ class SmartHeatingData:
 
     def set_enabled(self, enabled: bool) -> None:
         """Turn the hysteresis control on or off."""
+        was_enabled = self.enabled
         self.enabled = enabled
         if not enabled:
             self.heating = False
             self.sync_output()
             self._notify_listeners()
             return
+        if not was_enabled and self.contact_1_enabled:
+            target = self.effective_target_temperature
+            self.room_temperature = self._read_float(CONF_ROOM_TEMPERATURE)
+            switch_1_id = self.get_config_or_option(CONF_SWITCH_1)
+            s1_state = self.hass.states.get(switch_1_id) if switch_1_id else None
+            is_phys_on = (s1_state.state == "on") if s1_state else False
+            if self.room_temperature is not None:
+                if is_phys_on and self.room_temperature < target + self.hysteresis_off:
+                    self.heating = True
+                elif self.room_temperature < target:
+                    self.heating = True
         self.evaluate()
 
     def set_contact_1(self, enabled: bool) -> None:
@@ -675,7 +721,7 @@ class SmartHeatingData:
             "contact_1_enabled": self.contact_1_enabled,
             "contact_2_enabled": self.contact_2_enabled,
             "contact_1_state": is_burning,
-            "contact_2_state": (self.source_value(CONF_SWITCH_2) == "on") if self.enabled else False,
+            "contact_2_state": (self.source_value(CONF_SWITCH_2) == "on"),
             "contact_1_alert": self._compute_contact_alert(1),
             "contact_2_alert": self._compute_contact_alert(2),
             "contact_1_alert_code": (alert_1 or {}).get("code"),
