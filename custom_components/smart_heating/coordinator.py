@@ -674,11 +674,15 @@ class SmartHeatingData:
     @property
     def attributes(self) -> dict[str, Any]:
         """Extra attributes consumed by the Lovelace card."""
-        is_burning = self.heating if (self.enabled and self.contact_1_enabled) else False
         switch_1_id = self.get_config_or_option(CONF_SWITCH_1)
         switch_1_state = self.hass.states.get(switch_1_id) if switch_1_id else None
-        if switch_1_state is not None and switch_1_state.state not in UNAVAILABLE_STATES:
-            is_burning = switch_1_state.state == "on"
+        if switch_1_id:
+            if switch_1_state is not None and switch_1_state.state not in UNAVAILABLE_STATES:
+                is_burning = switch_1_state.state == "on"
+            else:
+                is_burning = False
+        else:
+            is_burning = self.heating if (self.enabled and self.contact_1_enabled) else False
         outdoor = self.source_value(CONF_OUTDOOR_TEMPERATURE)
         if outdoor is None:
             w_temp = self.weather_attr("temperature")
