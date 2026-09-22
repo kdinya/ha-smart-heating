@@ -212,11 +212,21 @@ class SmartHeatingData:
                             self.max_target_temperature,
                             self.min_target_temperature,
                         )
-                    self.target_temperature = clamp(
-                        self.target_temperature,
-                        self.min_target_temperature,
-                        self.max_target_temperature,
-                    )
+                    if "target_temperature" in stored:
+                        try:
+                            self.target_temperature = clamp(
+                                float(stored["target_temperature"]),
+                                self.min_target_temperature,
+                                self.max_target_temperature,
+                            )
+                        except (TypeError, ValueError):
+                            pass
+                    else:
+                        self.target_temperature = clamp(
+                            self.target_temperature,
+                            self.min_target_temperature,
+                            self.max_target_temperature,
+                        )
             except Exception as err:
                 _LOGGER.warning("Could not load stored programs: %s", err)
         if "P1" not in self.programs:
@@ -277,6 +287,7 @@ class SmartHeatingData:
                     "programs": self.programs,
                     "contact_1_enabled": self.contact_1_enabled,
                     "contact_2_enabled": self.contact_2_enabled,
+                    "target_temperature": self.target_temperature,
                     "min_target_temperature": self.min_target_temperature,
                     "max_target_temperature": self.max_target_temperature,
                 }
@@ -511,6 +522,7 @@ class SmartHeatingData:
         """Change the target temperature and re-evaluate."""
         self.target_temperature = clamp(float(value), self.min_target_temperature, self.max_target_temperature)
         self.evaluate()
+        self._async_save_store()
 
     def set_min_target_temperature(self, value: float) -> None:
         """Change the minimum allowed target temperature and re-evaluate."""
