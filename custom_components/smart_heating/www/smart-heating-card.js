@@ -8,6 +8,8 @@ const SH_ACTIVE_PROG_KEY = 'smart-heating-active-program';
 const SH_ECO_TIMER_KEY = 'smart-heating-eco-timer';
 const SH_RELAY_TIMEOUT_KEY = 'smart-heating-relay-timeout';
 const SH_ECO_TEMP_KEY = 'smart-heating-eco-temp';
+const SH_MIN_TARGET_KEY = 'smart-heating-min-target';
+const SH_MAX_TARGET_KEY = 'smart-heating-max-target';
 /* Single source of truth for every tunable the card and its editor share. */
 const SH_DEFAULTS = {
   screen_aspect_ratio: 1.75, card_radius: 20, row_offset_y: 0, frame_width: 0,
@@ -289,6 +291,14 @@ class SmartHeatingCard extends HTMLElement {
     const v = parseFloat(SH_READ_STORE(SH_RELAY_TIMEOUT_KEY));
     return Number.isFinite(v) ? v : 10.0;
   }
+  _getMinTarget() {
+    const v = parseFloat(SH_READ_STORE(SH_MIN_TARGET_KEY));
+    return Number.isFinite(v) ? v : 16.0;
+  }
+  _getMaxTarget() {
+    const v = parseFloat(SH_READ_STORE(SH_MAX_TARGET_KEY));
+    return Number.isFinite(v) ? v : 30.0;
+  }
 
   safe(x){return String(x).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
   render(){
@@ -350,8 +360,14 @@ class SmartHeatingCard extends HTMLElement {
     const currentSlotIsEco = ecoTimerActive || (activeProg ? (activeProg.hours[curHour] === 0) : false);
     const ecoTemp = a.eco_temperature !== undefined ? Number(a.eco_temperature) : this._getEcoTemp();
     const relayTimeoutVal = a.relay_timeout !== undefined ? Number(a.relay_timeout) : this._getRelayTimeout();
-    const currentMinTarget = a.min_target_temperature !== undefined ? Number(a.min_target_temperature) : 16,
-      currentMaxTarget = a.max_target_temperature !== undefined ? Number(a.max_target_temperature) : 30;
+    const currentMinTarget = a.min_target_temperature !== undefined ? Number(a.min_target_temperature) : this._getMinTarget(),
+      currentMaxTarget = a.max_target_temperature !== undefined ? Number(a.max_target_temperature) : this._getMaxTarget();
+    if (a.min_target_temperature !== undefined && Number.isFinite(Number(a.min_target_temperature))) {
+      SH_WRITE_STORE(SH_MIN_TARGET_KEY, String(a.min_target_temperature));
+    }
+    if (a.max_target_temperature !== undefined && Number.isFinite(Number(a.max_target_temperature))) {
+      SH_WRITE_STORE(SH_MAX_TARGET_KEY, String(a.max_target_temperature));
+    }
     const relayMismatch = Boolean(a.relay_mismatch);
     const localAlert=(n)=>{const code=a[`contact_${n}_alert_code`];const id=a[`contact_${n}_alert_entity`]||'';if(!code)return a[`contact_${n}_alert`]||null;if(code==='unavailable'){const st=a[`contact_${n}_alert_state`];return tr('alert_unavailable').replace('{n}',n).replace('{id}',id).replace('{state}',st||tr('alert_state_missing'));}if(code==='mismatch'){return tr('alert_mismatch').replace('{id}',id).replace('{timeout}',a.relay_timeout??'');}return a[`contact_${n}_alert`]||null;};
     const alert1 = localAlert(1);
@@ -820,8 +836,8 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
         const step = Number(btn.dataset.targetTempStep);
         const curTarget = Number(a.temperature ?? target);
         if (!Number.isFinite(curTarget)) return;
-        const min = Number.isFinite(Number(a.min_temp)) ? Number(a.min_temp) : 5;
-        const max = Number.isFinite(Number(a.max_temp)) ? Number(a.max_temp) : 35;
+        const min = Number.isFinite(Number(a.min_temp)) ? Number(a.min_temp) : this._getMinTarget();
+        const max = Number.isFinite(Number(a.max_temp)) ? Number(a.max_temp) : this._getMaxTarget();
         const nextTarget = Math.min(max, Math.max(min, Number((curTarget + step).toFixed(2))));
         if (nextTarget === curTarget) return;
         this._hass.callService('climate', 'set_temperature', { entity_id: this.config.entity, temperature: nextTarget });
@@ -1024,6 +1040,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     }));
     const applyMinTarget=(val)=>{
       const next=Math.min(35,Math.max(5,Number(Number(val).toFixed(1))));
+      SH_WRITE_STORE(SH_MIN_TARGET_KEY, String(next));
       this._hass.callService('smart_heating','set_min_target_temperature',{entity_id:this.config.entity,temperature:next});
     };
     root.querySelectorAll('[data-min-target-slider]').forEach(sl=>{
@@ -1038,6 +1055,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     }));
     const applyMaxTarget=(val)=>{
       const next=Math.min(35,Math.max(5,Number(Number(val).toFixed(1))));
+      SH_WRITE_STORE(SH_MAX_TARGET_KEY, String(next));
       this._hass.callService('smart_heating','set_max_target_temperature',{entity_id:this.config.entity,temperature:next});
     };
     root.querySelectorAll('[data-max-target-slider]').forEach(sl=>{
@@ -1140,7 +1158,7 @@ ${this._confirmDialog?`<div class="modal-backdrop confirm-backdrop" style="z-ind
     root.querySelectorAll('.adjust button').forEach(b=>b.addEventListener('click',()=>{
       const current=Number(target);if(!Number.isFinite(current))return;
       const step=(this._tempStep()??Number(a.target_temp_step))||Math.abs(Number(b.dataset.delta))||.5;
-      const min=Number.isFinite(Number(a.min_temp))?Number(a.min_temp):5,max=Number.isFinite(Number(a.max_temp))?Number(a.max_temp):35;
+      const min=Number.isFinite(Number(a.min_temp))?Number(a.min_temp):this._getMinTarget(),max=Number.isFinite(Number(a.max_temp))?Number(a.max_temp):this._getMaxTarget();
       const next=Math.min(max,Math.max(min,current+Math.sign(Number(b.dataset.delta))*step));
       if(next!==current)this._hass.callService('climate','set_temperature',{entity_id:this.config.entity,temperature:Number(next.toFixed(2))});
     }));

@@ -75,6 +75,18 @@ class SmartHeatingClimate(RestoreEntity, ClimateEntity):
         if last_state:
             self.data.enabled = last_state.state == HVACMode.HEAT
             attributes = last_state.attributes
+            min_t = attributes.get("min_target_temperature", attributes.get("min_temp"))
+            if min_t is not None:
+                try:
+                    self.data.set_min_target_temperature(float(min_t))
+                except (TypeError, ValueError):
+                    _LOGGER.debug("Ignoring restored min target temperature %r", min_t)
+            max_t = attributes.get("max_target_temperature", attributes.get("max_temp"))
+            if max_t is not None:
+                try:
+                    self.data.set_max_target_temperature(float(max_t))
+                except (TypeError, ValueError):
+                    _LOGGER.debug("Ignoring restored max target temperature %r", max_t)
             target = attributes.get(ATTR_TEMPERATURE, attributes.get("target_temperature"))
             if target is not None:
                 try:

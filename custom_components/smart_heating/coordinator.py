@@ -193,6 +193,30 @@ class SmartHeatingData:
                         self.contact_1_enabled = bool(stored.get("contact_1_enabled"))
                     if "contact_2_enabled" in stored:
                         self.contact_2_enabled = bool(stored.get("contact_2_enabled"))
+                    if "min_target_temperature" in stored:
+                        try:
+                            self.min_target_temperature = clamp(
+                                float(stored["min_target_temperature"]), MIN_TARGET, MAX_TARGET
+                            )
+                        except (TypeError, ValueError):
+                            pass
+                    if "max_target_temperature" in stored:
+                        try:
+                            self.max_target_temperature = clamp(
+                                float(stored["max_target_temperature"]), MIN_TARGET, MAX_TARGET
+                            )
+                        except (TypeError, ValueError):
+                            pass
+                    if self.min_target_temperature > self.max_target_temperature:
+                        self.min_target_temperature, self.max_target_temperature = (
+                            self.max_target_temperature,
+                            self.min_target_temperature,
+                        )
+                    self.target_temperature = clamp(
+                        self.target_temperature,
+                        self.min_target_temperature,
+                        self.max_target_temperature,
+                    )
             except Exception as err:
                 _LOGGER.warning("Could not load stored programs: %s", err)
         if "P1" not in self.programs:
@@ -253,6 +277,8 @@ class SmartHeatingData:
                     "programs": self.programs,
                     "contact_1_enabled": self.contact_1_enabled,
                     "contact_2_enabled": self.contact_2_enabled,
+                    "min_target_temperature": self.min_target_temperature,
+                    "max_target_temperature": self.max_target_temperature,
                 }
                 try:
                     await self._store.async_save(data)
@@ -493,6 +519,7 @@ class SmartHeatingData:
             self.max_target_temperature = self.min_target_temperature
         self.target_temperature = clamp(self.target_temperature, self.min_target_temperature, self.max_target_temperature)
         self.evaluate()
+        self._async_save_store()
 
     def set_max_target_temperature(self, value: float) -> None:
         """Change the maximum allowed target temperature and re-evaluate."""
@@ -501,6 +528,7 @@ class SmartHeatingData:
             self.min_target_temperature = self.max_target_temperature
         self.target_temperature = clamp(self.target_temperature, self.min_target_temperature, self.max_target_temperature)
         self.evaluate()
+        self._async_save_store()
 
     @property
     def hysteresis(self) -> float:
