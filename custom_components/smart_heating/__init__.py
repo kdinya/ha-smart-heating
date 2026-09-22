@@ -19,8 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["climate", "number", "switch"]
 CARD_PATH = Path(__file__).parent / "www"
 CANONICAL_CARD_URL = "/hacsfiles/ha-smart-heating/smart-heating-card.js"
-CARD_VERSION = "1.0.7"
-CARD_BUILD = "reference-dashboard-v107-1"
+CARD_VERSION = "1.0.8"
+CARD_BUILD = "reference-dashboard-v108-1"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
@@ -173,7 +173,7 @@ def _register_domain_services(hass: HomeAssistant) -> None:
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up Smart Heating and install its Lovelace card automatically."""
     await hass.http.async_register_static_paths([
-        StaticPathConfig("/hacsfiles/ha-smart-heating", str(CARD_PATH), cache_headers=False),
+        StaticPathConfig("/hacsfiles/ha-smart-heating", str(CARD_PATH), cache_headers=True),
     ])
     async def _register_frontend(_event: Any = None) -> None:
         """Register the card only after Lovelace has initialized."""

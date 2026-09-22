@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.8 — 2026-09-22
+
+- Re-enabled HTTP caching for the card file (`cache_headers=True`); the versioned `?v=&build=` query string already forces a fresh download whenever the file actually changes, so this only removes an unnecessary full re-download on every dashboard load.
+- Settings saved to Home Assistant storage (programs, contacts, target/min/max temperature, shutdown behavior) are now written with a 2-second debounce (`Store.async_delay_save`) instead of on every single change; a pending write is still flushed synchronously when Home Assistant shuts down, so nothing is lost.
+- Removed dead imports (`DEFAULT_HYSTERESIS`, `MIN_HYSTERESIS`, `MAX_HYSTERESIS`, `NumberEntity`) and a redundant timezone-naive fallback in the eco-program hour lookup.
+
 ## 1.0.5 — 2026-09-18
 
 - Dedicated sensors now take priority over the `weather` entity for outdoor temperature, wind and precipitation; the weather entity is used only as a fallback. Wind also reuses the sensor's own `unit_of_measurement`.

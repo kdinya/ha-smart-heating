@@ -1,7 +1,6 @@
 """Runtime state and hysteresis controller for Smart Heating."""
 from __future__ import annotations
 
-import asyncio
 import logging
 import time
 
@@ -12,6 +11,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_HEATING,
@@ -44,20 +44,18 @@ from .const import (
     MAX_TEMP_STEP,
     CONF_WEATHER,
     CONF_WIND,
-    DEFAULT_HYSTERESIS,
     DEFAULT_HYSTERESIS_ON,
     DEFAULT_HYSTERESIS_OFF,
     DEFAULT_NAME,
     DEFAULT_TARGET,
     ENTITY_KEYS,
-    MAX_HYSTERESIS,
     MAX_TARGET,
-    MIN_HYSTERESIS,
     MIN_HYSTERESIS_ON,
     MAX_HYSTERESIS_ON,
     MIN_HYSTERESIS_OFF,
     MAX_HYSTERESIS_OFF,
     MIN_TARGET,
+    STORE_SAVE_DELAY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -148,8 +146,7 @@ class SmartHeatingData:
         self._switch_2_requested_time: float = 0.0
         self.climate_entity_id: str | None = None
         self.entity_ids: set[str] = set()
-        self._store_save_task: asyncio.Task | None = None
-        self._store_save_pending: bool = False
+
         self._switch_1_last_sent_time: float = 0.0
         self._switch_2_last_sent_time: float = 0.0
         self.relay_mismatch_1: bool = False
@@ -284,42 +281,30 @@ class SmartHeatingData:
         return {"name": name.strip(), "hours": valid_hours}
 
     @callback
+    def _store_data(self) -> dict:
+        """Snapshot of everything persisted to the Home Assistant Store."""
+        return {
+            "active_program": self.active_program,
+            "programs": self.programs,
+            "contact_1_enabled": self.contact_1_enabled,
+            "contact_2_enabled": self.contact_2_enabled,
+            "target_temperature": self.target_temperature,
+            "min_target_temperature": self.min_target_temperature,
+            "max_target_temperature": self.max_target_temperature,
+            "shutdown_contact_1": self.shutdown_contact_1,
+            "shutdown_contact_2": self.shutdown_contact_2,
+        }
+
     def _async_save_store(self) -> None:
-        """Persist programs and contact state to Home Assistant storage sequentially."""
+        """Queue a debounced write to Home Assistant storage.
+
+        Uses Store's own delayed-save: rapid successive calls collapse into
+        one disk write after STORE_SAVE_DELAY seconds of quiet, and any
+        pending write is still flushed on HA shutdown (see async_stop).
+        """
         if not self._store or not self.hass:
             return
-
-        if self._store_save_task and not self._store_save_task.done():
-            self._store_save_pending = True
-            return
-
-        self._store_save_pending = False
-
-        async def _do_save() -> None:
-            while True:
-                data = {
-                    "active_program": self.active_program,
-                    "programs": self.programs,
-                    "contact_1_enabled": self.contact_1_enabled,
-                    "contact_2_enabled": self.contact_2_enabled,
-                    "target_temperature": self.target_temperature,
-                    "min_target_temperature": self.min_target_temperature,
-                    "max_target_temperature": self.max_target_temperature,
-                    "shutdown_contact_1": self.shutdown_contact_1,
-                    "shutdown_contact_2": self.shutdown_contact_2,
-
-                }
-                try:
-                    await self._store.async_save(data)
-                except Exception as err:
-                    _LOGGER.warning("Could not persist Smart Heating state: %s", err)
-
-                if self._store_save_pending:
-                    self._store_save_pending = False
-                else:
-                    break
-
-        self._store_save_task = self.hass.async_create_task(_do_save())
+        self._store.async_delay_save(self._store_data, STORE_SAVE_DELAY)
 
     def set_contact_shutdown(self, contact: int, action: str) -> None:
         """Configure contact behavior when Home Assistant shuts down."""
@@ -379,11 +364,11 @@ class SmartHeatingData:
         if self._remove_listener:
             self._remove_listener()
             self._remove_listener = None
-        if self._store_save_task and not self._store_save_task.done():
+        if self._store and self.hass:
             try:
-                await self._store_save_task
-            except Exception:
-                pass
+                await self._store.async_save(self._store_data())
+            except Exception as err:
+                _LOGGER.warning("Could not persist Smart Heating state on shutdown: %s", err)
 
     @callback
     def _state_changed(self, event: Any) -> None:
@@ -667,12 +652,7 @@ class SmartHeatingData:
         if self.active_program and self.active_program in self.programs:
             prog = self.programs[self.active_program]
             hours = prog.get("hours", [])
-            try:
-                from homeassistant.util import dt as dt_util
-                cur_hour = dt_util.now().hour
-            except Exception:
-                import datetime
-                cur_hour = datetime.datetime.now().hour
+            cur_hour = dt_util.now().hour
             if 0 <= cur_hour < len(hours) and hours[cur_hour] == 0:
                 return self.eco_temperature
         return self.target_temperature

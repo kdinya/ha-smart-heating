@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 DOMAIN = "smart_heating"
+STORE_SAVE_DELAY = 2.0  # seconds of quiet before writing pending changes to disk
 
 CONF_NAME = "name"
 CONF_ROOM_TEMPERATURE = "room_temperature"
