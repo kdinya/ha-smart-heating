@@ -247,9 +247,12 @@ class SmartHeatingData:
             for key in ENTITY_KEYS
             if (entity_id := self.get_config_or_option(key))
         ]
-        self.hass.bus.async_listen_once(
+        async def _async_on_ha_stop(_event: Any) -> None:
+            await self._async_execute_shutdown_failsafe()
+
+        self._remove_stop_listener = self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP,
-            lambda _: self.hass.async_create_task(self._async_execute_shutdown_failsafe()),
+            _async_on_ha_stop,
         )
         if entity_ids:
             self._remove_listener = async_track_state_change_event(
@@ -327,6 +330,7 @@ class SmartHeatingData:
             self.shutdown_contact_2 = valid
         self._async_save_store()
         self.evaluate()
+        self._notify_listeners()
 
     async def _async_execute_shutdown_failsafe(self) -> None:
         """Turn off configured contacts when Home Assistant stops."""
@@ -335,9 +339,10 @@ class SmartHeatingData:
         self._shutdown_executed = True
         sw1 = self.get_config_or_option(CONF_SWITCH_1)
         if self.shutdown_contact_1 == "turn_off" and sw1:
+            domain1 = sw1.split(".")[0] if "." in sw1 else "homeassistant"
             try:
                 await self.hass.services.async_call(
-                    "homeassistant",
+                    domain1,
                     "turn_off",
                     {"entity_id": sw1},
                     blocking=True,
@@ -347,9 +352,10 @@ class SmartHeatingData:
                 _LOGGER.warning("Could not turn off contact 1 on shutdown: %s", err)
         sw2 = self.get_config_or_option(CONF_SWITCH_2)
         if self.shutdown_contact_2 == "turn_off" and sw2:
+            domain2 = sw2.split(".")[0] if "." in sw2 else "homeassistant"
             try:
                 await self.hass.services.async_call(
-                    "homeassistant",
+                    domain2,
                     "turn_off",
                     {"entity_id": sw2},
                     blocking=True,
@@ -360,6 +366,9 @@ class SmartHeatingData:
 
     async def async_stop(self) -> None:
         """Stop watching source entities and flush any pending store save."""
+        if hasattr(self, "_remove_stop_listener") and self._remove_stop_listener:
+            self._remove_stop_listener()
+            self._remove_stop_listener = None
         await self._async_execute_shutdown_failsafe()
         if self._remove_listener:
             self._remove_listener()
