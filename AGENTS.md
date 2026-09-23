@@ -70,8 +70,9 @@
    - State preservation: After reboot, the integration must restore its previous operational state (if it was active, resume heating; if turned off, remain off).
 
 7. **Localization & Full Translation Coverage**:
-   - Every text element in the card and visual editor must support full localization.
-   - When adding, updating, or removing any visual text, labels, hints, or options, ensure they are properly wired into translation dictionaries (`SH_DICT`, `SH_EDITOR_EN`, etc.) for all supported languages (`uk`, `en`).
+   - Every text element in the card and visual editor must support full localization across all languages supported by the repository (currently `uk`, `en`, and any future additions).
+   - When adding or updating any visual text, labels, hints, or options, they must be properly wired into translation dictionaries (`SH_DICT`, `SH_EDITOR_EN`, etc.) for every supported language.
+   - When removing any text element, its translation entries must be cleaned up and removed from all language dictionaries as well, never left orphaned.
    - Hardcoded, non-translatable text in markup or code is strictly prohibited.
 
 8. **Settings Preservation & Storage Resilience**:

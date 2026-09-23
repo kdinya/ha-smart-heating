@@ -115,7 +115,8 @@ class VersionTests(unittest.TestCase):
         self.assertIn("this.config?.weather", source)
         self.assertIn("a.temperature", source)
         self.assertIn("a.wind_speed", source)
-        self.assertIn("SH_READ_STORE(SH_LANG_KEY)||this.config?.language", source)
+        self.assertIn("SH_READ_STORE(SH_LANG_KEY)", source)
+        self.assertIn("this.config?.language", source)
 
     def test_card_resource_url_carries_version_and_build(self):
         init = (COMPONENT / "__init__.py").read_text()
