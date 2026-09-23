@@ -225,8 +225,9 @@ class SmartHeatingCard extends HTMLElement {
   _tickClock(){if(!this.shadowRoot||(typeof document!=='undefined'&&document.hidden))return;const lang=this._language(),locale=SH_DICT[lang]?.locale||'uk-UA',now=new Date();const date=this.shadowRoot.querySelector('.clock .date'),time=this.shadowRoot.querySelector('.clock-time');if(date)date.textContent=now.toLocaleDateString(locale,{weekday:'short',day:'2-digit',month:'long',year:'numeric'}).toUpperCase();if(time)time.textContent=now.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'});}
   _language(){const saved=SH_READ_STORE(SH_LANG_KEY);if(saved)return saved;
     if(this.config?.language)return this.config.language;
-    const hl=this._hass?.locale?.language||this._hass?.language||'';
-    return hl.startsWith('en')?'en':'uk';}
+    const hl=this._hass?.locale?.language||this._hass?.language;
+    if(hl)return hl.toLowerCase().startsWith('uk')?'uk':'en';
+    return 'en';}
   /* User-chosen step for the dial's +/- buttons; falls back to the climate
      entity's own target_temp_step, then to the historical 0.5 default. */
   _tempStep(){const v=Number(SH_READ_STORE(SH_TEMP_STEP_KEY));return Number.isFinite(v)&&v>0?Math.min(2,Math.max(.1,v)):null;}
@@ -1468,8 +1469,9 @@ class SmartHeatingCardEditor extends HTMLElement {
      migration fallback for cards that have no saved local preference yet. */
   _language(){const saved=SH_READ_STORE(SH_LANG_KEY);if(saved)return saved;
     if(this.config?.language)return this.config.language;
-    const hl=this._hass?.locale?.language||this._hass?.language||'';
-    return hl.startsWith('en')?'en':'uk';}
+    const hl=this._hass?.locale?.language||this._hass?.language;
+    if(hl)return hl.toLowerCase().startsWith('uk')?'uk':'en';
+    return 'en';}
   _ui(value){return this._language()==='en'?(SH_EDITOR_EN[value]||value):value}
   _default(key,fallback){return Object.prototype.hasOwnProperty.call(SH_DEFAULTS,key)?SH_DEFAULTS[key]:fallback}
   _field(label,id,value,placeholder=''){return `<div class="field"><label>${this._ui(label)}</label><input id="${id}" type="text" value="${value??''}" placeholder="${placeholder}"></div>`}

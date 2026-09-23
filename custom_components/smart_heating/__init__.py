@@ -20,7 +20,7 @@ PLATFORMS = ["climate", "number", "switch"]
 CARD_PATH = Path(__file__).parent / "www"
 CANONICAL_CARD_URL = "/hacsfiles/ha-smart-heating/smart-heating-card.js"
 CARD_VERSION = "1.0.8"
-CARD_BUILD = "reference-dashboard-v108-3"
+CARD_BUILD = "reference-dashboard-v108-4"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
