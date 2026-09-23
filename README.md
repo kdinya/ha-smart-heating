@@ -103,7 +103,7 @@ The visual editor provides language selection, block position and scale controls
 
 After a HACS update, restart Home Assistant completely. The integration automatically finds old Smart Heating resources by filename, updates one to `/hacsfiles/ha-smart-heating/smart-heating-card.js?v=<version>&build=<build>`, and removes duplicates. The `build` marker changes on every published refresh, which is what forces browsers to refetch the card. If the old card is still displayed, refresh the browser with `Ctrl+F5` or clear the browser cache.
 
-The integration automatically finds old Smart Heating resources by filename, including `/hacsfiles/...`, `/api/...`, and old `/local/...` URLs, updates one to the canonical `/local` URL, and deletes duplicates. If the climate entity is unavailable, check the configured room-temperature sensor and its state. If `switch_1` does not respond, verify that the selected entity is a switch and that Home Assistant can call its `turn_on` and `turn_off` services. The optional `switch_2` entity reflects the state of its configured switch and is not part of the automatic hysteresis output.
+The integration automatically finds old Smart Heating resources by filename, including `/hacsfiles/...`, `/api/...`, and old `/local/...` URLs, updates one to the canonical `/hacsfiles` URL, and deletes duplicates. If the climate entity is unavailable, check the configured room-temperature sensor and its state. If `switch_1` does not respond, verify that the selected entity is a switch and that Home Assistant can call its `turn_on` and `turn_off` services. The optional `switch_2` entity reflects the state of its configured switch and is not part of the automatic hysteresis output.
 
 ### Development
 
