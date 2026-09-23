@@ -69,6 +69,16 @@
    - Unregister event listeners immediately during shutdown to prevent race conditions where subsequent events re-enable contacts.
    - State preservation: After reboot, the integration must restore its previous operational state (if it was active, resume heating; if turned off, remain off).
 
+7. **Localization & Full Translation Coverage**:
+   - Every text element in the card and visual editor must support full localization.
+   - When adding, updating, or removing any visual text, labels, hints, or options, ensure they are properly wired into translation dictionaries (`SH_DICT`, `SH_EDITOR_EN`, etc.) for all supported languages (`uk`, `en`).
+   - Hardcoded, non-translatable text in markup or code is strictly prohibited.
+
+8. **Settings Preservation & Storage Resilience**:
+   - Any code changes must ensure user settings, configurations, and presets are never reset or wiped during updates, reboots, or browser cache cleans.
+   - Configuration persistence must prioritize dashboard config (`this.config`) and Home Assistant context (such as `hass.locale.language`) rather than relying solely on ephemeral browser `localStorage`.
+   - Backend `Store` schemas must remain backwards-compatible across versions.
+
 ---
 
 ## 3. Pre-Flight Verification Checklist
